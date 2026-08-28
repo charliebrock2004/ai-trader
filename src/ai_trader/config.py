@@ -1,0 +1,115 @@
+"""Configuration. Secrets stay in the environment; this module never logs them."""
+
+from __future__ import annotations
+
+from functools import lru_cache
+from pathlib import Path
+from typing import Optional
+
+from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from ai_trader.safety import ALPACA_PAPER_BASE_URL, assert_safe_to_run
+
+
+def project_root() -> Path:
+    """Workspace / repo root (parent of src/)."""
+    return Path(__file__).resolve().parents[2]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    trading_mode: str = "simulate"
+
+    xai_api_key: Optional[SecretStr] = None
+    xai_model: str = "grok-4.5"
+    xai_base_url: str = "https://api.x.ai/v1"
+
+    alpaca_api_key: Optional[SecretStr] = None
+    alpaca_secret_key: Optional[SecretStr] = None
+    alpaca_base_url: str = ALPACA_PAPER_BASE_URL
+
+    database_path: Path = Field(default=Path("data/ai_trader.db"))
+    log_level: str = "INFO"
+    log_dir: Path = Field(default=Path("logs"))
+
+    kill_switch_engaged: bool = True
+
+    dashboard_host: str = "0.0.0.0"
+    dashboard_port: int = 8080
+
+    @field_validator("trading_mode", mode="before")
+    @classmethod
+    def _normalise_mode(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    @model_validator(mode="after")
+    def _enforce_safety(self) -> "Settings":
+        normalised = assert_safe_to_run(
+            mode=self.trading_mode, alpaca_base_url=self.alpaca_base_url
+        )
+        self.trading_mode = normalised
+        return self
+
+    def resolve_database_path(self) -> Path:
+        path = self.database_path
+        if not path.is_absolute():
+            path = project_root() / path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def resolve_log_dir(self) -> Path:
+        path = self.log_dir
+        if not path.is_absolute():
+            path = project_root() / path
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def resolve_kill_switch_path(self) -> Path:
+        return self.resolve_database_path().parent / "KILL_SWITCH"
+
+    def grok_configured(self) -> bool:
+        return bool(self.xai_api_key and self.xai_api_key.get_secret_value().strip())
+
+    def alpaca_configured(self) -> bool:
+        key = self.alpaca_api_key.get_secret_value().strip() if self.alpaca_api_key else ""
+        secret = (
+            self.alpaca_secret_key.get_secret_value().strip()
+            if self.alpaca_secret_key
+            else ""
+        )
+        return bool(key and secret)
+
+    def public_view(self) -> dict:
+        """Safe for the dashboard and logs. No secrets."""
+        return {
+            "trading_mode": self.trading_mode,
+            "xai_model": self.xai_model,
+            "xai_base_url": self.xai_base_url,
+            "xai_configured": self.grok_configured(),
+            "alpaca_base_url": self.alpaca_base_url,
+            "alpaca_configured": self.alpaca_configured(),
+            "database_path": str(self.resolve_database_path()),
+            "log_level": self.log_level,
+            "kill_switch_default": self.kill_switch_engaged,
+            "dashboard_host": self.dashboard_host,
+            "dashboard_port": self.dashboard_port,
+            "live_trading": False,
+        }
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+def clear_settings_cache() -> None:
+    get_settings.cache_clear()
