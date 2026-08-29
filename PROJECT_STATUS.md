@@ -5,7 +5,7 @@ Read this first, then [ARCHITECTURE.md](ARCHITECTURE.md) and [DEVELOPMENT.md](DE
 
 | | |
 |---|---|
-| Repository | [charliebrock2004/ai-trader](https://github.com/charliebrock2004/ai-trader) (private) |
+| Repository | [charliebrock2004/ai-trader](https://github.com/charliebrock2004/ai-trader) (public) |
 | Branch | `main` |
 | Package version | `0.1.0` |
 | Product | Paper-trading research desk. **Not** a live broker. |

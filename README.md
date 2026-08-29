@@ -20,7 +20,7 @@ Stop blocks new trades. No real money. No live broker.
 | Default session | BTC-USD, 5m, public Coinbase, continuous |
 | Live trading | `LIVE_TRADING_ALLOWED = False` |
 
-This repository is **private**. Do not put API keys in it.
+This repository is **public**. Still never put API keys in it.
 
 ---
 
