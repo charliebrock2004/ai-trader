@@ -25,7 +25,9 @@ build/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
+coverage/
 .tox/
 .nox/
 
@@ -47,6 +49,9 @@ Thumbs.db
 .vscode/
 *.swp
 *~
+*.orig
+*.bak
+*.tmp
 
 # Node
 node_modules/
@@ -54,6 +59,9 @@ node_modules/
 .vinxi/
 .nitro/
 .tanstack/
+npm-debug.log*
+yarn-error.log*
+.nyc_output/
 
 # Test / cache
 .cache/
