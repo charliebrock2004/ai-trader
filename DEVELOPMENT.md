@@ -3,7 +3,7 @@
 How humans and AI assistants should change AI-Trader.
 
 Repository: [charliebrock2004/ai-trader](https://github.com/charliebrock2004/ai-trader)  
-Read [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md) first.
+Read [PROJECT_STATUS.md](PROJECT_STATUS.md), [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md) first.
 
 ---
 
@@ -149,6 +149,7 @@ curl -sS -X POST http://127.0.0.1:8080/api/paper-session/stop
 ## Suggested first files for an AI clone
 
 ```text
+PROJECT_STATUS.md
 DEVELOPMENT.md
 ARCHITECTURE.md
 README.md

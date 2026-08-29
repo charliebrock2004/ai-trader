@@ -24,35 +24,53 @@ This repository is **private**. Do not put API keys in it.
 
 ---
 
-## What it is
+## What the application currently does
 
-AI-Trader is a modular paper-trading system:
+- Paper-only research desk: £100 simulated GBP account.
+- Home screen Start runs a **continuous** session: public Coinbase **BTC-USD** 5-minute **completed** candles → analysis → Grok or fixture → BUY/SELL/HOLD → risk → internal paper fills.
+- Stop blocks new paper trades.
+- Fail-closed market data: bad/stale/timeout → HOLD, Grok STOPPED, zero trades.
+- Fixture Grok always HOLD. Real Grok is paper analysis only (opt-in / key present).
+- Risk engine sizes or rejects **internal** paper orders. Broker orders stay disabled.
+- SQLite logs events and paper runs (continuous persist on Stop).
 
-- A **Python engine** (`src/ai_trader`) walks candles, asks Grok (or a fixture)
-  for a decision, sizes through risk, and fills an internal paper ledger.
-- A **web desk** (TanStack Start / React) shows balance, today’s P&L, Grok
-  status, the current BUY / SELL / HOLD, the open position, Start, Stop, and
-  Performance. Advanced pipeline details live under System.
+Current snapshot: [PROJECT_STATUS.md](PROJECT_STATUS.md).  
+Call graph: [ARCHITECTURE.md](ARCHITECTURE.md).
 
-It is **not** a live trading platform. Alpaca live is blocked. Broker `submit`
-is disabled on the generic path. The Start button never talks to a live
-exchange.
+## What it does NOT do
+
+- **Live trading.** `LIVE_TRADING_ALLOWED` is hardcoded `False`. There is no live mode.
+- **Real money.** No cash broker, no withdrawals, no live Alpaca.
+- **Alpaca live host.** `https://api.alpaca.markets` is blocked.
+- **Default Alpaca paper fills.** Start reports `broker: NOT USED` unless paper keys + paper mode are set (they are not, in the normal desk).
+- **Look-ahead.** Grok and the simulator see candles `[0..i]` only. The forming Coinbase bar is dropped.
+- **Guaranteed profit.** No strategy in this repo has a demonstrated out-of-sample edge. Do not claim one.
+- **Unrestricted Grok.** Grok cannot skip risk, cannot send tools, cannot call a broker.
+- **Order buttons.** Dashboard `/api/orders` is blocked. Start is paper session, not “place order”.
+- **Hydrate-on-refresh.** The home screen does not GET status on first paint; it shows a snapshot until Start.
+
+It is **not** a live trading platform.
 
 ---
 
-## How the application works
+## Exact data flow
 
-1. The web app boots (`npm run dev`). Vite listens for the UI.
-2. A Vite plugin starts a Python **stdio worker** (`python3 -m ai_trader rpc`).
-   There is no second HTTP server for paper trading.
-3. The user presses **Start**.
-4. The browser POSTs `/api/paper-session/start`.
-5. The API route sends a JSON-line `start` command to the Python worker.
-6. The orchestrator starts a continuous paper session:
-   public Coinbase BTC-USD 5m candles → technical analysis → Grok (if enabled)
-   → risk → internal paper fills → SQLite / in-memory session status.
-7. The UI polls `/api/paper-session` while Grok is RUNNING.
-8. **Stop** sends `/api/paper-session/stop`. New paper trades are blocked.
+```text
+MARKET DATA → ANALYSIS → GROK → BUY/SELL/HOLD → RISK ENGINE
+        → PAPER EXECUTION → PAPER ACCOUNT → TRADE/EVENT LOG
+```
+
+On Start (home button):
+
+1. Coinbase completed 5m BTC-USD candles (`market_data/public.py`)
+2. `TechnicalAnalyst` on the visible prefix only
+3. `GrokAnalyst` or `FixtureAnalyst` → BUY / SELL / HOLD
+4. `RepeatingGrokSource` (warmup 8, then every 8 bars)
+5. `RiskEngine.review_paper` — internal size or reject
+6. `PaperSimulator` / `PaperLedger` — next-bar open fill, £100 book
+7. Status JSON to the UI; SQLite persist on Stop (continuous)
+
+If market data is unsafe: HOLD, Grok STOPPED, zero trades, no execution.
 
 Grok is **user-initiated** (Start). It is not called on page load. Frequency is
 capped (warmup 8 bars, then every 8 completed 5-minute bars).
@@ -233,6 +251,7 @@ Do not commit if this fails.
 - Real-money brokers
 - Unrestricted Grok control of orders
 - Alpaca live
+- A proven profitable strategy
 
 ---
 
@@ -244,16 +263,17 @@ This section is for ChatGPT, Claude, Grok, or any other assistant cloning
 **Repository:** `charliebrock2004/ai-trader`  
 **Branch:** `main`  
 **Package version:** `0.1.0`  
-**Documented commit:** `4957582acb414adbe6580854a0e9167f8f034e17` on `main` (architecture/docs snapshot). Prefer the tip of `main` if newer.
+**Documented commit:** tip of `main` — see [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ### Read first (in this order)
 
-1. [DEVELOPMENT.md](DEVELOPMENT.md) — rules. Do not skip.
-2. [ARCHITECTURE.md](ARCHITECTURE.md) — module map.
-3. `src/ai_trader/safety.py` — live trading must stay False.
-4. `src/ai_trader/pipeline/orchestrator.py` — the only legal pipeline wiring.
-5. `src/components/trading-home.tsx` — Start / Stop UI (do not redesign unless asked).
-6. `src/lib/paper-engine.server.ts` + `src/ai_trader/rpc.py` — how Start reaches Python.
+1. [PROJECT_STATUS.md](PROJECT_STATUS.md) — what actually works today.
+2. [DEVELOPMENT.md](DEVELOPMENT.md) — rules. Do not skip.
+3. [ARCHITECTURE.md](ARCHITECTURE.md) — real module map and data flow.
+4. `src/ai_trader/safety.py` — live trading must stay False.
+5. `src/ai_trader/pipeline/orchestrator.py` — the only legal pipeline wiring.
+6. `src/components/trading-home.tsx` — Start / Stop UI (do not redesign unless asked).
+7. `src/lib/paper-engine.server.ts` + `src/ai_trader/rpc.py` — how Start reaches Python.
 
 ### If the task is…
 
