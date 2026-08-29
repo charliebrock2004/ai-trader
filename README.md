@@ -244,7 +244,7 @@ This section is for ChatGPT, Claude, Grok, or any other assistant cloning
 **Repository:** `charliebrock2004/ai-trader`  
 **Branch:** `main`  
 **Package version:** `0.1.0`  
-**Documented commit:** see the latest commit on `main` (`git log -1 --format='%H %s'`).
+**Documented commit:** `4957582acb414adbe6580854a0e9167f8f034e17` on `main` (architecture/docs snapshot). Prefer the tip of `main` if newer.
 
 ### Read first (in this order)
 
