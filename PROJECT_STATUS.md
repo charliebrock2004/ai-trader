@@ -9,7 +9,7 @@ Read this first, then [ARCHITECTURE.md](ARCHITECTURE.md) and [DEVELOPMENT.md](DE
 | Branch | `main` |
 | Package version | `0.1.0` |
 | Product | Paper-trading research desk. **Not** a live broker. |
-| Documented commit | `be57fd18a089ebcca5a1aa58ab5ce121ff5001b5` on `main` |
+| Documented commit | `054d01edfaa6d9b9b426f32600b862e1a92c0bbb` on `main` |
 
 If this file disagrees with the code, **the code wins**. Update this file after every significant change.
 
