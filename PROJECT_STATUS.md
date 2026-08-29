@@ -139,6 +139,31 @@ Completed candles only. Forming bar excluded (`close_at > now` dropped). Stale i
 
 ---
 
+## Before real-money trading (security milestone)
+
+Real-money trading is **not enabled** and is **not the next step**. Treat it as a
+separate security milestone, not a config flip.
+
+Before any real-money use:
+
+- All brokerage credentials must remain **outside GitHub**.
+- API keys must be stored as environment / secret variables on the machine or
+  host — never in source, never in `.env.example`, never in docs.
+- Credentials must **never** appear in source code.
+- Credentials must **never** appear in logs.
+- Credentials must **never** appear in the UI.
+- If a credential was ever exposed in git history, it **must be revoked and
+  replaced** before it is used. Deleting the file is not enough.
+- `LIVE_TRADING_ALLOWED` must stay `False` until that milestone is explicitly
+  designed, tested, and reviewed. There is no env override today.
+- Alpaca live (`https://api.alpaca.markets`) must stay blocked.
+- Grok must still be unable to bypass the risk engine or place broker orders.
+
+This repository is public source + documentation only. It is not a wallet and
+not a broker.
+
+---
+
 ## Latest tests
 
 Recorded on the documentation pass that added this file. Re-run and update after code changes.

@@ -1,11 +1,19 @@
 # Secrets — never commit
 .env
+.env.*
+!.env.example
+.envrc
 .env.local
 .env.*.local
 *.pem
 *.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
 credentials.json
 secrets/
+service-account*.json
 
 # Python
 __pycache__/
@@ -31,7 +39,13 @@ coverage/
 .tox/
 .nox/
 
-# Local runtime data
+# Local runtime data — never publish account/session state
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
 data/*.db
 data/*.db-journal
 data/*.db-wal
