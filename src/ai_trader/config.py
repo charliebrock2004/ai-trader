@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     trading_mode: str = "simulate"
 
     xai_api_key: Optional[SecretStr] = None
-    xai_model: str = "grok-4.5"
+    xai_model: str = "grok-4.6"
     xai_base_url: str = "https://api.x.ai/v1"
 
     alpaca_api_key: Optional[SecretStr] = None
@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     log_dir: Path = Field(default=Path("logs"))
 
     kill_switch_engaged: bool = True
+    grok_paper_analysis: bool = False
+    xai_timeout: float = 20.0
 
     dashboard_host: str = "0.0.0.0"
     dashboard_port: int = 8080
@@ -100,6 +102,7 @@ class Settings(BaseSettings):
             "database_path": str(self.resolve_database_path()),
             "log_level": self.log_level,
             "kill_switch_default": self.kill_switch_engaged,
+            "grok_paper_analysis": self.grok_paper_analysis,
             "dashboard_host": self.dashboard_host,
             "dashboard_port": self.dashboard_port,
             "live_trading": False,

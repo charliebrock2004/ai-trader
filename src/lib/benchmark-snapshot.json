@@ -1,0 +1,3724 @@
+{
+  "ok": true,
+  "banner": "PAPER SIMULATION \u2014 NO REAL TRADING",
+  "live": false,
+  "broker": "NOT USED",
+  "broker_submit_calls": 0,
+  "live_trading_allowed": false,
+  "grok_model": "real Grok",
+  "headline_split": "out_of_sample",
+  "starting_conditions": {
+    "starting_cash": 100.0,
+    "currency": "GBP",
+    "spread_bps": 5.0,
+    "slippage_bps": 5.0,
+    "max_risk_pct": 0.02,
+    "max_risk_amount": 2.0,
+    "max_open_positions": 2,
+    "max_daily_loss_pct": 0.05,
+    "max_trades_per_day": 10,
+    "leverage": 0.0,
+    "flatten_at_end": true,
+    "live": false,
+    "live_trading_allowed": false,
+    "broker": "NOT USED"
+  },
+  "headline": {
+    "split": "out_of_sample",
+    "grok_return_pct": 0.0,
+    "benchmark_return_pct": -0.352,
+    "benchmark_name": "BUY_AND_HOLD",
+    "maximum_drawdown": 0.0,
+    "trades": 0,
+    "win_rate": 0.0,
+    "profit_factor": 0.0,
+    "grok_model": "real Grok"
+  },
+  "comparison": [
+    {
+      "strategy": "GROK",
+      "return_pct": 0.0,
+      "ending_balance": 100.0,
+      "absolute_pnl": 0.0,
+      "maximum_drawdown": 0.0,
+      "trades": 0,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "volatility": 0.0,
+      "risk_adjusted_return": 0.0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "return_pct": -0.352,
+      "ending_balance": 99.65,
+      "absolute_pnl": -0.35,
+      "maximum_drawdown": 0.037554,
+      "trades": 5,
+      "win_rate": 0.4,
+      "profit_factor": 0.696,
+      "volatility": 0.003273,
+      "risk_adjusted_return": -1.0755
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "return_pct": -0.504,
+      "ending_balance": 99.5,
+      "absolute_pnl": -0.5,
+      "maximum_drawdown": 0.024701,
+      "trades": 7,
+      "win_rate": 0.2857,
+      "profit_factor": 0.4606,
+      "volatility": 0.001575,
+      "risk_adjusted_return": -3.2
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "return_pct": -2.794,
+      "ending_balance": 97.21,
+      "absolute_pnl": -2.79,
+      "maximum_drawdown": 0.070861,
+      "trades": 23,
+      "win_rate": 0.3043,
+      "profit_factor": 0.2089,
+      "volatility": 0.00315,
+      "risk_adjusted_return": -8.8698
+    }
+  ],
+  "verdict": {
+    "grok_return_pct": 0.0,
+    "benchmark_return_pct": -0.352,
+    "grok_traded": false,
+    "beats": {
+      "BUY_AND_HOLD": false,
+      "SIMPLE_TECHNICAL": false,
+      "RANDOM_BASELINE": false
+    },
+    "beats_buy_and_hold": false,
+    "beats_simple_technical": false,
+    "beats_random": false,
+    "beats_all": false
+  },
+  "splits": {
+    "training": {
+      "period": {
+        "name": "training",
+        "seed": 101,
+        "limit": 60,
+        "source": "simulated",
+        "timeframe": "5m",
+        "start": null,
+        "end": null,
+        "role": "Development data. Strategies are frozen; this split is not used to tune."
+      },
+      "pooled": {
+        "BUY_AND_HOLD": {
+          "starting_balance": 100.0,
+          "ending_balance": 99.47,
+          "absolute_pnl": -0.53,
+          "return_pct": -0.526,
+          "trades": 5,
+          "winning_trades": 2,
+          "losing_trades": 3,
+          "win_rate": 0.4,
+          "average_win": 1.83,
+          "average_loss": -2.1,
+          "profit_factor": 0.5794,
+          "maximum_drawdown": 0.027896,
+          "volatility": 0.00333,
+          "risk_adjusted_return": -1.5796,
+          "calmar_like": -0.1886,
+          "runs": 5
+        },
+        "SIMPLE_TECHNICAL": {
+          "starting_balance": 100.0,
+          "ending_balance": 99.4,
+          "absolute_pnl": -0.6,
+          "return_pct": -0.602,
+          "trades": 5,
+          "winning_trades": 0,
+          "losing_trades": 5,
+          "win_rate": 0.0,
+          "average_win": 0.0,
+          "average_loss": -0.6,
+          "profit_factor": 0.0,
+          "maximum_drawdown": 0.021739,
+          "volatility": 0.000679,
+          "risk_adjusted_return": -8.866,
+          "calmar_like": -0.2769,
+          "runs": 5
+        },
+        "RANDOM_BASELINE": {
+          "starting_balance": 100.0,
+          "ending_balance": 99.38,
+          "absolute_pnl": -0.62,
+          "return_pct": -0.624,
+          "trades": 25,
+          "winning_trades": 8,
+          "losing_trades": 17,
+          "win_rate": 0.32,
+          "average_win": 1.47,
+          "average_loss": -0.88,
+          "profit_factor": 0.7893,
+          "maximum_drawdown": 0.058118,
+          "volatility": 0.003566,
+          "risk_adjusted_return": -1.7499,
+          "calmar_like": -0.1074,
+          "runs": 5
+        },
+        "GROK": {
+          "starting_balance": 100.0,
+          "ending_balance": 100.0,
+          "absolute_pnl": 0.0,
+          "return_pct": 0.0,
+          "trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0.0,
+          "average_win": 0.0,
+          "average_loss": 0.0,
+          "profit_factor": 0.0,
+          "maximum_drawdown": 0.0,
+          "volatility": 0.0,
+          "risk_adjusted_return": 0.0,
+          "calmar_like": 0.0,
+          "runs": 5
+        }
+      },
+      "markets": {
+        "SIM-UP": {
+          "BUY_AND_HOLD": {
+            "return_pct": 3.64,
+            "absolute_pnl": 3.64,
+            "ending_balance": 103.64,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.016894,
+            "volatility": 0.00386,
+            "risk_adjusted_return": 9.4301
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": 1.85,
+            "absolute_pnl": 1.85,
+            "ending_balance": 101.85,
+            "trades": 5,
+            "win_rate": 0.6,
+            "profit_factor": 2.6,
+            "maximum_drawdown": 0.0116,
+            "volatility": 0.002599,
+            "risk_adjusted_return": 7.1181
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-DOWN": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.08,
+            "absolute_pnl": -2.08,
+            "ending_balance": 97.92,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.027896,
+            "volatility": 0.003167,
+            "risk_adjusted_return": -6.5677
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -4.88,
+            "absolute_pnl": -4.88,
+            "ending_balance": 95.12,
+            "trades": 5,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0494,
+            "volatility": 0.002655,
+            "risk_adjusted_return": -18.3804
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-FLAT": {
+          "BUY_AND_HOLD": {
+            "return_pct": 0.01,
+            "absolute_pnl": 0.01,
+            "ending_balance": 100.01,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.012464,
+            "volatility": 0.002953,
+            "risk_adjusted_return": 0.0339
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -0.97,
+            "absolute_pnl": -0.97,
+            "ending_balance": 99.03,
+            "trades": 2,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.009,
+            "volatility": 0.000791,
+            "risk_adjusted_return": -12.263
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -1.34,
+            "absolute_pnl": -1.34,
+            "ending_balance": 98.66,
+            "trades": 5,
+            "win_rate": 0.2,
+            "profit_factor": 0.2796,
+            "maximum_drawdown": 0.020166,
+            "volatility": 0.002107,
+            "risk_adjusted_return": -6.3598
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-VOL": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.11,
+            "absolute_pnl": -2.11,
+            "ending_balance": 97.89,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0211,
+            "volatility": 0.002747,
+            "risk_adjusted_return": -7.6811
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -0.06,
+            "absolute_pnl": -0.06,
+            "ending_balance": 99.94,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 1.3e-05,
+            "risk_adjusted_return": -46.1538
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": 1.29,
+            "absolute_pnl": 1.29,
+            "ending_balance": 101.29,
+            "trades": 5,
+            "win_rate": 0.4,
+            "profit_factor": 1.2045,
+            "maximum_drawdown": 0.058118,
+            "volatility": 0.008213,
+            "risk_adjusted_return": 1.5707
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-SHOCK": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.09,
+            "absolute_pnl": -2.09,
+            "ending_balance": 97.91,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.02412,
+            "volatility": 0.003921,
+            "risk_adjusted_return": -5.3303
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -1.98,
+            "absolute_pnl": -1.98,
+            "ending_balance": 98.02,
+            "trades": 2,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.021739,
+            "volatility": 0.00259,
+            "risk_adjusted_return": -7.6448
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -0.04,
+            "absolute_pnl": -0.04,
+            "ending_balance": 99.96,
+            "trades": 5,
+            "win_rate": 0.4,
+            "profit_factor": 0.9342,
+            "maximum_drawdown": 0.008333,
+            "volatility": 0.002257,
+            "risk_adjusted_return": -0.1772
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        }
+      },
+      "comparison": {
+        "grok_return_pct": 0.0,
+        "benchmark_return_pct": -0.526,
+        "grok_traded": false,
+        "beats": {
+          "BUY_AND_HOLD": false,
+          "SIMPLE_TECHNICAL": false,
+          "RANDOM_BASELINE": false
+        },
+        "beats_buy_and_hold": false,
+        "beats_simple_technical": false,
+        "beats_random": false,
+        "beats_all": false
+      }
+    },
+    "validation": {
+      "period": {
+        "name": "validation",
+        "seed": 202,
+        "limit": 60,
+        "source": "simulated",
+        "timeframe": "5m",
+        "start": null,
+        "end": null,
+        "role": "Held-out check. Not used to change parameters."
+      },
+      "pooled": {
+        "BUY_AND_HOLD": {
+          "starting_balance": 100.0,
+          "ending_balance": 99.52,
+          "absolute_pnl": -0.48,
+          "return_pct": -0.48,
+          "trades": 5,
+          "winning_trades": 2,
+          "losing_trades": 3,
+          "win_rate": 0.4,
+          "average_win": 1.92,
+          "average_loss": -2.07,
+          "profit_factor": 0.6167,
+          "maximum_drawdown": 0.031368,
+          "volatility": 0.002948,
+          "risk_adjusted_return": -1.6282,
+          "calmar_like": -0.153,
+          "runs": 5
+        },
+        "SIMPLE_TECHNICAL": {
+          "starting_balance": 100.0,
+          "ending_balance": 100.16,
+          "absolute_pnl": 0.16,
+          "return_pct": 0.156,
+          "trades": 5,
+          "winning_trades": 2,
+          "losing_trades": 3,
+          "win_rate": 0.4,
+          "average_win": 2.29,
+          "average_loss": -1.27,
+          "profit_factor": 1.2021,
+          "maximum_drawdown": 0.0209,
+          "volatility": 0.001912,
+          "risk_adjusted_return": 0.8159,
+          "calmar_like": 0.0746,
+          "runs": 5
+        },
+        "RANDOM_BASELINE": {
+          "starting_balance": 100.0,
+          "ending_balance": 98.92,
+          "absolute_pnl": -1.08,
+          "return_pct": -1.08,
+          "trades": 25,
+          "winning_trades": 9,
+          "losing_trades": 16,
+          "win_rate": 0.36,
+          "average_win": 0.87,
+          "average_loss": -0.83,
+          "profit_factor": 0.5915,
+          "maximum_drawdown": 0.048493,
+          "volatility": 0.003099,
+          "risk_adjusted_return": -3.485,
+          "calmar_like": -0.2227,
+          "runs": 5
+        },
+        "GROK": {
+          "starting_balance": 100.0,
+          "ending_balance": 100.0,
+          "absolute_pnl": 0.0,
+          "return_pct": 0.0,
+          "trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0.0,
+          "average_win": 0.0,
+          "average_loss": 0.0,
+          "profit_factor": 0.0,
+          "maximum_drawdown": 0.0,
+          "volatility": 0.0,
+          "risk_adjusted_return": 0.0,
+          "calmar_like": 0.0,
+          "runs": 5
+        }
+      },
+      "markets": {
+        "SIM-UP": {
+          "BUY_AND_HOLD": {
+            "return_pct": 3.72,
+            "absolute_pnl": 3.72,
+            "ending_balance": 103.72,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.009888,
+            "volatility": 0.003095,
+            "risk_adjusted_return": 12.0194
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 3.6,
+            "absolute_pnl": 3.6,
+            "ending_balance": 103.6,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.0065,
+            "volatility": 0.003691,
+            "risk_adjusted_return": 9.7535
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": 0.68,
+            "absolute_pnl": 0.68,
+            "ending_balance": 100.68,
+            "trades": 5,
+            "win_rate": 0.6,
+            "profit_factor": 1.9857,
+            "maximum_drawdown": 0.019961,
+            "volatility": 0.002898,
+            "risk_adjusted_return": 2.3464
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-DOWN": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.11,
+            "absolute_pnl": -2.11,
+            "ending_balance": 97.89,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.031368,
+            "volatility": 0.002417,
+            "risk_adjusted_return": -8.7298
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -2.88,
+            "absolute_pnl": -2.88,
+            "ending_balance": 97.12,
+            "trades": 5,
+            "win_rate": 0.4,
+            "profit_factor": 0.2162,
+            "maximum_drawdown": 0.031608,
+            "volatility": 0.0023,
+            "risk_adjusted_return": -12.5217
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-FLAT": {
+          "BUY_AND_HOLD": {
+            "return_pct": 0.1,
+            "absolute_pnl": 0.1,
+            "ending_balance": 100.1,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.024958,
+            "volatility": 0.003807,
+            "risk_adjusted_return": 0.2627
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -1.82,
+            "absolute_pnl": -1.82,
+            "ending_balance": 98.18,
+            "trades": 2,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0209,
+            "volatility": 0.001761,
+            "risk_adjusted_return": -10.335
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -1.81,
+            "absolute_pnl": -1.81,
+            "ending_balance": 98.19,
+            "trades": 5,
+            "win_rate": 0.4,
+            "profit_factor": 0.2026,
+            "maximum_drawdown": 0.026494,
+            "volatility": 0.001671,
+            "risk_adjusted_return": -10.8318
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-VOL": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.04,
+            "absolute_pnl": -2.04,
+            "ending_balance": 97.96,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0204,
+            "volatility": 0.002656,
+            "risk_adjusted_return": -7.6807
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -1.98,
+            "absolute_pnl": -1.98,
+            "ending_balance": 98.02,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0198,
+            "volatility": 0.002578,
+            "risk_adjusted_return": -7.6804
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": 0.07,
+            "absolute_pnl": 0.07,
+            "ending_balance": 100.07,
+            "trades": 5,
+            "win_rate": 0.4,
+            "profit_factor": 1.0157,
+            "maximum_drawdown": 0.048493,
+            "volatility": 0.006587,
+            "risk_adjusted_return": 0.1063
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-SHOCK": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.07,
+            "absolute_pnl": -2.07,
+            "ending_balance": 97.93,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.030588,
+            "volatility": 0.002767,
+            "risk_adjusted_return": -7.481
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 0.98,
+            "absolute_pnl": 0.98,
+            "ending_balance": 100.98,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.004826,
+            "volatility": 0.001528,
+            "risk_adjusted_return": 6.4136
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -1.46,
+            "absolute_pnl": -1.46,
+            "ending_balance": 98.54,
+            "trades": 5,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.016875,
+            "volatility": 0.002038,
+            "risk_adjusted_return": -7.1639
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        }
+      },
+      "comparison": {
+        "grok_return_pct": 0.0,
+        "benchmark_return_pct": -0.48,
+        "grok_traded": false,
+        "beats": {
+          "BUY_AND_HOLD": false,
+          "SIMPLE_TECHNICAL": false,
+          "RANDOM_BASELINE": false
+        },
+        "beats_buy_and_hold": false,
+        "beats_simple_technical": false,
+        "beats_random": false,
+        "beats_all": false
+      }
+    },
+    "out_of_sample": {
+      "period": {
+        "name": "out_of_sample",
+        "seed": 303,
+        "limit": 60,
+        "source": "simulated",
+        "timeframe": "5m",
+        "start": null,
+        "end": null,
+        "role": "Final test. Never used to modify a strategy."
+      },
+      "pooled": {
+        "BUY_AND_HOLD": {
+          "starting_balance": 100.0,
+          "ending_balance": 99.65,
+          "absolute_pnl": -0.35,
+          "return_pct": -0.352,
+          "trades": 5,
+          "winning_trades": 2,
+          "losing_trades": 3,
+          "win_rate": 0.4,
+          "average_win": 2.02,
+          "average_loss": -1.93,
+          "profit_factor": 0.696,
+          "maximum_drawdown": 0.037554,
+          "volatility": 0.003273,
+          "risk_adjusted_return": -1.0755,
+          "calmar_like": -0.0937,
+          "runs": 5
+        },
+        "SIMPLE_TECHNICAL": {
+          "starting_balance": 100.0,
+          "ending_balance": 99.5,
+          "absolute_pnl": -0.5,
+          "return_pct": -0.504,
+          "trades": 7,
+          "winning_trades": 2,
+          "losing_trades": 5,
+          "win_rate": 0.2857,
+          "average_win": 1.08,
+          "average_loss": -0.94,
+          "profit_factor": 0.4606,
+          "maximum_drawdown": 0.024701,
+          "volatility": 0.001575,
+          "risk_adjusted_return": -3.2,
+          "calmar_like": -0.204,
+          "runs": 5
+        },
+        "RANDOM_BASELINE": {
+          "starting_balance": 100.0,
+          "ending_balance": 97.21,
+          "absolute_pnl": -2.79,
+          "return_pct": -2.794,
+          "trades": 23,
+          "winning_trades": 7,
+          "losing_trades": 16,
+          "win_rate": 0.3043,
+          "average_win": 0.53,
+          "average_loss": -1.1,
+          "profit_factor": 0.2089,
+          "maximum_drawdown": 0.070861,
+          "volatility": 0.00315,
+          "risk_adjusted_return": -8.8698,
+          "calmar_like": -0.3943,
+          "runs": 5
+        },
+        "GROK": {
+          "starting_balance": 100.0,
+          "ending_balance": 100.0,
+          "absolute_pnl": 0.0,
+          "return_pct": 0.0,
+          "trades": 0,
+          "winning_trades": 0,
+          "losing_trades": 0,
+          "win_rate": 0.0,
+          "average_win": 0.0,
+          "average_loss": 0.0,
+          "profit_factor": 0.0,
+          "maximum_drawdown": 0.0,
+          "volatility": 0.0,
+          "risk_adjusted_return": 0.0,
+          "calmar_like": 0.0,
+          "runs": 5
+        }
+      },
+      "markets": {
+        "SIM-UP": {
+          "BUY_AND_HOLD": {
+            "return_pct": 3.69,
+            "absolute_pnl": 3.69,
+            "ending_balance": 103.69,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.006567,
+            "volatility": 0.003125,
+            "risk_adjusted_return": 11.808
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -1.59,
+            "absolute_pnl": -1.59,
+            "ending_balance": 98.41,
+            "trades": 2,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0159,
+            "volatility": 0.001345,
+            "risk_adjusted_return": -11.8216
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -0.24,
+            "absolute_pnl": -0.24,
+            "ending_balance": 99.76,
+            "trades": 5,
+            "win_rate": 0.6,
+            "profit_factor": 0.902,
+            "maximum_drawdown": 0.027937,
+            "volatility": 0.003287,
+            "risk_adjusted_return": -0.7301
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-DOWN": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.1,
+            "absolute_pnl": -2.1,
+            "ending_balance": 97.9,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.037554,
+            "volatility": 0.002925,
+            "risk_adjusted_return": -7.1795
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -5.3,
+            "absolute_pnl": -5.3,
+            "ending_balance": 94.7,
+            "trades": 4,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.053,
+            "volatility": 0.003435,
+            "risk_adjusted_return": -15.4294
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-FLAT": {
+          "BUY_AND_HOLD": {
+            "return_pct": 0.33,
+            "absolute_pnl": 0.33,
+            "ending_balance": 100.33,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.019048,
+            "volatility": 0.003905,
+            "risk_adjusted_return": 0.8451
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -0.34,
+            "absolute_pnl": -0.34,
+            "ending_balance": 99.66,
+            "trades": 3,
+            "win_rate": 0.3333,
+            "profit_factor": 0.728,
+            "maximum_drawdown": 0.024701,
+            "volatility": 0.002618,
+            "risk_adjusted_return": -1.2987
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -2.33,
+            "absolute_pnl": -2.33,
+            "ending_balance": 97.67,
+            "trades": 5,
+            "win_rate": 0.2,
+            "profit_factor": 0.1552,
+            "maximum_drawdown": 0.027978,
+            "volatility": 0.002092,
+            "risk_adjusted_return": -11.1377
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-VOL": {
+          "BUY_AND_HOLD": {
+            "return_pct": -1.64,
+            "absolute_pnl": -1.64,
+            "ending_balance": 98.36,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0164,
+            "volatility": 0.001892,
+            "risk_adjusted_return": -8.6681
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": -1.84,
+            "absolute_pnl": -1.84,
+            "ending_balance": 98.16,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0184,
+            "volatility": 0.002395,
+            "risk_adjusted_return": -7.6827
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -5.33,
+            "absolute_pnl": -5.33,
+            "ending_balance": 94.67,
+            "trades": 4,
+            "win_rate": 0.25,
+            "profit_factor": 0.1415,
+            "maximum_drawdown": 0.070861,
+            "volatility": 0.004878,
+            "risk_adjusted_return": -10.9266
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        },
+        "SIM-SHOCK": {
+          "BUY_AND_HOLD": {
+            "return_pct": -2.04,
+            "absolute_pnl": -2.04,
+            "ending_balance": 97.96,
+            "trades": 1,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.037154,
+            "volatility": 0.004518,
+            "risk_adjusted_return": -4.5153
+          },
+          "SIMPLE_TECHNICAL": {
+            "return_pct": 1.25,
+            "absolute_pnl": 1.25,
+            "ending_balance": 101.25,
+            "trades": 1,
+            "win_rate": 1.0,
+            "profit_factor": 999.0,
+            "maximum_drawdown": 0.002363,
+            "volatility": 0.001517,
+            "risk_adjusted_return": 8.2399
+          },
+          "RANDOM_BASELINE": {
+            "return_pct": -0.77,
+            "absolute_pnl": -0.77,
+            "ending_balance": 99.23,
+            "trades": 5,
+            "win_rate": 0.4,
+            "profit_factor": 0.1828,
+            "maximum_drawdown": 0.010964,
+            "volatility": 0.002058,
+            "risk_adjusted_return": -3.7415
+          },
+          "GROK": {
+            "return_pct": 0.0,
+            "absolute_pnl": 0.0,
+            "ending_balance": 100.0,
+            "trades": 0,
+            "win_rate": 0.0,
+            "profit_factor": 0.0,
+            "maximum_drawdown": 0.0,
+            "volatility": 0.0,
+            "risk_adjusted_return": 0.0
+          }
+        }
+      },
+      "comparison": {
+        "grok_return_pct": 0.0,
+        "benchmark_return_pct": -0.352,
+        "grok_traded": false,
+        "beats": {
+          "BUY_AND_HOLD": false,
+          "SIMPLE_TECHNICAL": false,
+          "RANDOM_BASELINE": false
+        },
+        "beats_buy_and_hold": false,
+        "beats_simple_technical": false,
+        "beats_random": false,
+        "beats_all": false
+      }
+    }
+  },
+  "runs": [
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-UP",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 103.64,
+        "absolute_pnl": 3.64,
+        "return_pct": 3.64,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 3.64,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.016894,
+        "volatility": 0.00386,
+        "risk_adjusted_return": 9.4301,
+        "calmar_like": 2.1546
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.7038,
+          "average_entry": 139.4745,
+          "realised_pnl": 3.64,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T16:40:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-UP",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-UP",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 101.85,
+        "absolute_pnl": 1.85,
+        "return_pct": 1.85,
+        "trades": 5,
+        "winning_trades": 3,
+        "losing_trades": 2,
+        "win_rate": 0.6,
+        "average_win": 1.0,
+        "average_loss": -0.57,
+        "profit_factor": 2.6,
+        "maximum_drawdown": 0.0116,
+        "volatility": 0.002599,
+        "risk_adjusted_return": 7.1181,
+        "calmar_like": 1.5948
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.7005,
+          "average_entry": 140.065,
+          "realised_pnl": -0.86,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.698,
+          "average_entry": 139.2043,
+          "realised_pnl": 0.92,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6926,
+          "average_entry": 141.5261,
+          "realised_pnl": -0.29,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.688,
+          "average_entry": 141.9764,
+          "realised_pnl": 0.07,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6808,
+          "average_entry": 143.8478,
+          "realised_pnl": 2.0,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-UP",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-UP:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 141.22.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-DOWN",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.92,
+        "absolute_pnl": -2.08,
+        "return_pct": -2.08,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.09,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.027896,
+        "volatility": 0.003167,
+        "risk_adjusted_return": -6.5677,
+        "calmar_like": -0.7456
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6127,
+          "average_entry": 159.9699,
+          "realised_pnl": -2.09,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-DOWN",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-DOWN",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 95.12,
+        "absolute_pnl": -4.88,
+        "return_pct": -4.88,
+        "trades": 5,
+        "winning_trades": 0,
+        "losing_trades": 5,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.97,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0494,
+        "volatility": 0.002655,
+        "risk_adjusted_return": -18.3804,
+        "calmar_like": -0.9879
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6147,
+          "average_entry": 159.5196,
+          "realised_pnl": -1.19,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6117,
+          "average_entry": 158.2286,
+          "realised_pnl": -2.0,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:40:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6116,
+          "average_entry": 155.1463,
+          "realised_pnl": -0.75,
+          "entry_timestamp": "2024-01-02T15:50:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6117,
+          "average_entry": 153.9454,
+          "realised_pnl": -0.27,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6131,
+          "average_entry": 153.0547,
+          "realised_pnl": -0.66,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-DOWN",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-DOWN:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 153.62.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-FLAT",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.01,
+        "absolute_pnl": 0.01,
+        "return_pct": 0.01,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 0.01,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.012464,
+        "volatility": 0.002953,
+        "risk_adjusted_return": 0.0339,
+        "calmar_like": 0.008
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2687,
+          "average_entry": 364.7634,
+          "realised_pnl": 0.01,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-FLAT",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 99.03,
+        "absolute_pnl": -0.97,
+        "return_pct": -0.97,
+        "trades": 2,
+        "winning_trades": 0,
+        "losing_trades": 2,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.49,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.009,
+        "volatility": 0.000791,
+        "risk_adjusted_return": -12.263,
+        "calmar_like": -1.0778
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2672,
+          "average_entry": 367.0851,
+          "realised_pnl": -0.5,
+          "entry_timestamp": "2024-01-02T18:05:00+00:00",
+          "exit_timestamp": "2024-01-02T18:30:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2662,
+          "average_entry": 366.5847,
+          "realised_pnl": -0.48,
+          "entry_timestamp": "2024-01-02T19:15:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-FLAT",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.66,
+        "absolute_pnl": -1.34,
+        "return_pct": -1.34,
+        "trades": 5,
+        "winning_trades": 1,
+        "losing_trades": 4,
+        "win_rate": 0.2,
+        "average_win": 0.52,
+        "average_loss": -0.46,
+        "profit_factor": 0.2796,
+        "maximum_drawdown": 0.020166,
+        "volatility": 0.002107,
+        "risk_adjusted_return": -6.3598,
+        "calmar_like": -0.6645
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2679,
+          "average_entry": 366.2245,
+          "realised_pnl": -0.44,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2674,
+          "average_entry": 365.0636,
+          "realised_pnl": 0.52,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2663,
+          "average_entry": 368.0759,
+          "realised_pnl": -0.65,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2641,
+          "average_entry": 369.0366,
+          "realised_pnl": -0.31,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2641,
+          "average_entry": 367.8056,
+          "realised_pnl": -0.46,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-FLAT",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-FLAT:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 365.91.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-VOL",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.89,
+        "absolute_pnl": -2.11,
+        "return_pct": -2.11,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.12,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0211,
+        "volatility": 0.002747,
+        "risk_adjusted_return": -7.6811,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5346,
+          "average_entry": 183.3974,
+          "realised_pnl": -2.12,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T14:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-VOL",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 99.94,
+        "absolute_pnl": -0.06,
+        "return_pct": -0.06,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.06,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 1.3e-05,
+        "risk_adjusted_return": -46.1538,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5002,
+          "average_entry": 196.4973,
+          "realised_pnl": -0.06,
+          "entry_timestamp": "2024-01-02T19:25:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-VOL",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 101.29,
+        "absolute_pnl": 1.29,
+        "return_pct": 1.29,
+        "trades": 5,
+        "winning_trades": 2,
+        "losing_trades": 3,
+        "win_rate": 0.4,
+        "average_win": 3.77,
+        "average_loss": -2.09,
+        "profit_factor": 1.2045,
+        "maximum_drawdown": 0.058118,
+        "volatility": 0.008213,
+        "risk_adjusted_return": 1.5707,
+        "calmar_like": 0.222
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.551,
+          "average_entry": 177.7932,
+          "realised_pnl": 3.84,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5526,
+          "average_entry": 181.3659,
+          "realised_pnl": 3.7,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5388,
+          "average_entry": 185.6591,
+          "realised_pnl": -2.12,
+          "entry_timestamp": "2024-01-02T15:40:00+00:00",
+          "exit_timestamp": "2024-01-02T15:40:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5367,
+          "average_entry": 186.2496,
+          "realised_pnl": -2.05,
+          "entry_timestamp": "2024-01-02T15:50:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.548,
+          "average_entry": 182.5168,
+          "realised_pnl": -2.09,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-VOL",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-VOL:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 187.6.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-SHOCK",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.91,
+        "absolute_pnl": -2.09,
+        "return_pct": -2.09,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.09,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.02412,
+        "volatility": 0.003921,
+        "risk_adjusted_return": -5.3303,
+        "calmar_like": -0.8665
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0367,
+          "average_entry": 94.5509,
+          "realised_pnl": -2.09,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T17:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-SHOCK",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.02,
+        "absolute_pnl": -1.98,
+        "return_pct": -1.98,
+        "trades": 2,
+        "winning_trades": 0,
+        "losing_trades": 2,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.98,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.021739,
+        "volatility": 0.00259,
+        "risk_adjusted_return": -7.6448,
+        "calmar_like": -0.9108
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0385,
+          "average_entry": 94.4208,
+          "realised_pnl": -0.63,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0552,
+          "average_entry": 92.2491,
+          "realised_pnl": -1.34,
+          "entry_timestamp": "2024-01-02T18:55:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-SHOCK",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 99.96,
+        "absolute_pnl": -0.04,
+        "return_pct": -0.04,
+        "trades": 5,
+        "winning_trades": 2,
+        "losing_trades": 3,
+        "win_rate": 0.4,
+        "average_win": 0.36,
+        "average_loss": -0.25,
+        "profit_factor": 0.9342,
+        "maximum_drawdown": 0.008333,
+        "volatility": 0.002257,
+        "risk_adjusted_return": -0.1772,
+        "calmar_like": -0.048
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0497,
+          "average_entry": 93.42,
+          "realised_pnl": -0.2,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0461,
+          "average_entry": 93.5901,
+          "realised_pnl": 0.5,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0408,
+          "average_entry": 94.4908,
+          "realised_pnl": -0.16,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0401,
+          "average_entry": 94.4208,
+          "realised_pnl": 0.21,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.044,
+          "average_entry": 94.1906,
+          "realised_pnl": -0.4,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-SHOCK",
+      "split": "training",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-SHOCK:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 94.41.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-UP",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 103.72,
+        "absolute_pnl": 3.72,
+        "return_pct": 3.72,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 3.73,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.009888,
+        "volatility": 0.003095,
+        "risk_adjusted_return": 12.0194,
+        "calmar_like": 3.7621
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.7048,
+          "average_entry": 139.1443,
+          "realised_pnl": 3.73,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-UP",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 103.6,
+        "absolute_pnl": 3.6,
+        "return_pct": 3.6,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 3.6,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.0065,
+        "volatility": 0.003691,
+        "risk_adjusted_return": 9.7535,
+        "calmar_like": 5.5385
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6737,
+          "average_entry": 145.7592,
+          "realised_pnl": 3.6,
+          "entry_timestamp": "2024-01-02T17:45:00+00:00",
+          "exit_timestamp": "2024-01-02T18:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-UP",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.68,
+        "absolute_pnl": 0.68,
+        "return_pct": 0.68,
+        "trades": 5,
+        "winning_trades": 3,
+        "losing_trades": 2,
+        "win_rate": 0.6,
+        "average_win": 0.46,
+        "average_loss": -0.35,
+        "profit_factor": 1.9857,
+        "maximum_drawdown": 0.019961,
+        "volatility": 0.002898,
+        "risk_adjusted_return": 2.3464,
+        "calmar_like": 0.3407
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.7027,
+          "average_entry": 139.4745,
+          "realised_pnl": 0.73,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6981,
+          "average_entry": 141.5261,
+          "realised_pnl": 0.49,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6963,
+          "average_entry": 142.3367,
+          "realised_pnl": -0.18,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6957,
+          "average_entry": 142.2466,
+          "realised_pnl": 0.17,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6958,
+          "average_entry": 142.767,
+          "realised_pnl": -0.52,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-UP",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-UP:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 142.18.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-DOWN",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.89,
+        "absolute_pnl": -2.11,
+        "return_pct": -2.11,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.1,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.031368,
+        "volatility": 0.002417,
+        "risk_adjusted_return": -8.7298,
+        "calmar_like": -0.6727
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.622,
+          "average_entry": 157.6181,
+          "realised_pnl": -2.1,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-DOWN",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-DOWN",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.12,
+        "absolute_pnl": -2.88,
+        "return_pct": -2.88,
+        "trades": 5,
+        "winning_trades": 2,
+        "losing_trades": 3,
+        "win_rate": 0.4,
+        "average_win": 0.4,
+        "average_loss": -1.23,
+        "profit_factor": 0.2162,
+        "maximum_drawdown": 0.031608,
+        "volatility": 0.0023,
+        "risk_adjusted_return": -12.5217,
+        "calmar_like": -0.9112
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6267,
+          "average_entry": 156.3572,
+          "realised_pnl": 0.22,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.628,
+          "average_entry": 156.3972,
+          "realised_pnl": -2.08,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:45:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6283,
+          "average_entry": 153.0647,
+          "realised_pnl": 0.58,
+          "entry_timestamp": "2024-01-02T15:50:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6309,
+          "average_entry": 153.3749,
+          "realised_pnl": -0.62,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6366,
+          "average_entry": 150.9631,
+          "realised_pnl": -1.0,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-DOWN",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-DOWN:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 152.51.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-FLAT",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.1,
+        "absolute_pnl": 0.1,
+        "return_pct": 0.1,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 0.1,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.024958,
+        "volatility": 0.003807,
+        "risk_adjusted_return": 0.2627,
+        "calmar_like": 0.0401
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2675,
+          "average_entry": 366.3846,
+          "realised_pnl": 0.1,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-FLAT",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.18,
+        "absolute_pnl": -1.82,
+        "return_pct": -1.82,
+        "trades": 2,
+        "winning_trades": 0,
+        "losing_trades": 2,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.91,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0209,
+        "volatility": 0.001761,
+        "risk_adjusted_return": -10.335,
+        "calmar_like": -0.8708
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2678,
+          "average_entry": 365.9443,
+          "realised_pnl": -1.51,
+          "entry_timestamp": "2024-01-02T17:25:00+00:00",
+          "exit_timestamp": "2024-01-02T17:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2624,
+          "average_entry": 367.9458,
+          "realised_pnl": -0.31,
+          "entry_timestamp": "2024-01-02T18:30:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-FLAT",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.19,
+        "absolute_pnl": -1.81,
+        "return_pct": -1.81,
+        "trades": 5,
+        "winning_trades": 2,
+        "losing_trades": 3,
+        "win_rate": 0.4,
+        "average_win": 0.23,
+        "average_loss": -0.76,
+        "profit_factor": 0.2026,
+        "maximum_drawdown": 0.026494,
+        "volatility": 0.001671,
+        "risk_adjusted_return": -10.8318,
+        "calmar_like": -0.6832
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2658,
+          "average_entry": 368.5262,
+          "realised_pnl": 0.32,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2657,
+          "average_entry": 369.9773,
+          "realised_pnl": -1.35,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2656,
+          "average_entry": 364.9835,
+          "realised_pnl": -0.4,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2656,
+          "average_entry": 363.9528,
+          "realised_pnl": -0.52,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2635,
+          "average_entry": 364.7534,
+          "realised_pnl": 0.14,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-FLAT",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-FLAT:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 363.76.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-VOL",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.96,
+        "absolute_pnl": -2.04,
+        "return_pct": -2.04,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.04,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0204,
+        "volatility": 0.002656,
+        "risk_adjusted_return": -7.6807,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5427,
+          "average_entry": 180.5053,
+          "realised_pnl": -2.04,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T14:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-VOL",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.02,
+        "absolute_pnl": -1.98,
+        "return_pct": -1.98,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -1.99,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0198,
+        "volatility": 0.002578,
+        "risk_adjusted_return": -7.6804,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.4753,
+          "average_entry": 206.0044,
+          "realised_pnl": -1.99,
+          "entry_timestamp": "2024-01-02T18:00:00+00:00",
+          "exit_timestamp": "2024-01-02T18:00:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-VOL",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.07,
+        "absolute_pnl": 0.07,
+        "return_pct": 0.07,
+        "trades": 5,
+        "winning_trades": 2,
+        "losing_trades": 3,
+        "win_rate": 0.4,
+        "average_win": 2.59,
+        "average_loss": -1.7,
+        "profit_factor": 1.0157,
+        "maximum_drawdown": 0.048493,
+        "volatility": 0.006587,
+        "risk_adjusted_return": 0.1063,
+        "calmar_like": 0.0144
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5099,
+          "average_entry": 193.0147,
+          "realised_pnl": 1.12,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5047,
+          "average_entry": 195.9268,
+          "realised_pnl": 4.05,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:40:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.4982,
+          "average_entry": 201.8112,
+          "realised_pnl": -2.63,
+          "entry_timestamp": "2024-01-02T15:50:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.4976,
+          "average_entry": 201.0006,
+          "realised_pnl": -0.08,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.4924,
+          "average_entry": 203.6927,
+          "realised_pnl": -2.38,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-VOL",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-VOL:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 201.0.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-SHOCK",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.93,
+        "absolute_pnl": -2.07,
+        "return_pct": -2.07,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.07,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.030588,
+        "volatility": 0.002767,
+        "risk_adjusted_return": -7.481,
+        "calmar_like": -0.6767
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.033,
+          "average_entry": 94.8711,
+          "realised_pnl": -2.07,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T16:00:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-SHOCK",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.98,
+        "absolute_pnl": 0.98,
+        "return_pct": 0.98,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 0.98,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.004826,
+        "volatility": 0.001528,
+        "risk_adjusted_return": 6.4136,
+        "calmar_like": 2.0307
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.1007,
+          "average_entry": 89.0567,
+          "realised_pnl": 0.98,
+          "entry_timestamp": "2024-01-02T19:00:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-SHOCK",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.54,
+        "absolute_pnl": -1.46,
+        "return_pct": -1.46,
+        "trades": 5,
+        "winning_trades": 0,
+        "losing_trades": 5,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.29,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.016875,
+        "volatility": 0.002038,
+        "risk_adjusted_return": -7.1639,
+        "calmar_like": -0.8652
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0275,
+          "average_entry": 95.3915,
+          "realised_pnl": -0.25,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0351,
+          "average_entry": 94.3907,
+          "realised_pnl": -0.34,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0413,
+          "average_entry": 93.5501,
+          "realised_pnl": -0.31,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0344,
+          "average_entry": 93.8303,
+          "realised_pnl": -0.09,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0358,
+          "average_entry": 93.7403,
+          "realised_pnl": -0.47,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-SHOCK",
+      "split": "validation",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 1.0,
+          "reasoning": "Fixture Grok adapter \u2014 offline, no network. Always HOLD. This is not a forecast and not a trade. Analysis SIM-SHOCK:2024-01-02T16:10:00+00:00: trend UNKNOWN, price 93.32.",
+          "model": "fixture-hold",
+          "validated": false,
+          "fixture": true,
+          "network": false
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-UP",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 103.69,
+        "absolute_pnl": 3.69,
+        "return_pct": 3.69,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 3.7,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.006567,
+        "volatility": 0.003125,
+        "risk_adjusted_return": 11.808,
+        "calmar_like": 5.619
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.7053,
+          "average_entry": 139.0842,
+          "realised_pnl": 3.7,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-UP",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.41,
+        "absolute_pnl": -1.59,
+        "return_pct": -1.59,
+        "trades": 2,
+        "winning_trades": 0,
+        "losing_trades": 2,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -0.8,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0159,
+        "volatility": 0.001345,
+        "risk_adjusted_return": -11.8216,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6928,
+          "average_entry": 141.486,
+          "realised_pnl": -0.69,
+          "entry_timestamp": "2024-01-02T18:00:00+00:00",
+          "exit_timestamp": "2024-01-02T18:00:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.698,
+          "average_entry": 139.6046,
+          "realised_pnl": -0.91,
+          "entry_timestamp": "2024-01-02T19:20:00+00:00",
+          "exit_timestamp": "2024-01-02T19:20:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-UP",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 99.76,
+        "absolute_pnl": -0.24,
+        "return_pct": -0.24,
+        "trades": 5,
+        "winning_trades": 3,
+        "losing_trades": 2,
+        "win_rate": 0.6,
+        "average_win": 0.74,
+        "average_loss": -1.22,
+        "profit_factor": 0.902,
+        "maximum_drawdown": 0.027937,
+        "volatility": 0.003287,
+        "risk_adjusted_return": -0.7301,
+        "calmar_like": -0.0859
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6908,
+          "average_entry": 142.0264,
+          "realised_pnl": -0.78,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.688,
+          "average_entry": 141.486,
+          "realised_pnl": 1.43,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6851,
+          "average_entry": 143.9679,
+          "realised_pnl": 0.58,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6859,
+          "average_entry": 144.6784,
+          "realised_pnl": -1.67,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-UP",
+          "quantity": 0.6839,
+          "average_entry": 142.827,
+          "realised_pnl": 0.2,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-UP",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 0.62,
+          "reasoning": "Trend flagged UNKNOWN with only 21 bars and no SMA50. Short-term SMAs and returns are mildly positive and volume is above average, but 5m data, elevated last range vs average, and no position make a new entry too uncertain. Prefer wait.",
+          "model": "grok-4.6",
+          "validated": true,
+          "fixture": false,
+          "network": true
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-DOWN",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.9,
+        "absolute_pnl": -2.1,
+        "return_pct": -2.1,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.1,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.037554,
+        "volatility": 0.002925,
+        "risk_adjusted_return": -7.1795,
+        "calmar_like": -0.5592
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6194,
+          "average_entry": 158.2586,
+          "realised_pnl": -2.1,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-DOWN",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-DOWN",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 94.7,
+        "absolute_pnl": -5.3,
+        "return_pct": -5.3,
+        "trades": 4,
+        "winning_trades": 0,
+        "losing_trades": 4,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -1.32,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.053,
+        "volatility": 0.003435,
+        "risk_adjusted_return": -15.4294,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6252,
+          "average_entry": 156.8876,
+          "realised_pnl": -0.45,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6245,
+          "average_entry": 156.3372,
+          "realised_pnl": -2.13,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6252,
+          "average_entry": 152.6844,
+          "realised_pnl": -0.67,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-DOWN",
+          "quantity": 0.6304,
+          "average_entry": 150.4528,
+          "realised_pnl": -2.04,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-DOWN",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": null,
+          "reasoning": "Grok request timed out. Converted to HOLD.",
+          "model": "grok-4.6",
+          "validated": false,
+          "fixture": false,
+          "network": true
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-FLAT",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.33,
+        "absolute_pnl": 0.33,
+        "return_pct": 0.33,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 0.33,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.019048,
+        "volatility": 0.003905,
+        "risk_adjusted_return": 0.8451,
+        "calmar_like": 0.1732
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2671,
+          "average_entry": 366.8149,
+          "realised_pnl": 0.33,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-FLAT",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 99.66,
+        "absolute_pnl": -0.34,
+        "return_pct": -0.34,
+        "trades": 3,
+        "winning_trades": 1,
+        "losing_trades": 2,
+        "win_rate": 0.3333,
+        "average_win": 0.91,
+        "average_loss": -0.62,
+        "profit_factor": 0.728,
+        "maximum_drawdown": 0.024701,
+        "volatility": 0.002618,
+        "risk_adjusted_return": -1.2987,
+        "calmar_like": -0.1376
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2663,
+          "average_entry": 368.306,
+          "realised_pnl": -1.09,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2647,
+          "average_entry": 366.3946,
+          "realised_pnl": -0.16,
+          "entry_timestamp": "2024-01-02T18:10:00+00:00",
+          "exit_timestamp": "2024-01-02T18:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2654,
+          "average_entry": 364.6533,
+          "realised_pnl": 0.91,
+          "entry_timestamp": "2024-01-02T19:10:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-FLAT",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.67,
+        "absolute_pnl": -2.33,
+        "return_pct": -2.33,
+        "trades": 5,
+        "winning_trades": 1,
+        "losing_trades": 4,
+        "win_rate": 0.2,
+        "average_win": 0.43,
+        "average_loss": -0.69,
+        "profit_factor": 0.1552,
+        "maximum_drawdown": 0.027978,
+        "volatility": 0.002092,
+        "risk_adjusted_return": -11.1377,
+        "calmar_like": -0.8328
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.269,
+          "average_entry": 364.5332,
+          "realised_pnl": -0.42,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2684,
+          "average_entry": 363.5725,
+          "realised_pnl": 0.43,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2663,
+          "average_entry": 367.9858,
+          "realised_pnl": -0.55,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2649,
+          "average_entry": 368.306,
+          "realised_pnl": -0.61,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-FLAT",
+          "quantity": 0.2629,
+          "average_entry": 368.7263,
+          "realised_pnl": -1.19,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-FLAT",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 0.72,
+          "reasoning": "Sideways 5m tape with UNKNOWN trend and only 21 bars (no SMA50). Price sits just above short SMAs but last bar was down 0.43% with volume below average. Mixed lookbacks and no position mean no edge to buy or sell; wait for a clearer break or trend.",
+          "model": "grok-4.6",
+          "validated": true,
+          "fixture": false,
+          "network": true
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-VOL",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.36,
+        "absolute_pnl": -1.64,
+        "return_pct": -1.64,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -1.65,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0164,
+        "volatility": 0.001892,
+        "risk_adjusted_return": -8.6681,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5211,
+          "average_entry": 187.2403,
+          "realised_pnl": -1.65,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T14:40:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-VOL",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 98.16,
+        "absolute_pnl": -1.84,
+        "return_pct": -1.84,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -1.84,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0184,
+        "volatility": 0.002395,
+        "risk_adjusted_return": -7.6827,
+        "calmar_like": -1.0
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5277,
+          "average_entry": 185.2789,
+          "realised_pnl": -1.84,
+          "entry_timestamp": "2024-01-02T17:15:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-VOL",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 94.67,
+        "absolute_pnl": -5.33,
+        "return_pct": -5.33,
+        "trades": 4,
+        "winning_trades": 1,
+        "losing_trades": 3,
+        "win_rate": 0.25,
+        "average_win": 0.88,
+        "average_loss": -2.07,
+        "profit_factor": 0.1415,
+        "maximum_drawdown": 0.070861,
+        "volatility": 0.004878,
+        "risk_adjusted_return": -10.9266,
+        "calmar_like": -0.7522
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5504,
+          "average_entry": 178.0034,
+          "realised_pnl": 0.88,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5513,
+          "average_entry": 179.9749,
+          "realised_pnl": -2.44,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5387,
+          "average_entry": 178.6339,
+          "realised_pnl": -1.81,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-VOL",
+          "quantity": 0.5444,
+          "average_entry": 173.8703,
+          "realised_pnl": -1.97,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-VOL",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 0.42,
+          "reasoning": "Trend unknown with only 21 bars and no SMA50. Price sits below SMA5/10/20, short-term slope negative, and lookback returns are negative. High-volatility regime with an elevated range versus average. No existing position; wait for a clearer directional signal rather than chase.",
+          "model": "grok-4.6",
+          "validated": true,
+          "fixture": false,
+          "network": true
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "BUY_AND_HOLD",
+      "symbol": "SIM-SHOCK",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 97.96,
+        "absolute_pnl": -2.04,
+        "return_pct": -2.04,
+        "trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": -2.04,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.037154,
+        "volatility": 0.004518,
+        "risk_adjusted_return": -4.5153,
+        "calmar_like": -0.5491
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0293,
+          "average_entry": 95.1813,
+          "realised_pnl": -2.04,
+          "entry_timestamp": "2024-01-02T14:35:00+00:00",
+          "exit_timestamp": "2024-01-02T17:35:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "SIMPLE_TECHNICAL",
+      "symbol": "SIM-SHOCK",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 101.25,
+        "absolute_pnl": 1.25,
+        "return_pct": 1.25,
+        "trades": 1,
+        "winning_trades": 1,
+        "losing_trades": 0,
+        "win_rate": 1.0,
+        "average_win": 1.25,
+        "average_loss": 0.0,
+        "profit_factor": 999.0,
+        "maximum_drawdown": 0.002363,
+        "volatility": 0.001517,
+        "risk_adjusted_return": 8.2399,
+        "calmar_like": 5.2899
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0883,
+          "average_entry": 90.0675,
+          "realised_pnl": 1.25,
+          "entry_timestamp": "2024-01-02T19:05:00+00:00",
+          "exit_timestamp": "2024-01-02T19:25:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "RANDOM_BASELINE",
+      "symbol": "SIM-SHOCK",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 99.23,
+        "absolute_pnl": -0.77,
+        "return_pct": -0.77,
+        "trades": 5,
+        "winning_trades": 2,
+        "losing_trades": 3,
+        "win_rate": 0.4,
+        "average_win": 0.09,
+        "average_loss": -0.31,
+        "profit_factor": 0.1828,
+        "maximum_drawdown": 0.010964,
+        "volatility": 0.002058,
+        "risk_adjusted_return": -3.7415,
+        "calmar_like": -0.7023
+      },
+      "ai_decisions": [],
+      "trades": [
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0275,
+          "average_entry": 95.4215,
+          "realised_pnl": -0.2,
+          "entry_timestamp": "2024-01-02T15:25:00+00:00",
+          "exit_timestamp": "2024-01-02T15:25:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0247,
+          "average_entry": 95.5116,
+          "realised_pnl": 0.16,
+          "entry_timestamp": "2024-01-02T15:35:00+00:00",
+          "exit_timestamp": "2024-01-02T15:50:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0109,
+          "average_entry": 96.8626,
+          "realised_pnl": -0.25,
+          "entry_timestamp": "2024-01-02T16:10:00+00:00",
+          "exit_timestamp": "2024-01-02T16:10:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0185,
+          "average_entry": 95.9819,
+          "realised_pnl": 0.01,
+          "entry_timestamp": "2024-01-02T16:25:00+00:00",
+          "exit_timestamp": "2024-01-02T16:35:00+00:00"
+        },
+        {
+          "symbol": "SIM-SHOCK",
+          "quantity": 1.0157,
+          "average_entry": 96.2922,
+          "realised_pnl": -0.48,
+          "entry_timestamp": "2024-01-02T16:45:00+00:00",
+          "exit_timestamp": "2024-01-02T17:15:00+00:00"
+        }
+      ],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    },
+    {
+      "strategy": "GROK",
+      "symbol": "SIM-SHOCK",
+      "split": "out_of_sample",
+      "metrics": {
+        "starting_balance": 100.0,
+        "ending_balance": 100.0,
+        "absolute_pnl": 0.0,
+        "return_pct": 0.0,
+        "trades": 0,
+        "winning_trades": 0,
+        "losing_trades": 0,
+        "win_rate": 0.0,
+        "average_win": 0.0,
+        "average_loss": 0.0,
+        "profit_factor": 0.0,
+        "maximum_drawdown": 0.0,
+        "volatility": 0.0,
+        "risk_adjusted_return": 0.0,
+        "calmar_like": 0.0
+      },
+      "ai_decisions": [
+        {
+          "bar": 20,
+          "bar_count": 21,
+          "action": "HOLD",
+          "confidence": 0.62,
+          "reasoning": "Shock scenario with unknown trend and only 21 bars (no SMA50). Price sits modestly above short SMAs after a bounce from 93.66, but the last bar was down, volume is below average, and volatility is mixed. Insufficient confirmation to take a directional view on a small paper account; stay flat.",
+          "model": "grok-4.6",
+          "validated": true,
+          "fixture": false,
+          "network": true
+        }
+      ],
+      "trades": [],
+      "look_ahead": false,
+      "broker_submit_calls": 0
+    }
+  ],
+  "notes": "Same £100, same fills, same risk limits, same simulated tape. Grok is one paper decision per series. Strategies were not fitted to these paths. Out-of-sample is the score that counts. Real grok-4.6 was evaluated on the five out-of-sample markets and HOLDed each time. Training and validation were not used to change parameters.",
+  "run_count": 60
+}

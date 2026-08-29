@@ -84,6 +84,20 @@ button:not(:disabled),
   padding: 20px 0 64px;
 }
 
+.desk-banner {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in oklab, var(--halt) 45%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--halt-dim);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
 .top {
   display: flex;
   align-items: flex-start;
@@ -147,6 +161,11 @@ h1 {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--fg-muted);
+  text-decoration: none;
+}
+
+a.chip {
+  min-height: 44px;
 }
 
 .chip-warn {
@@ -174,6 +193,16 @@ h1 {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--fg-subtle);
+}
+
+.decision {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
 }
 
 .hero h2,
@@ -248,6 +277,10 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.halt-actions-stack {
+  flex-direction: column;
 }
 
 .btn {
@@ -395,6 +428,10 @@ h1 {
   margin: 0 0 20px;
 }
 
+.counts.counts-3 {
+  grid-template-columns: 1fr;
+}
+
 .counts div {
   background: var(--bg-subtle);
   border-radius: var(--radius-md);
@@ -414,6 +451,7 @@ h1 {
   font-family: var(--font-mono);
   font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .empty-tables {
@@ -468,6 +506,12 @@ h1 {
   font-family: var(--font-mono);
 }
 
+@media (min-width: 640px) {
+  .counts.counts-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 840px) {
   .frame {
     width: min(1120px, calc(100% - 64px));
@@ -487,6 +531,16 @@ h1 {
     flex: 1;
   }
 
+  .halt-actions-stack,
+  .halt-actions-stack.halt-actions {
+    flex-direction: column;
+  }
+
+  .halt-actions-stack .btn {
+    flex: none;
+    width: 100%;
+  }
+
   .stages {
     grid-template-columns: 1fr;
   }
@@ -494,6 +548,44 @@ h1 {
   .grid-two {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.desk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.desk-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--fg-subtle);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 10px;
+  padding: 0 12px 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.desk-table td {
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.desk-table tr:last-child td {
+  border-bottom: 0;
+}
+
+details.panel summary {
+  cursor: pointer;
+  color: var(--fg-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

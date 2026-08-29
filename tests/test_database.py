@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ai_trader.db.repository import Repository
 from ai_trader.db.schema import REQUIRED_TABLES
+from ai_trader.market_data.generator import generate_series
 
 
 def test_schema_creates_required_tables(tmp_path: Path) -> None:
@@ -27,4 +28,15 @@ def test_event_roundtrip(tmp_path: Path) -> None:
     assert event_id >= 1
     events = repo.list_events()
     assert events[0]["message"] == "hello"
+    repo.close()
+
+
+def test_market_series_roundtrip(tmp_path: Path) -> None:
+    repo = Repository(tmp_path / "test.db")
+    series = generate_series("SIM-UP", limit=8, seed=42)
+    series_id = repo.save_series(series)
+    assert series_id >= 1
+    stored = repo.latest_series("SIM-UP")
+    assert stored[0]["scenario"] == "uptrend"
+    assert stored[0]["candles"][-1]["close"] == series.candles[-1].close
     repo.close()

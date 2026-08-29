@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Performance — AI-Trader</title>
+    <meta name="description" content="Paper-only Grok versus baseline strategies. Live trading disabled." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://grok.com/grok-app-builder/extensions.js" defer></script>
+  </head>
+  <body>
+    <div class="frame">
+      <p class="desk-banner" role="status">PAPER SIMULATION — NO REAL TRADING</p>
+      <header class="top">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">Paper trading</p>
+            <h1>Performance</h1>
+          </div>
+        </div>
+        <div class="top-status">
+          <a class="chip" href="/">Trade</a>
+          <a class="chip" href="/system">System</a>
+          <span class="chip chip-warn">Paper only</span>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker" id="perf-kicker">Out of sample</p>
+          <h2>Grok versus the baselines.</h2>
+          <p class="lede" id="perf-verdict">Same £100, same tape, same costs. Buy-and-hold is the benchmark.</p>
+        </div>
+        <aside class="halt-card">
+          <p class="halt-copy">
+            Four strategies, five simulated markets. Nothing here is live. Broker is not used.
+          </p>
+          <div class="halt-actions">
+            <button type="button" class="btn btn-danger" id="run-benchmark">Run paper benchmark</button>
+          </div>
+          <p class="halt-meta" id="perf-note"></p>
+        </aside>
+      </section>
+
+      <dl class="counts" id="perf-tiles">
+        <div><dt>Grok return</dt><dd id="tile-grok">—</dd></div>
+        <div><dt>Benchmark return</dt><dd id="tile-bench">—</dd></div>
+        <div><dt>Max drawdown</dt><dd id="tile-dd">—</dd></div>
+        <div><dt>Trades</dt><dd id="tile-trades">—</dd></div>
+        <div><dt>Win rate</dt><dd id="tile-win">—</dd></div>
+        <div><dt>Profit factor</dt><dd id="tile-pf">—</dd></div>
+      </dl>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Comparison</h2>
+          <p>Out-of-sample average across the five simulated markets.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="desk-table" id="perf-table">
+            <thead>
+              <tr>
+                <th>Strategy</th>
+                <th>Return</th>
+                <th>Drawdown</th>
+                <th>Trades</th>
+                <th>Win rate</th>
+                <th>Profit factor</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <details class="panel">
+        <summary>Detailed splits and markets</summary>
+        <p class="halt-meta" id="perf-detail">
+          Training seed 101 · validation seed 202 · out-of-sample seed 303. Strategies were not fitted to these paths.
+        </p>
+      </details>
+
+      <footer class="foot">
+        <p>Paper and simulate only. Live trading is disabled in code.</p>
+        <p>Broker not used · live trading allowed: false</p>
+      </footer>
+    </div>
+    <script src="/static/performance.js"></script>
+  </body>
+</html>

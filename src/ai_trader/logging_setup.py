@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
@@ -23,7 +24,7 @@ def setup_logging(log_dir: Path, level: str = "INFO") -> logging.Logger:
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
 
-    stream = logging.StreamHandler()
+    stream = logging.StreamHandler(sys.stderr)
     stream.setFormatter(formatter)
     logger.addHandler(stream)
 

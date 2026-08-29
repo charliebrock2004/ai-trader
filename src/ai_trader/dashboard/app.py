@@ -24,6 +24,16 @@ class KillSwitchRequest(BaseModel):
     reason: str = Field(default="Dashboard toggle", max_length=400)
 
 
+class PaperSessionStartRequest(BaseModel):
+    symbol: str = Field(default="SIM-UP", max_length=32)
+    bars: int = Field(default=24, ge=2, le=120)
+    timeframe: str = Field(default="5m", max_length=8)
+    grok_frequency: int = Field(default=8, ge=1, le=60)
+    warmup: int = Field(default=8, ge=0, le=60)
+    source: str = Field(default="simulated", max_length=16)
+    continuous: bool = False
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="AI-Trader",
@@ -37,6 +47,18 @@ def create_app() -> FastAPI:
     @app.get("/", response_class=HTMLResponse)
     def index() -> FileResponse:
         return FileResponse(TEMPLATE_DIR / "index.html")
+
+    @app.get("/performance", response_class=HTMLResponse)
+    def performance() -> FileResponse:
+        return FileResponse(TEMPLATE_DIR / "performance.html")
+
+    @app.get("/system", response_class=HTMLResponse)
+    def system() -> FileResponse:
+        return FileResponse(TEMPLATE_DIR / "system.html")
+
+    @app.get("/paper", response_class=HTMLResponse)
+    def paper_page() -> FileResponse:
+        return FileResponse(TEMPLATE_DIR / "paper.html")
 
     @app.get("/favicon.svg")
     def favicon() -> FileResponse:
@@ -76,7 +98,25 @@ def create_app() -> FastAPI:
     @app.get("/api/account")
     def account() -> dict:
         runtime = get_runtime()
-        return {"account": runtime.repository.latest_account()}
+        return {
+            "account": runtime.orchestrator.paper_account.snapshot().to_dict(),
+            "latest_snapshot": runtime.repository.latest_account(),
+        }
+
+    @app.get("/api/market")
+    def market(symbol: str | None = None) -> dict:
+        runtime = get_runtime()
+        return {"series": runtime.repository.latest_series(symbol)}
+
+    @app.get("/api/analysis")
+    def analysis(symbol: str | None = None) -> dict:
+        runtime = get_runtime()
+        return {"analysis": runtime.repository.latest_analysis(symbol)}
+
+    @app.get("/api/decision")
+    def latest_decision(symbol: str | None = None) -> dict:
+        runtime = get_runtime()
+        return {"decision": runtime.repository.latest_decision(symbol)}
 
     @app.post("/api/kill-switch")
     def set_kill_switch(body: KillSwitchRequest) -> dict:
@@ -102,6 +142,71 @@ def create_app() -> FastAPI:
     def dry_run() -> dict:
         runtime = get_runtime()
         return runtime.orchestrator.dry_run()
+
+    @app.get("/api/paper")
+    def paper() -> dict:
+        runtime = get_runtime()
+        repo = runtime.repository
+        return {
+            "orders": repo.list_paper_orders(50),
+            "fills": repo.list_paper_fills(50),
+            "positions": repo.list_paper_positions(),
+            "performance": repo.latest_performance(),
+            "account": repo.latest_account(),
+        }
+
+    @app.post("/api/paper-sim")
+    def paper_sim() -> dict:
+        runtime = get_runtime()
+        return runtime.orchestrator.paper_simulate(symbol="SIM-UP", demo=True)
+
+    @app.post("/api/grok-paper-cycle")
+    def grok_paper_cycle() -> dict:
+        runtime = get_runtime()
+        return runtime.orchestrator.grok_paper_cycle(symbol="SIM-UP")
+
+    @app.get("/api/benchmark")
+    def get_benchmark() -> dict:
+        runtime = get_runtime()
+        report = runtime.orchestrator.last_benchmark
+        if report is None:
+            return {
+                "ok": True,
+                "banner": "PAPER SIMULATION — NO REAL TRADING",
+                "live": False,
+                "broker": "NOT USED",
+                "available": False,
+            }
+        return report
+
+    @app.post("/api/benchmark")
+    def run_benchmark_endpoint() -> dict:
+        runtime = get_runtime()
+        return runtime.orchestrator.benchmark()
+
+    @app.get("/api/paper-session")
+    def get_paper_session() -> dict:
+        runtime = get_runtime()
+        return runtime.orchestrator.paper_session.status()
+
+    @app.post("/api/paper-session/start")
+    def start_paper_session(body: PaperSessionStartRequest | None = None) -> dict:
+        runtime = get_runtime()
+        payload = body or PaperSessionStartRequest()
+        return runtime.orchestrator.start_paper_session(
+            symbol=payload.symbol,
+            bars=payload.bars,
+            timeframe=payload.timeframe,
+            grok_frequency=payload.grok_frequency,
+            warmup=payload.warmup,
+            source=payload.source,
+            continuous=payload.continuous,
+        )
+
+    @app.post("/api/paper-session/stop")
+    def stop_paper_session() -> dict:
+        runtime = get_runtime()
+        return runtime.orchestrator.stop_paper_session()
 
     @app.post("/api/orders")
     def orders_blocked(request: Request) -> None:

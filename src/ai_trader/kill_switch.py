@@ -1,8 +1,8 @@
 """File-backed kill switch.
 
 When engaged, the orchestrator must refuse to run. Default is ENGAGED.
-Disengaging the switch does not enable order placement — that stays blocked
-in the broker and risk layers.
+Disengaging the switch does not enable live trading. Alpaca paper orders
+still require risk approval, paper host, and LIVE_TRADING_ALLOWED = False.
 """
 
 from __future__ import annotations

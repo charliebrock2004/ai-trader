@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Advanced / System — AI-Trader</title>
+    <meta name="description" content="Paper-only AI trading system. Live trading disabled." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://grok.com/grok-app-builder/extensions.js" defer></script>
+  </head>
+  <body>
+    <div class="frame">
+      <p class="desk-banner" role="status">PAPER SIMULATION — NO REAL TRADING</p>
+      <header class="top">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">Advanced</p>
+            <h1>System</h1>
+          </div>
+        </div>
+        <div class="top-status">
+          <a class="chip" href="/">Trade</a>
+          <a class="chip" href="/performance">Performance</a>
+          <span class="chip" id="mode-chip">SIMULATE</span>
+          <span class="chip chip-warn" id="exec-chip">ORDERS OFF</span>
+          <span class="chip chip-warn" id="broker-chip">BROKER NOT USED</span>
+        </div>
+      </header>
+
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="kicker" id="hero-kicker">Advanced / System</p>
+          <h2 id="hero-title">The desk can paper-trade. Nothing can go live.</h2>
+          <p class="lede">
+            Market data, Grok, and Alpaca paper trading are wired as modules —
+            not connected, not live. The risk engine sits between any future
+            AI decision and execution. The kill switch is on.
+          </p>
+        </div>
+        <aside class="halt-card" id="halt-card">
+          <div class="halt-head">
+            <span class="halt-dot" id="halt-dot"></span>
+            <h3 id="halt-title">Kill switch engaged</h3>
+          </div>
+          <p class="halt-copy" id="halt-copy">
+            Pipeline halted. Dry runs and order paths are blocked until you
+            disengage. Disengaging does not enable orders.
+          </p>
+          <div class="halt-actions">
+            <button type="button" class="btn btn-danger" id="kill-toggle">Engage kill switch</button>
+            <button type="button" class="btn btn-ghost" id="dry-run">Run dry cycle</button>
+            <button type="button" class="btn btn-ghost" id="grok-cycle">Run Grok paper cycle</button>
+          </div>
+          <p class="halt-meta" id="halt-meta"></p>
+        </aside>
+      </section>
+
+      <section class="panel" aria-labelledby="ai-title">
+        <div class="section-head">
+          <h2 id="ai-title">AI decision</h2>
+          <p>Paper simulation only. Risk sizes and can reject. Broker is not used.</p>
+        </div>
+        <dl class="counts" id="ai-facts">
+          <div><dt>AI MODEL</dt><dd id="ai-model">fixture-hold</dd></div>
+          <div><dt>AI DECISION</dt><dd id="ai-action">HOLD</dd></div>
+          <div><dt>CONFIDENCE</dt><dd id="ai-confidence">—</dd></div>
+          <div><dt>RISK</dt><dd id="ai-risk">—</dd></div>
+          <div><dt>PAPER EXECUTION</dt><dd id="ai-exec">none</dd></div>
+          <div><dt>BROKER</dt><dd>NOT USED</dd></div>
+        </dl>
+        <p id="ai-reasoning">No Grok paper cycle yet. Disengage the kill switch and run one. Real Grok stays gated unless GROK_PAPER_ANALYSIS is on.</p>
+      </section>
+
+      <section class="pipeline" aria-labelledby="pipe-title">
+        <div class="section-head">
+          <h2 id="pipe-title">Pipeline</h2>
+          <p>Signals move top to bottom. Execution is last, and locked.</p>
+        </div>
+        <ol class="stages" id="stages"></ol>
+      </section>
+
+      <section class="grid-two">
+        <article class="panel">
+          <div class="section-head">
+            <h2>Modules</h2>
+            <p>Swap later without rewriting the desk.</p>
+          </div>
+          <ul class="modules" id="modules"></ul>
+        </article>
+        <article class="panel">
+          <div class="section-head">
+            <h2>Ledger</h2>
+            <p>Decisions, trades, and positions stay empty until we add logic.</p>
+          </div>
+          <dl class="counts" id="counts"></dl>
+          <div class="empty-tables" id="empty-tables">
+            <div>
+              <h3>Decisions</h3>
+              <p id="decisions-empty">No AI decisions recorded.</p>
+            </div>
+            <div>
+              <h3>Trades</h3>
+              <p id="trades-empty">No trades recorded.</p>
+            </div>
+            <div>
+              <h3>Positions</h3>
+              <p id="positions-empty">No open positions.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="section-head">
+          <h2>Event log</h2>
+          <p>System events only. Secrets are never written here.</p>
+        </div>
+        <div class="log" id="log">
+          <p class="log-empty">Waiting for events.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>Paper and simulate only. Live trading is disabled in code.</p>
+        <p id="foot-meta"></p>
+      </footer>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

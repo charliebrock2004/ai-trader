@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>AI-Trader</title>
-    <meta name="description" content="Paper-only AI trading research desk. Live trading disabled." />
+    <meta name="description" content="Paper-only AI trading. Live trading disabled." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,101 +17,55 @@
   </head>
   <body>
     <div class="frame">
+      <p class="desk-banner" role="status">PAPER SIMULATION — NO REAL TRADING</p>
       <header class="top">
         <div class="brand">
           <span class="mark" aria-hidden="true"></span>
           <div>
-            <p class="eyebrow">Research desk</p>
+            <p class="eyebrow">Paper trading</p>
             <h1>AI-Trader</h1>
           </div>
         </div>
-        <div class="top-status">
-          <span class="chip" id="mode-chip">SIMULATE</span>
-          <span class="chip chip-warn" id="exec-chip">ORDERS OFF</span>
-        </div>
+        <nav class="top-status" aria-label="App">
+          <a class="chip" href="/performance">Performance</a>
+          <a class="chip" href="/system">System</a>
+        </nav>
       </header>
 
-      <section class="hero" aria-labelledby="hero-title">
+      <section class="hero">
         <div class="hero-copy">
-          <p class="kicker" id="hero-kicker">Foundation mode</p>
-          <h2 id="hero-title">The desk is built. Nothing can trade.</h2>
-          <p class="lede">
-            Market data, Grok, and Alpaca paper trading are wired as modules —
-            not connected, not live. The risk engine sits between any future
-            AI decision and execution. The kill switch is on.
-          </p>
+          <p class="kicker" id="paper-kicker">Grok STOPPED</p>
+          <p class="decision" id="decision">HOLD</p>
+          <p class="lede">Current BUY / SELL / HOLD decision. Start a paper session. Stop blocks new trades.</p>
         </div>
-        <aside class="halt-card" id="halt-card">
-          <div class="halt-head">
-            <span class="halt-dot" id="halt-dot"></span>
-            <h3 id="halt-title">Kill switch engaged</h3>
+        <aside class="halt-card">
+          <div class="halt-actions halt-actions-stack">
+            <button type="button" class="btn btn-danger" id="session-start">Start</button>
+            <button type="button" class="btn btn-ghost" id="session-stop">Stop</button>
           </div>
-          <p class="halt-copy" id="halt-copy">
-            Pipeline halted. Dry runs and order paths are blocked until you
-            disengage. Disengaging does not enable orders.
-          </p>
-          <div class="halt-actions">
-            <button type="button" class="btn btn-danger" id="kill-toggle">Engage kill switch</button>
-            <button type="button" class="btn btn-ghost" id="dry-run">Run dry cycle</button>
-          </div>
-          <p class="halt-meta" id="halt-meta"></p>
+          <p class="halt-meta" id="paper-note"></p>
         </aside>
       </section>
 
-      <section class="pipeline" aria-labelledby="pipe-title">
-        <div class="section-head">
-          <h2 id="pipe-title">Pipeline</h2>
-          <p>Signals move top to bottom. Execution is last, and locked.</p>
+      <dl class="counts counts-3">
+        <div>
+          <dt>Account balance</dt>
+          <dd id="tile-balance">£100.00</dd>
         </div>
-        <ol class="stages" id="stages"></ol>
-      </section>
-
-      <section class="grid-two">
-        <article class="panel">
-          <div class="section-head">
-            <h2>Modules</h2>
-            <p>Swap later without rewriting the desk.</p>
-          </div>
-          <ul class="modules" id="modules"></ul>
-        </article>
-        <article class="panel">
-          <div class="section-head">
-            <h2>Ledger</h2>
-            <p>Decisions, trades, and positions stay empty until we add logic.</p>
-          </div>
-          <dl class="counts" id="counts"></dl>
-          <div class="empty-tables" id="empty-tables">
-            <div>
-              <h3>Decisions</h3>
-              <p id="decisions-empty">No AI decisions recorded.</p>
-            </div>
-            <div>
-              <h3>Trades</h3>
-              <p id="trades-empty">No trades recorded.</p>
-            </div>
-            <div>
-              <h3>Positions</h3>
-              <p id="positions-empty">No open positions.</p>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section class="panel log-panel">
-        <div class="section-head">
-          <h2>Event log</h2>
-          <p>System events only. Secrets are never written here.</p>
+        <div>
+          <dt>Today’s profit/loss</dt>
+          <dd id="tile-pnl">£0.00</dd>
         </div>
-        <div class="log" id="log">
-          <p class="log-empty">Waiting for events.</p>
+        <div>
+          <dt>Current position</dt>
+          <dd id="tile-position">flat</dd>
         </div>
-      </section>
+      </dl>
 
       <footer class="foot">
-        <p>Paper and simulate only. Live trading is disabled in code.</p>
-        <p id="foot-meta"></p>
+        <p>Paper only. Live trading is disabled.</p>
       </footer>
     </div>
-    <script src="/static/app.js"></script>
+    <script src="/static/paper.js"></script>
   </body>
 </html>

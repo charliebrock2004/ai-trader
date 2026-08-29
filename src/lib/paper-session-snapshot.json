@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "banner": "PAPER SIMULATION \u2014 NO REAL TRADING",
+  "live": false,
+  "broker": "NOT USED",
+  "grok": "STOPPED",
+  "grok_model": "fixture-hold",
+  "running": false,
+  "stopped": true,
+  "balance": 100.0,
+  "today_pnl": 0.0,
+  "current_decision": "HOLD",
+  "decision": "HOLD",
+  "position": "flat",
+  "open_pnl": 0.0,
+  "trades": 0,
+  "maximum_drawdown": 0.0,
+  "last_decision_at": "2026-08-28T13:50:00+00:00",
+  "decisions": 2,
+  "real_market_data": true,
+  "symbol": "BTC-USD"
+}

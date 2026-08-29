@@ -8,6 +8,7 @@ const haltCopy = document.getElementById("halt-copy");
 const haltMeta = document.getElementById("halt-meta");
 const killToggle = document.getElementById("kill-toggle");
 const dryRunBtn = document.getElementById("dry-run");
+const grokCycleBtn = document.getElementById("grok-cycle");
 const modeChip = document.getElementById("mode-chip");
 const footMeta = document.getElementById("foot-meta");
 
@@ -123,11 +124,39 @@ function renderHalt(kill) {
   killToggle.textContent = engaged ? "Disengage kill switch" : "Engage kill switch";
   haltMeta.textContent = [kill.reason, formatTime(kill.at)].filter(Boolean).join(" · ");
   dryRunBtn.disabled = engaged;
-  const lede = document.querySelector(".lede");
+  if (grokCycleBtn) grokCycleBtn.disabled = engaged;
+  const lede = document.querySelector(".hero .lede");
   if (lede) {
     lede.textContent = engaged
       ? "Market data, Grok, and Alpaca paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is on."
       : "Market data, Grok, and Alpaca paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is clear; orders are still blocked.";
+  }
+}
+
+function renderDecision(cycle) {
+  const model = document.getElementById("ai-model");
+  const action = document.getElementById("ai-action");
+  const confidence = document.getElementById("ai-confidence");
+  const risk = document.getElementById("ai-risk");
+  const exec = document.getElementById("ai-exec");
+  const reasoning = document.getElementById("ai-reasoning");
+  if (!model) return;
+  if (!cycle) {
+    model.textContent = "fixture-hold";
+    action.textContent = "HOLD";
+    confidence.textContent = "—";
+    risk.textContent = "—";
+    exec.textContent = "none";
+    return;
+  }
+  model.textContent = cycle.ai_model || "fixture-hold";
+  action.textContent = (cycle.ai_decision && cycle.ai_decision.action) || "HOLD";
+  confidence.textContent =
+    cycle.confidence === null || cycle.confidence === undefined ? "—" : String(cycle.confidence);
+  risk.textContent = cycle.risk && cycle.risk.approved ? "approved" : "rejected";
+  exec.textContent = cycle.paper_execution || "none";
+  if (reasoning) {
+    reasoning.textContent = cycle.reasoning || cycle.message || "";
   }
 }
 
@@ -141,6 +170,7 @@ async function refresh() {
   renderStages(status.architecture);
   renderModules(status.modules);
   renderCounts(status.modules.database);
+  renderDecision(status.last_grok_cycle);
   renderLog(events.events || []);
   footMeta.textContent = `v${status.version} · live trading allowed: ${status.safety.live_trading_allowed}`;
 }
@@ -177,6 +207,22 @@ dryRunBtn.addEventListener("click", async () => {
     dryRunBtn.disabled = Boolean(status.kill_switch.engaged);
   }
 });
+
+if (grokCycleBtn) {
+  grokCycleBtn.addEventListener("click", async () => {
+    grokCycleBtn.disabled = true;
+    try {
+      const cycle = await fetchJson("/api/grok-paper-cycle", { method: "POST" });
+      renderDecision(cycle);
+      await refresh();
+    } catch (error) {
+      haltMeta.textContent = error.message;
+    } finally {
+      const status = await fetchJson("/api/status");
+      grokCycleBtn.disabled = Boolean(status.kill_switch.engaged);
+    }
+  });
+}
 
 refresh().catch((error) => {
   haltCopy.textContent = error.message;

@@ -18,7 +18,7 @@ def main(argv: list[str] | None = None) -> int:
         "command",
         nargs="?",
         default="dashboard",
-        choices=("dashboard", "status", "init-db"),
+        choices=("dashboard", "status", "init-db", "grok-paper", "benchmark", "paper-session", "rpc"),
     )
     args = parser.parse_args(argv)
 
@@ -36,6 +36,26 @@ def main(argv: list[str] | None = None) -> int:
         runtime = get_runtime()
         print(json.dumps(runtime.orchestrator.status(), indent=2, default=str))
         return 0
+
+    if args.command == "grok-paper":
+        runtime = get_runtime()
+        print(json.dumps(runtime.orchestrator.grok_paper_cycle(symbol="SIM-UP"), indent=2, default=str))
+        return 0
+
+    if args.command == "benchmark":
+        runtime = get_runtime()
+        print(json.dumps(runtime.orchestrator.benchmark(), indent=2, default=str))
+        return 0
+
+    if args.command == "paper-session":
+        runtime = get_runtime()
+        print(json.dumps(runtime.orchestrator.start_paper_session(), indent=2, default=str))
+        return 0
+
+    if args.command == "rpc":
+        from ai_trader.rpc import serve
+
+        return serve()
 
     print(
         f"AI-Trader foundation  mode={settings.trading_mode}  "

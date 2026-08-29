@@ -48,7 +48,7 @@ Thumbs.db
 *.swp
 *~
 
-# Node (sandbox tooling — not part of the trading engine)
+# Node
 node_modules/
 .output/
 .vinxi/
@@ -58,3 +58,13 @@ node_modules/
 # Test / cache
 .cache/
 tmp/
+
+# Preview / sandbox artefacts — not the product
+.grok/
+.vercel/
+.project_id
+.node_modules.lock
+AGENTS.md
+screenshots/
+artifacts/
+public/__grok/

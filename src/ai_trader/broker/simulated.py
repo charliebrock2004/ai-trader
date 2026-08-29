@@ -17,8 +17,10 @@ class SimulatedBroker(Broker):
 
     def __init__(self) -> None:
         self.submitted: list[IntendedOrder] = []
+        self.submit_calls = 0
 
     def submit(self, order: IntendedOrder, verdict: RiskVerdict) -> dict[str, Any]:
+        self.submit_calls += 1
         assert_may_submit(verdict)
         raise OrderPlacementDisabledError(
             "Simulated broker will not place orders in the foundation build."
