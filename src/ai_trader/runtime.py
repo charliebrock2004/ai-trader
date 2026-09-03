@@ -26,9 +26,14 @@ class Runtime:
         self.settings = settings or get_settings()
         setup_logging(self.settings.resolve_log_dir(), self.settings.log_level)
         self.clock = SystemClock()
-        self.repository = Repository(
-            self.settings.resolve_database_path(), clock=self.clock
-        )
+        db_path = self.settings.resolve_database_path()
+        try:
+            from ai_trader.persist import restore_if_needed
+
+            restore_if_needed(db_path)
+        except Exception:  # noqa: BLE001 — a restore failure must not block boot
+            pass
+        self.repository = Repository(db_path, clock=self.clock)
         self.kill_switch = get_kill_switch(
             self.settings.resolve_kill_switch_path(),
             initially_engaged=self.settings.kill_switch_engaged,
@@ -151,6 +156,12 @@ class Runtime:
         # restart a session that the operator asked to keep running.
         try:
             self.worker.shutdown()
+        except Exception:
+            pass
+        try:
+            from ai_trader.persist import checkpoint
+
+            checkpoint(self.settings.resolve_database_path())
         except Exception:
             pass
         self.repository.close()

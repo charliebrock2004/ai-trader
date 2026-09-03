@@ -53,6 +53,8 @@ data/*.db-shm
 data/*.sqlite
 data/*.sqlite3
 data/KILL_SWITCH
+data/TERMINAL
+data/checkpoint.json
 logs/
 *.log
 

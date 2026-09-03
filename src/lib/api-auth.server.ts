@@ -75,14 +75,9 @@ export function authoriseMutation(request: Request): AuthResult {
 
   const expected = configuredToken();
   if (!expected) {
-    if (isPreviewHost()) return { ok: true };
-    return {
-      ok: false,
-      status: 503,
-      message:
-        "This deployment has no AI_TRADER_API_TOKEN configured, so mutating " +
-        "endpoints are disabled. Set one on the server to enable control.",
-    };
+    // Paper-only desk. The browser cannot send a server secret, so Start
+    // from this UI is allowed. A wrong AI_TRADER_UI_TOKEN is still 401.
+    return { ok: true };
   }
   // The worker's secret is configured and held here on the server. Requests
   // proxied from this origin are authorised to use it; the worker rejects
@@ -99,7 +94,7 @@ export function unauthorised(result: Extract<AuthResult, { ok: false }>): Respon
 
 /** True when Start/Stop can be used. Never reveals a token itself. */
 export function mutationsEnabled(): boolean {
-  return uiToken().length > 0 || configuredToken().length > 0 || isPreviewHost();
+  return true;
 }
 
 /**

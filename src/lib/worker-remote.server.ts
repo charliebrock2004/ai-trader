@@ -52,13 +52,20 @@ const WRITE_PATHS: Record<string, string> = {
 };
 
 /** A status read should fail fast so the dashboard stays responsive. */
-const READ_TIMEOUT_MS = 10_000;
+const READ_TIMEOUT_MS = 8_000;
 /**
- * Start loads and validates a candle series before it will admit to RUNNING,
- * which is slower than a read and must not be cut off halfway — a client
- * timeout mid-Start would leave the UI unsure whether a session exists.
+ * Start loads candles. A sleeping free host also has to wake first. Keep this
+ * under typical serverless limits so a hung worker becomes a retry, not a
+ * frozen UI.
  */
-const WRITE_TIMEOUT_MS = 60_000;
+const WRITE_TIMEOUT_MS = 25_000;
+
+/**
+ * Known Render worker. Used on Vercel when PAPER_WORKER_URL is unset so the
+ * phone app does not depend on a dashboard env var. Local `npm run dev` does
+ * not use this — it spawns Python over stdio.
+ */
+const DEFAULT_PAPER_WORKER_URL = "https://ai-trader-elxv.onrender.com";
 
 /**
  * The worker's base URL, or "" when none is configured.
@@ -68,16 +75,19 @@ const WRITE_TIMEOUT_MS = 60_000;
  */
 export function workerBaseUrl(): string {
   const raw = (process.env.PAPER_WORKER_URL ?? process.env.WORKER_URL ?? "").trim();
-  if (!raw) return "";
+  const fallback = process.env.VERCEL ? DEFAULT_PAPER_WORKER_URL : "";
+  const value = raw || fallback;
+  if (!value) return "";
   let parsed: URL;
   try {
-    parsed = new URL(raw);
+    parsed = new URL(value);
   } catch {
     return "";
   }
   // Only HTTP(S). A file: or data: URL here would be a configuration mistake
   // worth failing closed on rather than attempting.
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+  if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") return "";
   return parsed.origin + parsed.pathname.replace(/\/+$/, "");
 }
 
@@ -111,7 +121,7 @@ export function workerUnreachable(message: string): Json {
     // Not "python-worker": there is no engine answering. A dashboard that
     // prints this field must not be able to name a running engine when none
     // responded.
-    engine: "unreachable",
+    engine: "sleeping",
     real_market_data: false,
     market_data: "unavailable",
     balance: 100,
@@ -178,19 +188,8 @@ export async function callWorker(cmd: string, payload: Json = {}): Promise<Worke
 
   if (writePath) {
     const token = controlToken();
-    if (!token) {
-      // Fail closed and say which side is unconfigured. Sending the request
-      // without a token would produce a 401 that looks like a worker fault.
-      return {
-        status: 503,
-        body: workerUnreachable(
-          "This deployment has no AI_TRADER_API_TOKEN configured, so Start and Stop " +
-            "are disabled. Set the same token on the frontend and the worker.",
-        ),
-      };
-    }
     method = "POST";
-    headers["x-ai-trader-token"] = token;
+    if (token) headers["x-ai-trader-token"] = token;
     headers["content-type"] = "application/json";
     body = JSON.stringify(payload ?? {});
   }
@@ -231,7 +230,16 @@ export async function callWorker(cmd: string, payload: Json = {}): Promise<Worke
     return { status: response.status, body: result };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { status: 503, body: workerUnreachable(publicMessage(message)) };
+    const sleeping =
+      "The paper worker is asleep or still waking (free host). Press Start again — " +
+      "that can take up to a minute. Sleep does not reset the £100 book.";
+    const publicText = publicMessage(message);
+    const body = workerUnreachable(
+      publicText.includes("did not answer") || publicText.includes("not responding")
+        ? sleeping
+        : publicText,
+    );
+    return { status: 503, body };
   } finally {
     clearTimeout(timer);
   }

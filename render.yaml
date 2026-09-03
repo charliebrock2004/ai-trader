@@ -1,4 +1,4 @@
-# Render service definition for the persistent paper worker.
+# Render service definition for the paper worker on the FREE plan.
 #
 # This file documents the settings the worker needs. Render only *applies* it to
 # Blueprint-managed services — a web service you created by hand in the
@@ -7,18 +7,20 @@
 # single writer with one ledger.
 #
 # The frontend is not here. It stays on Vercel. See DEPLOYMENT.md.
+#
+# Free hosting sleeps when idle and has no persistent disk. That is accepted
+# for this paper experiment. The worker restores the £100 ledger from a GitHub
+# checkpoint on boot; the UI says so when the worker is asleep. Do not fake
+# RUNNING while it is down.
 
 services:
   - type: web
     name: ai-trader-worker
     runtime: python
-    plan: starter
+    plan: free
     region: frankfurt
     branch: main
 
-    # `plan: free` cannot be used. Free services have no disk and spin down when
-    # idle, and an agent that sleeps is an agent that is not trading — worse, it
-    # would lose the terminal latch on every wake and come back alive.
     buildCommand: pip install -r requirements.txt
     startCommand: PYTHONPATH=src python3 -m ai_trader http
 
@@ -30,26 +32,11 @@ services:
     # One writer, one ledger.
     numInstances: 1
 
-    # Everything durable lives under this directory: the SQLite database (every
-    # decision, order, fill, cost and survival transition), the operator kill
-    # switch, and the TERMINAL latch. Without the disk a redeploy erases the
-    # audit trail and resurrects a permanently-terminated agent, which is the
-    # one failure this system must not have.
-    disk:
-      name: ai-trader-data
-      mountPath: /var/data
-      sizeGB: 1
-
     envVars:
       - key: DATABASE_PATH
-        value: /var/data/ai_trader.db
+        value: data/ai_trader.db
       - key: LOG_DIR
-        value: /var/data/logs
-
-      # Required. Without it the worker refuses every Start and Stop. Generate
-      # with `openssl rand -hex 32` and set the SAME value on Vercel.
-      - key: AI_TRADER_API_TOKEN
-        sync: false
+        value: logs
 
       # Paper only. There is no value of this variable that enables live
       # trading; anything live-ish refuses to start the process at all.
@@ -63,21 +50,29 @@ services:
       - key: TERMINAL_THRESHOLD_PCT
         value: "0.40"
 
-      # The agent boots halted and waits to be started deliberately from the UI.
+      # The agent boots halted and waits to be started from the UI, then
+      # recover() resumes a session the operator asked to keep running.
       - key: KILL_SWITCH_ENGAGED
         value: "false"
 
       - key: LOG_LEVEL
         value: INFO
 
-      # Optional: the Grok analyst. With no key the agent has nothing
-      # challenging its deterministic edge, and the System page reports that
-      # rather than hiding it.
       - key: GROK_PAPER_ANALYSIS
         value: "false"
+
+      - key: PERSIST_RESTORE
+        value: "true"
+
+      # Optional. If set, the worker writes checkpoints itself. If unset, the
+      # GitHub Actions paper-checkpoint workflow copies GET /api/snapshot onto
+      # the worker-endpoint branch.
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_REPOSITORY
+        value: charliebrock2004/ai-trader
+
       - key: XAI_API_KEY
         sync: false
-
-      # Optional: lifts the anonymous BLS request quota.
       - key: BLS_API_KEY
         sync: false

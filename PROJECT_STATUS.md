@@ -152,9 +152,10 @@ performance page says so plainly rather than showing an encouraging empty state.
 
 **Vercel cannot host the worker, and no longer pretends to.** A serverless
 invocation has no `python3` and does not outlive the request. The worker
-therefore runs as its own service (`python -m ai_trader http`) and Vercel
-proxies to it, attaching the control token server-side. With no
-`PAPER_WORKER_URL` configured, the frontend says so rather than faking RUNNING.
+runs on Render free (`python -m ai_trader http`). The Vercel UI defaults to
+`https://ai-trader-elxv.onrender.com`. If the worker is asleep the UI says so
+rather than faking RUNNING. The £100 ledger is checkpointed to GitHub so a
+wake does not silently reset the book.
 
 **No live venue book, so no event-driven fills.** See above.
 
@@ -186,13 +187,14 @@ splits by time, but there is no historical corpus loaded.
    because that is what the engine records.
 5. **The Alpaca paper adapter is dormant** and observation only. The session path
    traps `submit` on every broker.
-6. **The worker must be a paid, always-on service with a disk.** A free tier
-   that sleeps is not trading, and a container without a mounted `/var/data`
-   loses the audit trail and resurrects a TERMINATED agent on every redeploy.
-7. **Page access is the frontend's only gate by default.** The worker refuses
-   anything without its token, but anyone who can load the Vercel URL can press
-   Start unless Deployment Protection or `AI_TRADER_UI_TOKEN` is turned on. The
-   System page states which is in effect.
+6. **The worker runs on Render free.** It sleeps when idle; the UI reports
+   asleep, not RUNNING. There is no paid disk. SQLite and the TERMINAL latch
+   are restored from GitHub `worker-endpoint/snapshot.json` on boot. A 10-minute
+   Actions job copies the snapshot. Until the first checkpoint, a restart would
+   start a fresh £100 book and the UI says so.
+7. **Page access is the frontend's only gate by default.** Anyone who can load
+   the Vercel URL can press Start. The System page states this. Live trading
+   is still impossible.
 
 ---
 

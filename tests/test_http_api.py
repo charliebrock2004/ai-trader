@@ -107,9 +107,10 @@ def test_health_answers_without_touching_the_engine(isolated_env, monkeypatch) -
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_health_reports_control_disabled_when_no_token_is_set(isolated_env, monkeypatch) -> None:
+def test_health_reports_control_enabled_when_no_token_is_set(isolated_env, monkeypatch) -> None:
+    """A free paper desk still accepts Start when no token is configured."""
     client = _client(monkeypatch, token=None)
-    assert client.get("/health").json()["control_enabled"] is False
+    assert client.get("/health").json()["control_enabled"] is True
 
 
 def test_status_reports_a_stopped_hundred_pound_desk(isolated_env, monkeypatch) -> None:
@@ -155,17 +156,18 @@ def test_decision_ids_are_validated_not_trusted(isolated_env, monkeypatch) -> No
 # ==========================================================================
 # Control is gated
 # ==========================================================================
-def test_an_unconfigured_worker_refuses_every_mutation(isolated_env, monkeypatch) -> None:
-    """No token means closed, not open."""
+def test_an_unconfigured_worker_allows_paper_mutations(isolated_env, monkeypatch) -> None:
+    """No token means this paper desk can still be started from the UI."""
     client = _client(monkeypatch, token=None)
-    for path in ("/api/start", "/api/stop", "/api/cycle"):
-        response = client.post(path, json={})
-        assert response.status_code == 503, path
-        body = response.json()
-        assert body["ok"] is False
-        assert body["running"] is False
-        assert body["live"] is False
-        assert "AI_TRADER_API_TOKEN" in body["error"]
+    started = client.post("/api/start", json=SIMULATED)
+    assert started.status_code == 200
+    body = started.json()
+    assert body["ok"] is True
+    assert body["running"] is True
+    assert body["live"] is False
+    stopped = client.post("/api/stop")
+    assert stopped.status_code == 200
+    assert stopped.json()["running"] is False
 
 
 def test_a_missing_or_wrong_token_cannot_control_the_desk(isolated_env, monkeypatch) -> None:
@@ -294,11 +296,23 @@ def test_the_service_does_not_publish_its_own_api_surface(isolated_env, monkeypa
 def test_the_worker_does_not_hand_the_browser_a_cross_origin_key(
     isolated_env, monkeypatch
 ) -> None:
-    """No CORS headers.
+    """No CORS on control routes.
 
-    The token has to stay on the server, so the browser must never call the
-    worker directly. Absent CORS is what enforces that.
+    The token has to stay on the server, so the browser must never call Start
+    on the worker directly. /health is allowed a * so a sleeping free host can
+    be woken without going through Vercel.
     """
     client = _client(monkeypatch)
     response = client.get("/api/status", headers={"Origin": "https://example.com"})
     assert "access-control-allow-origin" not in {k.lower() for k in response.headers}
+    health = client.get("/health", headers={"Origin": "https://ai-trader-snowy.vercel.app"})
+    assert health.headers.get("access-control-allow-origin") == "*"
+
+
+def test_snapshot_is_paper_only_and_not_a_trade(isolated_env, monkeypatch) -> None:
+    client = _client(monkeypatch)
+    body = client.get("/api/snapshot").json()
+    assert body["live"] is False
+    assert body["live_trading_allowed"] is False
+    assert body["engine"] == "python-worker"
+    assert isinstance(body.get("sql"), str)

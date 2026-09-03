@@ -5,20 +5,21 @@ decides the whole hosting shape, and it is why the app is split across two
 hosts.
 
 ```
-  Vercel                          Render
+  Vercel                          Render (free)
   ┌──────────────────┐            ┌──────────────────────────────┐
   │ React UI         │            │ python -m ai_trader http     │
   │                  │  HTTPS     │  ├─ FastAPI transport        │
   │ /api/* routes ───┼───────────▶│  ├─ DeskWorker (owns session)│
-  │  attach the      │  + token   │  ├─ risk / guardian / ledger │
-  │  token here      │            │  └─ survival + terminal latch│
-  └──────────────────┘            │        disk: /var/data       │
-                                  └──────────────────────────────┘
+  │                  │            │  ├─ risk / guardian / ledger │
+  └──────────────────┘            │  └─ SQLite (ephemeral disk)  │
+                                  └──────────────┬───────────────┘
+                                                 │ checkpoint
+                                                 ▼
+                                  GitHub branch worker-endpoint
 ```
 
-The browser talks only to Vercel. Vercel talks to Render and attaches the
-control token server-side, so the token never reaches a browser and the worker
-is not controllable by anyone who merely knows its URL.
+The browser talks only to Vercel. Vercel talks to Render. Closing the browser does not stop a running worker; a free Render service *will* sleep when idle. Sleep is reported honestly. On wake the worker restores the £100 ledger from the last GitHub checkpoint. It does not silently reset to a blank book, and it does not claim RUNNING while it is down.
+
 
 ## Why the frontend cannot host the engine
 
@@ -47,49 +48,49 @@ not the engine.
 | Start command | `PYTHONPATH=src python3 -m ai_trader http` |
 | Health check path | `/health` |
 | Instances | **1** — one writer, one ledger |
-| Plan | **Starter or higher** (see below) |
-| Disk | name `ai-trader-data`, mount path `/var/data`, 1 GB |
+| Plan | **Free** |
+| Disk | none — ledger is checkpointed to GitHub `worker-endpoint` |
 
-`render.yaml` in the repository root carries the same values. Render applies it
-only to Blueprint-managed services; if your web service was created by hand,
-use it as the checklist and set the values in the dashboard.
+`render.yaml` in the repository root carries the same values.
 
-**The free plan will not work.** Free services have no disk and spin down when
-idle. A sleeping agent is not trading, and — worse — it would lose the terminal
-latch on every wake, so an agent that had permanently shut itself down would
-come back alive.
+**Free plan behaviour, stated plainly:**
+
+- The process sleeps after idle HTTP. The UI then shows the worker as asleep, not RUNNING.
+- There is no persistent disk. On wake the worker restores SQLite + the TERMINAL latch from `worker-endpoint/snapshot.json`.
+- A GitHub Actions job copies `GET /api/snapshot` every 10 minutes and on demand. Until the first checkpoint exists, a restart *would* start a fresh £100 book — the UI warns rather than hiding that.
+- Pressing Start wakes the worker. That can take up to a minute.
 
 ### Environment variables
 
 Set these on the worker service:
 
 ```
-DATABASE_PATH=/var/data/ai_trader.db
-LOG_DIR=/var/data/logs
-AI_TRADER_API_TOKEN=<openssl rand -hex 32>
+DATABASE_PATH=data/ai_trader.db
+LOG_DIR=logs
 TRADING_MODE=simulate
 STARTING_EQUITY=100.00
 BASE_CURRENCY=GBP
 TERMINAL_THRESHOLD_PCT=0.40
 KILL_SWITCH_ENGAGED=false
 LOG_LEVEL=INFO
+PERSIST_RESTORE=true
 ```
 
+`AI_TRADER_API_TOKEN` is optional. If set on the worker, Start/Stop require it. If unset, this paper desk accepts Start from the Vercel UI. Live trading cannot be turned on with any of these.
+
 Optional: `XAI_API_KEY` and `GROK_PAPER_ANALYSIS=true` for the analyst,
-`BLS_API_KEY` to lift the anonymous quota on official data.
+`BLS_API_KEY` to lift the anonymous quota on official data,
+`GITHUB_TOKEN` if you want the worker to push checkpoints itself.
 
-### The disk is not optional
+### The disk is not required on free
 
-`/var/data` holds three things, and losing any of them is a real failure:
+`data/` holds three things:
 
-1. **The SQLite database** — every decision (including the HOLDs), order, fill,
-   cost, calibration outcome and survival transition.
+1. **The SQLite database** — every decision (including the HOLDs), order, fill, cost, calibration outcome and survival transition.
 2. **The operator kill switch.**
-3. **The TERMINAL latch.** The latch is written to disk *and* to the database,
-   and startup refuses to run if either says TERMINAL — but both live here.
+3. **The TERMINAL latch.**
 
-Without the disk, a redeploy erases the audit trail and resurrects a
-permanently-terminated agent.
+On Render free those files are ephemeral. The worker dumps them to GitHub after Start/Stop and on a 10-minute Actions job, and restores them on boot. A TERMINAL latch that made it into the checkpoint stays TERMINAL after a wake.
 
 ### Verify the worker
 
@@ -103,9 +104,9 @@ curl -s $WORKER/api/status | jq '{status, running, balance, currency, engine}'
 # {"status":"STOPPED","running":false,"balance":100,"currency":"GBP","engine":"python-worker"}
 ```
 
-`control_enabled: false` means `AI_TRADER_API_TOKEN` is not set and every Start
-and Stop will be refused. That is deliberate: an unconfigured deployment is
-closed, not open.
+The worker answers `/health` with `control_enabled: true` so the UI can Start.
+If `AI_TRADER_API_TOKEN` is set, Start/Stop require that header; if it is unset,
+this paper desk accepts Start from the Vercel UI. Live trading is still impossible.
 
 ---
 
@@ -114,16 +115,13 @@ closed, not open.
 Import the repository. The framework is detected automatically; no build
 overrides are needed.
 
-Set these environment variables:
+Set these environment variables (optional — the frontend defaults to the known Render URL):
 
 ```
-PAPER_WORKER_URL=https://<your-worker>.onrender.com
-AI_TRADER_API_TOKEN=<the same token you set on the worker>
+PAPER_WORKER_URL=https://ai-trader-elxv.onrender.com
 ```
 
-Both are **server-side only**. Neither is prefixed `VITE_`, which would inline
-it into the browser bundle. If the two tokens differ, the worker answers 401 and
-the UI says so.
+Server-side only. Never prefix `VITE_`. `AI_TRADER_API_TOKEN` is optional; if you set it, set the same value on Render.
 
 ### Who can press Start
 

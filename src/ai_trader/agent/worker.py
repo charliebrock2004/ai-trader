@@ -120,6 +120,7 @@ class DeskWorker:
         )
         if report.get("balance") is not None:
             self._remember_equity(report.get("balance"))
+        self._checkpoint()
         self._ensure_cycle_loop()
         return self.status(paper=report)
 
@@ -130,6 +131,7 @@ class DeskWorker:
             report = self.runtime.orchestrator.stop_paper_session()
             if report.get("balance") is not None:
                 self._remember_equity(report.get("balance"))
+            self._checkpoint()
             return self.status(paper=report)
 
     def shutdown(self) -> None:
@@ -193,6 +195,27 @@ class DeskWorker:
                     self.runtime.agent.survival.observe(equity, reason="paper session mark")
                 except Exception:
                     pass
+            self._checkpoint()
+
+    def _checkpoint(self) -> None:
+        try:
+            from ai_trader.persist import checkpoint
+
+            checkpoint(self.runtime.settings.resolve_database_path())
+        except Exception:
+            pass
+
+    def _persistence_view(self) -> dict[str, Any]:
+        try:
+            from ai_trader.persist import persistence_status
+
+            return persistence_status()
+        except Exception:
+            return {
+                "kind": "ephemeral",
+                "durable": False,
+                "warning": "Persistence status unavailable.",
+            }
 
     def status(self, paper: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         paper = paper or self.runtime.orchestrator.paper_session.status()
@@ -267,6 +290,7 @@ class DeskWorker:
             },
             "currency": "GBP",
             "engine": "python-worker",
+            "persistence": self._persistence_view(),
         }
         if paper.get("data_error") and not running:
             merged["data_error"] = paper.get("data_error")

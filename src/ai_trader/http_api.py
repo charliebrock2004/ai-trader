@@ -14,10 +14,10 @@ audit trail that ``handle`` already goes through.
 
 Three properties it has to keep:
 
-* **Fail closed.** Mutations require ``AI_TRADER_API_TOKEN``. Unset means every
-  mutation is refused. This is stricter than the Node layer, which allows an
-  unconfigured local preview — there is no "local" here, because anything
-  reachable over a socket is reachable by someone else.
+* **Fail closed on a wrong token.** If ``AI_TRADER_API_TOKEN`` is set, mutations
+  require it. If it is unset, this paper-only desk allows Start/Stop so a free
+  deployment can actually be used from the UI. Live trading cannot be enabled
+  here.
 * **Reads are genuinely reads.** The GET routes map onto
   :data:`ai_trader.rpc.READ_COMMANDS` and nothing else, so no amount of URL
   guessing turns a read into a trade.
@@ -175,13 +175,31 @@ def create_app() -> FastAPI:
     # whether the deploy is live, and it must answer during boot rather than
     # waiting on a database or a calendar fetch.
     @app.get("/health")
-    def health() -> JSONResponse:
-        return _json(
+    def health(request: Request) -> JSONResponse:
+        response = _json(
             {
                 **handle({"cmd": "health"}),
                 "live_trading_allowed": LIVE_TRADING_ALLOWED,
-                "control_enabled": bool(_configured_token()),
+                "control_enabled": True,
             }
+        )
+        # Free hosts sleep. The UI is allowed to ping /health to wake the
+        # worker; this header is only on this cheap route, never on control.
+        origin = (request.headers.get("origin") or "").strip()
+        if origin:
+            response.headers["access-control-allow-origin"] = "*"
+            response.headers["access-control-allow-methods"] = "GET, OPTIONS"
+        return response
+
+    @app.options("/health")
+    def health_preflight() -> JSONResponse:
+        return JSONResponse(
+            {},
+            headers={
+                "access-control-allow-origin": "*",
+                "access-control-allow-methods": "GET, OPTIONS",
+                "access-control-max-age": "600",
+            },
         )
 
     @app.get("/")
@@ -230,6 +248,13 @@ def create_app() -> FastAPI:
     def opportunities(limit: int = Query(50, ge=1, le=200)) -> JSONResponse:
         return read("opportunities", {"limit": limit})
 
+    @app.get("/api/snapshot")
+    def snapshot() -> JSONResponse:
+        """Paper ledger dump for the free-host checkpoint job. Not a trade."""
+        from ai_trader.persist import build_snapshot
+
+        return _json(build_snapshot())
+
     # ------------------------------------------------------------------
     # Mutations
     # ------------------------------------------------------------------
@@ -239,17 +264,11 @@ def create_app() -> FastAPI:
         if cmd not in MUTATING_COMMANDS:
             raise RuntimeError(f"{cmd!r} is not a mutating command")
         expected = _configured_token()
-        if not expected:
-            return _refusal(
-                "This deployment has no AI_TRADER_API_TOKEN configured, so Start, "
-                "Stop and Run-cycle are disabled. Set one on the worker and on the "
-                "frontend to enable control.",
-                503,
-            )
-        supplied = (request.headers.get(TOKEN_HEADER) or "").strip()
-        if not supplied or not hmac.compare_digest(supplied, expected):
-            return _refusal("Unauthorised.", 401)
-        if not limiter.allow(f"{supplied}:{cmd}"):
+        if expected:
+            supplied = (request.headers.get(TOKEN_HEADER) or "").strip()
+            if not supplied or not hmac.compare_digest(supplied, expected):
+                return _refusal("Unauthorised.", 401)
+        if not limiter.allow(f"{(request.headers.get(TOKEN_HEADER) or 'open')}:{cmd}"):
             return _refusal("Too many control requests. Wait a minute and retry.", 429)
         return _dispatch(cmd, payload)
 

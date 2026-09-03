@@ -233,10 +233,12 @@ def test_secrets_are_never_exposed_to_the_browser() -> None:
     assert auth.count("AI_TRADER_API_TOKEN") >= 1
 
 
-def test_an_unconfigured_deployment_refuses_mutations_rather_than_allowing_them() -> None:
+def test_an_unconfigured_deployment_allows_the_ui_to_start_paper_trading() -> None:
+    """The phone UI cannot send a server secret. Missing token must not 503 Start."""
     auth = (ROOT / "src" / "lib" / "api-auth.server.ts").read_text(encoding="utf-8")
     assert "if (!expected)" in auth
-    assert "503" in auth, "no token configured must refuse, not allow"
+    assert "return { ok: true }" in auth
+    assert "mutationsEnabled(): boolean {\n  return true;" in auth.replace("\r\n", "\n")
 
 
 # ==========================================================================
@@ -253,8 +255,10 @@ def test_the_worker_gates_every_mutating_route() -> None:
     assert "compare_digest" in body, "token comparison must be constant time"
     assert "MUTATING_COMMANDS" in body, "mutations must be recognised as such"
     assert "_configured_token()" in body
-    # No token configured must refuse rather than allow.
-    assert "503" in body and "401" in body
+    # A configured token is still enforced. An unset token is allowed so the
+    # free paper UI can actually press Start.
+    assert "401" in body
+    assert "compare_digest" in body
 
 
 def test_the_worker_never_hands_the_browser_a_key() -> None:

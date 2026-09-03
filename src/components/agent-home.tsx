@@ -168,7 +168,13 @@ export function AgentHome() {
             </div>
             <div>
               <dt>Engine</dt>
-              <dd>{status.engine === "python-worker" ? "worker" : status.engine ?? "—"}</dd>
+              <dd>
+                {status.engine === "python-worker"
+                  ? "worker"
+                  : status.engine === "sleeping"
+                    ? "asleep"
+                    : status.engine ?? "—"}
+              </dd>
             </div>
           </dl>
         </aside>
@@ -288,6 +294,12 @@ function describe(status: AgentStatus, deskStatus: string): string {
   if (status.terminated) {
     return "Permanently shut down. It cannot trade, and it cannot restart itself.";
   }
+  if (status.engine === "sleeping" || status.engine === "unreachable" || status.engine === "unavailable") {
+    return (
+      status.hold_reason ||
+      "The paper worker is asleep or not reachable (free host). Press Start to wake it. That can take up to a minute. Sleep does not reset the £100 book."
+    );
+  }
   if (deskStatus === "STARTING") {
     const symbol = status.symbol || "BTC-USD";
     const timeframe = status.timeframe || "5m";
@@ -297,11 +309,11 @@ function describe(status: AgentStatus, deskStatus: string): string {
     const symbol = status.symbol || "BTC-USD";
     const timeframe = status.timeframe || "5m";
     const price = typeof status.last_price === "number" ? ` · last ${status.last_price}` : "";
-    return `${symbol} ${timeframe} paper session${price}. Stop blocks new trades. Worker keeps running if you close this page.`;
+    return `${symbol} ${timeframe} paper session${price}. Stop blocks new trades. Worker keeps running if you close this page, until the free host sleeps.`;
   }
   const executed = status.decisions?.EXECUTED ?? 0;
   if (executed === 0) {
-    return "Paper account is idle. Press Start to run the worker. It holds unless a real edge clears every gate.";
+    return "Paper account is idle. Press Start to run the worker on BTC-USD. It holds unless a real edge clears every gate.";
   }
   const next = status.next_milestone;
   return next

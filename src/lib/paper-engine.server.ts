@@ -232,8 +232,8 @@ async function command(cmd: string, payload?: Record<string, unknown>, timeoutMs
 
 function unavailableDesk(cmd: string): EngineResult {
   const message =
-    "No trading worker is reachable. This host cannot run Python itself, so the " +
-    "engine must run as a persistent service and PAPER_WORKER_URL must point at it.";
+    "No trading worker is reachable. The paper engine runs on a separate host. " +
+    "If this is a free worker it may be asleep — press Start to wake it.";
   const stopped: EngineResult = {
     ok: cmd !== "start" && cmd !== "stop" && cmd !== "cycle",
     live: false,

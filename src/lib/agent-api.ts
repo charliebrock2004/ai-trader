@@ -95,6 +95,13 @@ export type AgentStatus = {
   data_error?: string | null;
   engine?: string;
   currency?: string;
+  persistence?: {
+    kind?: string;
+    durable?: boolean;
+    restored?: boolean;
+    warning?: string | null;
+    updated_at?: string | null;
+  };
 };
 
 export type OpenPosition = {
@@ -254,15 +261,34 @@ async function get<T>(path: string): Promise<T> {
   return readBody<T>(response);
 }
 
-async function mutate<T>(path: string, body?: unknown, timeoutMs = 15000): Promise<T> {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: { accept: "application/json", "content-type": "application/json" },
-    cache: "no-store",
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  return readBody<T>(response);
+async function mutate<T>(path: string, body?: unknown, timeoutMs = 25000): Promise<T> {
+  let lastError: Error | null = null;
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    try {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: { accept: "application/json", "content-type": "application/json" },
+        cache: "no-store",
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      return await readBody<T>(response);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const text = lastError.message.toLowerCase();
+      const retryable =
+        text.includes("timeout") ||
+        text.includes("timed out") ||
+        text.includes("abort") ||
+        text.includes("asleep") ||
+        text.includes("not responding") ||
+        text.includes("failed (503)") ||
+        text.includes("failed (502)");
+      if (!retryable || attempt === 4) throw lastError;
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+    }
+  }
+  throw lastError ?? new Error("Start failed.");
 }
 
 async function readBody<T>(response: Response): Promise<T> {
