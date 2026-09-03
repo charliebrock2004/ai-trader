@@ -9,9 +9,11 @@
 | Product | Autonomous **paper** trading agent. Not a broker. |
 | Capital | £100 paper, GBP base currency |
 | Live trading | `LIVE_TRADING_ALLOWED = False`. No live path exists. |
-| Engine | Python `DeskWorker` over stdio RPC. The browser is control/monitoring only. |
+| Engine | One Python `DeskWorker`. The browser is control/monitoring only. |
+| Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
+| Hosting | Frontend on Vercel, persistent worker on Render with a disk at `/var/data` |
 | Current strategy | BTC-USD public 5m paper session (operational fills) + BLS CPI event family (HOLDs until a venue book exists) |
-| Tests | Full Python suite + 14 frontend agent-api tests, all passing |
+| Tests | 482 Python tests passing |
 
 If this file disagrees with the code, the code wins. Update it after every
 significant change, and never mark something complete that is not tested.
@@ -148,11 +150,13 @@ venue means implementing `PredictionMarketAdapter` against it and passing its
 **No edge has been demonstrated.** Zero completed event-driven trades. The
 performance page says so plainly rather than showing an encouraging empty state.
 
-**Vercel / grok.me cannot host the worker.** The Grok Build production target is
-Nitro `nodejs22.x` with no Python. Start on that host fails closed rather than
-faking RUNNING. The operational desk is the Grok preview process
-(`npm run dev` + `python3 -m ai_trader rpc`). A real production deploy needs a
-long-lived VM/container, not serverless.
+**Vercel cannot host the worker, and no longer pretends to.** A serverless
+invocation has no `python3` and does not outlive the request. The worker
+therefore runs as its own service (`python -m ai_trader http`) and Vercel
+proxies to it, attaching the control token server-side. With no
+`PAPER_WORKER_URL` configured, the frontend says so rather than faking RUNNING.
+
+**No live venue book, so no event-driven fills.** See above.
 
 **Network access is required for public BTC-USD and FX.** Coinbase candles and
 Frankfurter USD→GBP are live public feeds. If either is missing the session
@@ -182,17 +186,35 @@ splits by time, but there is no historical corpus loaded.
    because that is what the engine records.
 5. **The Alpaca paper adapter is dormant** and observation only. The session path
    traps `submit` on every broker.
-6. **Closing the Grok preview process stops the worker.** Closing the *browser*
-   does not. A dedicated always-on host is the remaining ops gap.
+6. **The worker must be a paid, always-on service with a disk.** A free tier
+   that sleeps is not trading, and a container without a mounted `/var/data`
+   loses the audit trail and resurrects a TERMINATED agent on every redeploy.
+7. **Page access is the frontend's only gate by default.** The worker refuses
+   anything without its token, but anyone who can load the Vercel URL can press
+   Start unless Deployment Protection or `AI_TRADER_UI_TOKEN` is turned on. The
+   System page states which is in effect.
 
 ---
 
 ## How to run
 
-Preview (this is the operational desk):
+Deployed (see [DEPLOYMENT.md](DEPLOYMENT.md)):
+
+```
+Vercel   PAPER_WORKER_URL + AI_TRADER_API_TOKEN
+Render   PYTHONPATH=src python3 -m ai_trader http, disk at /var/data
+```
+
+Locally, the frontend spawns the worker over stdio:
 
 ```
 npm run dev          # UI on :8080, Python worker spawned on first API call
+```
+
+Or run the worker exactly as the host does:
+
+```
+PORT=8090 AI_TRADER_API_TOKEN=dev-token PYTHONPATH=src python3 -m ai_trader http
 ```
 
 Python tests:
@@ -226,8 +248,9 @@ Not the next step, and not a config flip. It would need all of:
 
 ## Next sensible step
 
-1. Keep paper-trading BTC-USD in the preview worker until there is a real
-   decision history.
-2. Connect one real prediction-market venue as a **read-only book source**.
-3. Put the Python worker on a long-lived host if this needs to outlive the
-   preview sandbox.
+1. Keep paper-trading BTC-USD on the deployed worker until there is a real
+   decision history measured in weeks, not hours.
+2. Connect one real prediction-market venue as a **read-only book source**, so
+   the event pipeline can do something other than HOLD.
+3. Load a historical corpus so the benchmark harness has out-of-sample data to
+   split.

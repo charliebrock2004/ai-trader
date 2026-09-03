@@ -133,12 +133,16 @@ Browser ──HTTP──► Node (TanStack Start)
                      │  GET  /api/agent /api/performance /api/system /api/decisions
                      │  POST /api/agent/cycle            (token required)
                      │
-                     └─stdio JSON lines─► python3 -m ai_trader rpc
+                     ├─stdio JSON lines─► python3 -m ai_trader rpc      (local)
+                     │
+                     └─HTTPS + token────► python3 -m ai_trader http     (deployed)
                                              └─ AgentRuntime (durable)
 ```
 
-One long-lived process owns both. See [DEPLOYMENT.md](DEPLOYMENT.md) for why this
-cannot be serverless.
+Both arrows reach the same `rpc.handle` command surface, so there is one engine
+and one ledger whichever transport is in use. The Python process is long-lived
+and owns the session; see [DEPLOYMENT.md](DEPLOYMENT.md) for why the frontend
+cannot host it.
 
 ---
 

@@ -105,13 +105,16 @@ export AI_TRADER_API_TOKEN="something-long-and-random"
 npm run dev          # http://localhost:8080
 ```
 
-The Node server spawns the Python worker itself. There is no second HTTP port.
+Locally, the Node server spawns the Python worker itself over stdio. Deployed,
+the worker is its own always-on service and the Node server proxies to it over
+HTTPS — same engine, same commands, different transport. See
+[DEPLOYMENT.md](DEPLOYMENT.md).
 
 Without `AI_TRADER_API_TOKEN` the read-only pages work and every mutating
 endpoint refuses — an unconfigured deployment is closed, not open.
 
 ```bash
-python3 -m pytest      # 453 tests
+python3 -m pytest      # 482 tests
 npm test               # frontend contract tests
 npx tsc --noEmit
 ```
