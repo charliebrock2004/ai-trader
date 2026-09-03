@@ -1,11 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  browserPaperStatus,
-  startBrowserPaper,
-  stopBrowserPaper,
-  tickBrowserPaper,
-} from "@/lib/paper-browser";
 import { raceTimeout } from "@/lib/paper-core";
 import {
   EMPTY_SESSION,
@@ -106,17 +100,6 @@ export function TradingHome() {
 
   useEffect(() => {
     if (!status.running) return;
-    if (status.engine === "browser") {
-      const id = window.setInterval(() => {
-        void tickBrowserPaper().then((next) => {
-          if (next) {
-            setStatus(next);
-            if (next.data_error) setNote(cleanError(next.data_error));
-          }
-        });
-      }, 15000);
-      return () => window.clearInterval(id);
-    }
     const id = window.setInterval(() => {
       void (async () => {
         try {
@@ -139,7 +122,7 @@ export function TradingHome() {
       })();
     }, 2000);
     return () => window.clearInterval(id);
-  }, [status.running, status.session_id, status.engine]);
+  }, [status.running, status.session_id]);
 
   async function startFromServer() {
     const res = await raceTimeout(
@@ -169,19 +152,21 @@ export function TradingHome() {
     return body;
   }
 
+  /**
+   * Start the desk.
+   *
+   * Only the worker starts a session. An earlier version tried an in-browser
+   * paper engine first and only fell back to the server if that threw — which
+   * meant the button usually drove a simulation that never touched the risk
+   * engine, the policy guardian, the survival latch or the ledger, produced
+   * P&L that existed in no audit trail, and vanished on refresh. There is one
+   * engine, and it is not in the browser.
+   */
   async function start() {
     setBusy(true);
-    setNote("Loading public BTC-USD candles…");
+    setNote("Asking the worker to start…");
     try {
-      let body: PaperSessionStatus;
-      try {
-        body = await startBrowserPaper();
-      } catch (browserError) {
-        body = await startFromServer();
-        if (!body.running && browserError instanceof Error && !body.data_error) {
-          throw browserError;
-        }
-      }
+      const body = await startFromServer();
       setStatus(body);
       if (body.data_error) {
         setNote(cleanError(body.data_error));
@@ -192,12 +177,8 @@ export function TradingHome() {
         const nextTimeframe = body.timeframe || body.config?.timeframe || "5m";
         const price = typeof body.last_price === "number" ? ` · last ${body.last_price}` : "";
         setNote(`Paper session running · ${nextSymbol} ${nextTimeframe}${price}`);
-        window.setTimeout(() => {
-          const later = browserPaperStatus();
-          if (later) setStatus(later);
-        }, 2500);
       } else {
-        setNote("Paper engine did not start.");
+        setNote("The worker did not start a session.");
       }
     } catch (error) {
       setNote(error instanceof Error ? cleanError(error.message) : "Start failed.");
@@ -209,25 +190,29 @@ export function TradingHome() {
   async function stop() {
     setBusy(true);
     try {
-      let body = await stopBrowserPaper();
-      try {
-        const res = await raceTimeout(
-          fetch(apiUrl("/api/paper-session/stop"), { method: "POST", cache: "no-store" }),
-          6000,
-          "Stop timed out.",
-        );
-        const raw = await res.text();
-        const parsed = readJson(raw);
-        const server = asStatus(parsed);
-        if (server) body = { ...server, grok: "STOPPED", running: false, stopped: true, engine: body.engine };
-      } catch {
-        /* local stop already applied */
+      const res = await raceTimeout(
+        fetch(apiUrl("/api/paper-session/stop"), { method: "POST", cache: "no-store" }),
+        10000,
+        "Stop timed out.",
+      );
+      const body = asStatus(readJson(await res.text()));
+      if (!res.ok || !body) {
+        // Do not paint the desk STOPPED on the strength of a failed request.
+        // The worker decides whether it stopped; saying otherwise here would
+        // leave a running session behind a screen that claims it is halted.
+        setNote("Stop failed. The worker may still be running — check the System page.");
+        return;
       }
-      setStatus({ ...body, grok: "STOPPED", running: false, stopped: true });
-      setNote("Stopped. New paper trades blocked.");
+      setStatus(body);
+      setNote(
+        body.running ? "The worker did not stop." : "Stopped. New paper trades blocked.",
+      );
     } catch (error) {
-      setStatus({ ...status, grok: "STOPPED", running: false, stopped: true });
-      setNote(error instanceof Error ? error.message : "Stop failed.");
+      setNote(
+        error instanceof Error
+          ? `${cleanError(error.message)} The worker may still be running.`
+          : "Stop failed.",
+      );
     } finally {
       setBusy(false);
     }

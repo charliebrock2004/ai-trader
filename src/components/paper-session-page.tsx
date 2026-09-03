@@ -55,8 +55,10 @@ export function PaperSessionPage() {
       setStatus(body);
       if (body.data_error) setNote(body.data_error);
     } catch {
-      setNote("Showing the last paper snapshot. The live engine is not on this desk.");
-      setStatus(FALLBACK);
+      // Do not swap in a snapshot here. A Start that failed leaves the desk
+      // exactly as it was, and showing canned figures in its place would put
+      // numbers on screen that no engine reported.
+      setNote("Could not reach the trading engine. Nothing was started.");
     } finally {
       setBusy(false);
     }

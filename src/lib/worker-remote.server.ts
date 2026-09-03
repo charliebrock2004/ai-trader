@@ -108,7 +108,10 @@ export function workerUnreachable(message: string): Json {
     session_ready: false,
     grok: "STOPPED",
     status: "STOPPED",
-    engine: "python-worker",
+    // Not "python-worker": there is no engine answering. A dashboard that
+    // prints this field must not be able to name a running engine when none
+    // responded.
+    engine: "unreachable",
     real_market_data: false,
     market_data: "unavailable",
     balance: 100,

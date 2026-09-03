@@ -1,10 +1,11 @@
 {
+  "_comment": "Placeholder shown before the first status reply arrives. It must describe an untouched desk and nothing else: no market data claim, no decision history, no P&L. Anything asserted here would be visible to a user as though the engine had reported it.",
   "ok": true,
-  "banner": "PAPER SIMULATION \u2014 NO REAL TRADING",
+  "banner": "PAPER SIMULATION — NO REAL TRADING",
   "live": false,
   "broker": "NOT USED",
   "grok": "STOPPED",
-  "grok_model": "fixture-hold",
+  "grok_model": null,
   "running": false,
   "stopped": true,
   "balance": 100.0,
@@ -15,8 +16,11 @@
   "open_pnl": 0.0,
   "trades": 0,
   "maximum_drawdown": 0.0,
-  "last_decision_at": "2026-08-28T13:50:00+00:00",
-  "decisions": 2,
-  "real_market_data": true,
+  "last_decision_at": null,
+  "decisions": 0,
+  "real_market_data": false,
+  "status": "STOPPED",
+  "engine": null,
+  "currency": "GBP",
   "symbol": "BTC-USD"
 }

@@ -108,6 +108,22 @@ export function SystemPage() {
                     : "Mutating endpoints are refused until AI_TRADER_API_TOKEN is set on the server."
                 }
               />
+              <Row
+                label="Trading worker"
+                value={data.worker_connected ? "Connected over HTTPS" : "Local process"}
+                note={
+                  data.worker_connected
+                    ? "A persistent worker owns the session. Closing this page does not stop it."
+                    : "No PAPER_WORKER_URL is set, so the engine runs beside this server. On a serverless host that means the desk cannot run at all."
+                }
+              />
+              {data.frontend_open ? (
+                <Row
+                  label="Who can press Start"
+                  value="Anyone with this URL"
+                  note="The worker itself is protected by its token, but this page is not gated. Turn on Vercel Deployment Protection, or set AI_TRADER_UI_TOKEN."
+                />
+              ) : null}
             </tbody>
           </table>
         </div>

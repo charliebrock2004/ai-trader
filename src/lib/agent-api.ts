@@ -225,6 +225,10 @@ export type SystemStatus = {
   live: false;
   paper_only: boolean;
   control_enabled: boolean;
+  /** True when this frontend is proxying to a persistent worker over HTTPS. */
+  worker_connected?: boolean;
+  /** True when page access is the only thing gating the Start button. */
+  frontend_open?: boolean;
   components: { id: string; title: string; ok: boolean; detail: string }[];
   last_error: string | null;
   last_cycle_at: string | null;
