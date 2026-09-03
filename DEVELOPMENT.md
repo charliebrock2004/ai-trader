@@ -1,162 +1,142 @@
 # Development rules
 
-How humans and AI assistants should change AI-Trader.
+How humans and AI assistants change AI-Trader.
 
-Repository: [charliebrock2004/ai-trader](https://github.com/charliebrock2004/ai-trader)  
-Read [PROJECT_STATUS.md](PROJECT_STATUS.md), [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md) first.
+Read [PROJECT_STATUS.md](PROJECT_STATUS.md) and [ARCHITECTURE.md](ARCHITECTURE.md)
+first.
 
 ---
 
 ## Default stance
 
-Paper trading first. The product is a research desk, not a broker.
-
-If a change is not required to finish the requested task, do not make it.
-Do not rewrite working modules. Do not restyle the home screen unless asked.
+Paper only. The product is an experiment designed to find out whether an edge
+exists, not a system that assumes one does. If a change makes the results look
+better without making them more true, it is the wrong change.
 
 ---
 
 ## Hard invariants
 
-These are not style preferences. Breaking them is a bug.
+Breaking any of these is a bug, not a style disagreement.
 
-1. **`LIVE_TRADING_ALLOWED` stays `False`** in `src/ai_trader/safety.py`.
-   There is no env override and no “just for a test” exception.
-2. **Never connect Alpaca live.** `https://api.alpaca.markets` must remain
-   blocked. Paper host only: `https://paper-api.alpaca.markets`.
-3. **Never bypass the risk engine.** Every proposed BUY/SELL goes through
-   `RiskEngine`. Do not let Grok, the UI, or a session runner call a broker
-   or the paper ledger directly.
-4. **`allow_orders=False`** stays the constructor default.
-5. **Kill switch** stays file-backed and defaults engaged. Clearing it must
-   not enable live trading.
-6. **Starting cash is £100** (`STARTING_CASH` in
-   `src/ai_trader/account/simulated.py`) unless the user explicitly asks to
-   change it.
-7. **No secrets in git.** No `.env`, API keys, tokens, passwords, or
-   `credentials.json`. `.env.example` may contain empty placeholders only.
-8. **Grok does not talk to brokers.** `GrokAnalyst` proposes JSON
-   BUY/SELL/HOLD. It must not send tools or call Alpaca.
-
-`tests/test_safety.py` and `tests/test_safety_audit.py` exist to catch
-regressions. If you change safety, those tests must still pass for the
-right reasons — do not weaken them.
-
----
-
-## Paper session behaviour to preserve
-
-Unless the user asks otherwise:
-
-- Start = BTC-USD, public Coinbase, 5-minute **completed** bars, continuous.
-- Sequential walk, **no look-ahead**.
-- Grok (or fixture HOLD) on warmup 8, then every 8 bars.
-- Fills at the **next bar open** ± spread/slip (`paper/execution.py`).
-- Stop cancels pending and blocks new paper trades.
-- UI Start/Stop stay on the home screen; do not hide them behind System.
+1. **`LIVE_TRADING_ALLOWED` stays `False`.** No env override, no "just for a
+   test".
+2. **Losses must never increase permitted risk.** Every survival state's
+   ceilings are monotone. `SurvivalConfig` refuses to construct otherwise, and
+   property tests assert it. If you add a state or a ceiling, extend those tests.
+3. **The Policy Guardian may only downgrade.** `_outcome` raises on an upgrade.
+   Do not remove that assertion.
+4. **TERMINAL is one-way.** Do not add a method that clears it. Do not make the
+   database the only witness, or the file the only witness.
+5. **Operating cost may never reach sizing or the edge threshold.** The guardian
+   takes no cost input and a test asserts none appears in its code.
+6. **The LLM never produces a probability, a size, a ticker, a price or a
+   venue.** If you extend the analyst schema, it must remain incapable of
+   expressing an order.
+7. **No implicit currency conversion.** A foreign position without an explicit
+   FX rate is refused.
+8. **A binary's risk is its whole premium.** Never size one as though it had a
+   stop.
+9. **Every decision is recorded, including HOLDs and rejections**, with a reason.
+10. **No secrets in git**, and never in a `VITE_` variable.
 
 ---
 
-## How to modify safely
+## What to preserve
+
+The pieces that were already good and should stay that way:
+
+- AI/execution separation and strict response validation.
+- Fail-closed market data — timeout, stale, malformed and unavailable all mean
+  HOLD.
+- No-look-ahead discipline (`_visible_only`, `seen_future`, ordered replay).
+- Conservative fill assumptions. Never make a fill more favourable to look better.
+- The dark, restrained visual language.
+- An honest `PROJECT_STATUS.md`.
+
+---
+
+## How to change something safely
 
 1. State the smallest change that satisfies the request.
-2. Touch only the modules on that path (see ARCHITECTURE.md).
-3. Keep public function names and JSON status fields the UI already reads
-   (`grok`, `running`, `balance`, `today_pnl`, `current_decision`, `position`,
-   `broker`, `live`, `data_error`).
-4. Add or extend a test in `tests/` for the behaviour you changed.
-5. Run the full suite:
+2. Touch only the modules on that path.
+3. Add or extend a test for the behaviour you changed. A new module without a
+   test does not ship.
+4. Run everything:
 
    ```bash
-   PYTHONPATH=src python3 -m pytest
+   python3 -m pytest        # 453 tests
+   npm test                 # frontend contract tests
+   npx tsc --noEmit
+   npm run build
    ```
 
-6. If you changed TypeScript, also run `npx tsc --noEmit`.
-7. Click Start (or POST `/api/paper-session/start`) and confirm:
-   - `live` is false
-   - `broker` is `NOT USED` unless Alpaca paper is explicitly under test
-   - `balance` starts at 100
-   - `LIVE_TRADING_ALLOWED` is still False
-8. Commit source + tests. Do not commit `node_modules`, `data/*.db`, logs,
-   screenshots, `.vercel`, or `.env`.
+5. Read your own diff adversarially. What would make this wrong?
+6. Update `PROJECT_STATUS.md` honestly — including anything you made worse.
 
 ---
 
-## Never enable live trading without an explicit milestone
+## Test conventions
 
-A future live-trading milestone would need **all** of:
+Tests are the argument that the system is trustworthy, so they are written to
+fail for the right reason:
 
-- A written user request that says live trading, not “paper” or “Alpaca”
-- A dedicated safety review
-- Keys that are not this repo
-- The current kill switch, risk engine, and paper simulator left in place as
-  the default path
-
-Until that milestone exists: do not add a live flag, a live URL, a live
-submit path, or a UI control that implies real money.
-
----
-
-## Secrets
-
-- Read keys from the environment (`XAI_API_KEY`, `ALPACA_*`) in server/Python
-  only.
-- Never put keys in `VITE_` variables (those ship to the browser).
-- Never print secrets in logs, RPC JSON, or dashboard payloads
-  (`Settings.public_view()` is the safe snapshot).
-- If a secret is committed by mistake, rotate it. Do not just delete the file.
+- **Name the property, not the function.** `test_losing_money_shrinks_the_allowed_premium`,
+  not `test_review_2`.
+- **Assert the corrected behaviour, never adjust an assertion to match a bug.**
+  When behaviour legitimately changes, update the expectation *and* say why in
+  the comment.
+- **Prefer structural proof where possible.** An AST walk asserting the guardian
+  cannot see a cost is stronger than a behavioural test that it currently does
+  not.
+- **Fuzz the invariants.** Monotonicity, downgrade-only and ledger consistency
+  are all property-tested across randomised inputs.
+- **A test that can be made to pass by loosening a limit is the wrong test.**
 
 ---
 
-## Tests before commit
+## Code ownership
 
-Minimum:
+To keep two AI partners from colliding:
+
+| Owner | Paths |
+|---|---|
+| Claude | `risk/`, `survival/`, `edge/`, `contracts/`, `paper/`, `db/`, `analytics/`, `replay/`, `costs/`, `tests/` |
+| Grok | `market_data/`, `analysis/`, `ai/`, `session/`, `pipeline/`, `src/components/`, `src/routes/` |
+| Either, with review | `agent/`, `orchestrator.py`, `safety.py`, `markets/`, `events/`, docs |
+
+Never both in one file in one session. Cross-boundary changes get a review from
+the other. Whoever touches a module runs the full suite and updates
+`PROJECT_STATUS.md`.
+
+---
+
+## Things not to do
+
+- Do not weaken a safety test to make a feature work.
+- Do not make the paper simulator more optimistic (better fills, no gaps, no
+  fees). That is how a fake edge survives to production.
+- Do not call a different random seed "out-of-sample".
+- Do not treat an LLM confidence score as a calibrated probability.
+- Do not add a third chart to the performance page.
+- Do not add a UI control that implies real money.
+- Do not reintroduce a second trading engine in TypeScript.
+- Do not claim profitability. If the evidence says there is no edge, the
+  application must say so — that outcome is a successful experiment.
+
+---
+
+## Running it
 
 ```bash
-PYTHONPATH=src python3 -m pytest
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+npm install
+
+cp .env.example .env      # never commit .env
+export AI_TRADER_API_TOKEN="something-long-and-random"
+npm run dev               # UI on :8080, Python worker spawned automatically
 ```
 
-If the change is in the Start path, also:
-
-```bash
-curl -sS -X POST http://127.0.0.1:8080/api/paper-session/start \
-  -H 'content-type: application/json' \
-  -d '{"symbol":"BTC-USD","source":"public","bars":24,"timeframe":"5m","grok_frequency":8,"warmup":8,"continuous":true}'
-```
-
-Expect `grok: RUNNING`, `live: false`, `broker: NOT USED`, `balance: 100`.
-
-Then stop:
-
-```bash
-curl -sS -X POST http://127.0.0.1:8080/api/paper-session/stop
-```
-
----
-
-## What not to do
-
-- Do not start a second HTTP server for the paper engine. Stdio RPC only.
-- Do not bind Python to the preview port (it steals the UI).
-- Do not fetch random extra hosts from the Node process.
-- Do not “simplify” by merging risk into Grok or Grok into the simulator.
-- Do not add auth or a database for accounts unless asked (this app is auth-off).
-- Do not commit AGENTS.md, `.grok/`, `screenshots/`, or other sandbox junk
-  (already gitignored).
-
----
-
-## Suggested first files for an AI clone
-
-```text
-PROJECT_STATUS.md
-DEVELOPMENT.md
-ARCHITECTURE.md
-README.md
-src/ai_trader/safety.py
-src/ai_trader/pipeline/orchestrator.py
-src/ai_trader/session/runner.py
-src/lib/paper-engine.server.ts
-src/components/trading-home.tsx
-tests/test_safety_audit.py
-```
+Without `AI_TRADER_API_TOKEN`, read-only pages work and every mutating endpoint
+refuses. That is deliberate.

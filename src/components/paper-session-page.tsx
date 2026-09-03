@@ -117,7 +117,7 @@ export function PaperSessionPage() {
             One session. No live orders.
           </h2>
           <p className="mt-4 max-w-[42ch] text-sm leading-normal text-muted">
-            Sequential candles. Grok. Risk. Alpaca paper when configured. Never live.
+            Sequential candles. Grok. Risk. Internal paper fills only. Never live.
           </p>
         </div>
         <aside className="desk-card">
@@ -151,8 +151,8 @@ export function PaperSessionPage() {
       </dl>
 
       <footer className="mt-8 flex flex-col gap-1.5 border-t border-fg/12 pt-4 font-mono text-xs text-faint">
-        <p>Alpaca paper only when configured. Live trading is disabled in code.</p>
-        <p>Live Alpaca host blocked · live trading allowed: false</p>
+        <p>Paper fills stay on the internal book. Live trading is disabled in code.</p>
+        <p>External live hosts blocked · live trading allowed: false</p>
       </footer>
     </div>
   );

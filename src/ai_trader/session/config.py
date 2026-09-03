@@ -29,6 +29,10 @@ class PaperSessionConfig:
     source: str = "simulated"
     flatten_at_end: bool = True
     continuous: bool = False
+    #: In a continuous session, bars fetched at Start are history. They warm
+    #: indicators; they must not create trades that pretend to be live.
+    trade_historical_bars: bool = False
+    base_currency: str = "GBP"
 
     def validate(self) -> "PaperSessionConfig":
         source = (self.source or "").strip().lower()
@@ -62,6 +66,8 @@ class PaperSessionConfig:
             "source": self.source,
             "flatten_at_end": self.flatten_at_end,
             "continuous": self.continuous,
+            "trade_historical_bars": self.trade_historical_bars,
+            "base_currency": self.base_currency,
             "live": False,
             "real_market_data": is_public,
             "allowed_timeframes": sorted(TIMEFRAME_SECONDS),

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from ai_trader.exceptions import InvalidMarketDataError, MarketDataUnavailableError, StaleMarketDataError
+from ai_trader.fx.provider import FxRateUnavailableError, PinnedFxProvider
 from ai_trader.market_data.public import PublicCryptoFeed, normalize_public_symbol
 from ai_trader.market_data.validation import parse_utc
 from ai_trader.safety import LIVE_TRADING_ALLOWED
@@ -72,6 +73,11 @@ def _feed(payload, **kwargs) -> tuple[PublicCryptoFeed, FakeGet]:
     http = FakeGet(payload, **kwargs)
     feed = PublicCryptoFeed(http_client=http, now_fn=lambda: NOW)
     return feed, http
+
+
+def _fx() -> PinnedFxProvider:
+    """0.80 GBP per USD — an explicit rate, never an assumed one."""
+    return PinnedFxProvider({("USD", "GBP"): "0.80"})
 
 
 def test_parses_completed_coinbase_candles() -> None:
@@ -178,9 +184,13 @@ def test_session_walks_public_tape_without_look_ahead() -> None:
     session = PaperSession(
         PaperSessionConfig(symbol="BTC-USD", bars=24, warmup=8, grok_frequency=8, source="public"),
         market_data=feed,
+        fx=_fx(),
     )
     report = session.start()
     assert report["ok"] is True
+    assert report["quote_currency"] == "USD"
+    assert report["currency"] == "GBP"
+    assert report["fx_rate"] == 0.8
     assert report["look_ahead"] is False
     assert report["live"] is False
     assert report["real_market_data"] is True
@@ -193,11 +203,49 @@ def test_session_walks_public_tape_without_look_ahead() -> None:
     assert all("alpaca" not in c["url"].lower() for c in http.calls)
 
 
+def test_usd_session_without_an_fx_provider_is_refused() -> None:
+    """A USD instrument on a GBP book must not silently treat $1 as £1."""
+    feed, _http = _feed(coinbase_rows(24))
+    session = PaperSession(
+        PaperSessionConfig(symbol="BTC-USD", bars=24, source="public"),
+        market_data=feed,
+    )
+    report = session.start()
+    assert report["ok"] is False
+    assert report["decision"] == "HOLD"
+    assert report["grok"] == "STOPPED"
+    assert report["trades"] == 0
+    assert report["data_failure"] == "not_configured"
+    assert "USD" in report["data_error"]
+
+
+def test_session_holds_when_the_fx_rate_is_unavailable() -> None:
+    class _DeadFx:
+        def rate(self, base, quote):
+            raise FxRateUnavailableError("FX feed down.", failure="network")
+
+        def health(self):
+            return {}
+
+    feed, _http = _feed(coinbase_rows(24))
+    session = PaperSession(
+        PaperSessionConfig(symbol="BTC-USD", bars=24, source="public"),
+        market_data=feed,
+        fx=_DeadFx(),
+    )
+    report = session.start()
+    assert report["ok"] is False
+    assert report["decision"] == "HOLD"
+    assert report["trades"] == 0
+    assert report["data_failure"] == "network"
+
+
 def test_session_connection_failure_holds() -> None:
     feed, _http = _feed([], error=ConnectionError("down"))
     session = PaperSession(
         PaperSessionConfig(symbol="BTC-USD", bars=24, source="public"),
         market_data=feed,
+        fx=_fx(),
     )
     report = session.start()
     assert report["ok"] is False
@@ -215,6 +263,7 @@ def test_session_malformed_holds() -> None:
     session = PaperSession(
         PaperSessionConfig(symbol="ETH-USD", bars=16, source="public"),
         market_data=feed,
+        fx=_fx(),
     )
     report = session.start()
     assert report["decision"] == "HOLD"
@@ -228,6 +277,7 @@ def test_session_stale_holds() -> None:
     session = PaperSession(
         PaperSessionConfig(symbol="BTC-USD", bars=24, source="public"),
         market_data=feed,
+        fx=_fx(),
     )
     report = session.start()
     assert report["decision"] == "HOLD"

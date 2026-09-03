@@ -41,9 +41,22 @@ function grokPaperFlag() {
 }
 
 function workspaceRoot() {
-  if (existsSync(join(process.cwd(), "src/ai_trader"))) return process.cwd();
-  if (existsSync("/workspace/src/ai_trader")) return "/workspace";
+  if (existsSync(join(process.cwd(), "src/ai_trader/rpc.py"))) return process.cwd();
   return process.cwd();
+}
+
+export function pythonEngineAvailable() {
+  if (process.env.PAPER_ENGINE === "inline") return false;
+  if (process.env.VERCEL) return false;
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME) return false;
+  // Production / PWA (Nitro vercel, vite preview) has no Python sidecar.
+  // Preview `npm run dev` stays on the stdio worker.
+  if (process.env.NODE_ENV === "production") return false;
+  const root = workspaceRoot();
+  if (!existsSync(join(root, "src/ai_trader/rpc.py"))) return false;
+  return ["/usr/bin/python3", "/usr/local/bin/python3", "/bin/python3"].some((bin) =>
+    existsSync(bin),
+  );
 }
 
 export function publicError(raw: string) {
@@ -121,6 +134,15 @@ function attach(proc: ChildProcessWithoutNullStreams) {
       waiter.resolve(failSession(FAILED_START));
     }
   });
+  proc.on("error", () => {
+    const current = state();
+    if (current.child === proc) current.child = null;
+    for (const [id, waiter] of current.pending) {
+      current.pending.delete(id);
+      clearTimeout(waiter.timer);
+      waiter.resolve(failSession(FAILED_START));
+    }
+  });
 }
 
 function spawnWorker() {
@@ -142,6 +164,7 @@ function spawnWorker() {
 }
 
 export async function ensurePaperWorker() {
+  if (!pythonEngineAvailable()) return false;
   const current = state();
   if (current.child && !current.child.killed && current.child.exitCode === null) return true;
   if (current.starting) return current.starting;
@@ -207,10 +230,106 @@ async function command(cmd: string, payload?: Record<string, unknown>, timeoutMs
   });
 }
 
+function unavailableDesk(cmd: string): EngineResult {
+  const message =
+    "The paper worker cannot run on this host. A persistent Python process is required; serverless deploys cannot run the desk.";
+  const stopped: EngineResult = {
+    ok: cmd !== "start" && cmd !== "stop" && cmd !== "cycle",
+    live: false,
+    live_trading_allowed: false,
+    broker: "NOT USED",
+    banner: "PAPER SIMULATION — NO REAL TRADING",
+    alive: true,
+    terminated: false,
+    running: false,
+    stopped: true,
+    worker_alive: false,
+    session_ready: false,
+    grok: "STOPPED",
+    status: "STOPPED",
+    balance: 100,
+    today_pnl: 0,
+    current_decision: "HOLD",
+    decision: "HOLD",
+    position: "flat",
+    open_pnl: 0,
+    trades: 0,
+    currency: "GBP",
+    engine: "unavailable",
+    hold_reason: message,
+    data_error: cmd === "start" || cmd === "stop" || cmd === "cycle" ? message : null,
+    account: {
+      base_currency: "GBP",
+      starting_cash: 100,
+      cash: 100,
+      equity: 100,
+      premium_at_risk: 0,
+      total_exposure: 0,
+      realised_pnl: 0,
+      fees_paid: 0,
+      drawdown: 0,
+      daily_pnl: 0,
+      open_positions: [],
+    },
+    survival: {
+      state: "HEALTHY",
+      terminated: false,
+      equity: 100,
+      starting_equity: 100,
+      highest_equity: 100,
+      terminal_threshold: 40,
+      base_currency: "GBP",
+      distance_to_terminal: 60,
+      life_remaining_pct: 100,
+      drawdown_from_peak_pct: 0,
+      policy: {
+        risk_multiplier: 1,
+        min_edge: 0,
+        max_exposure_pct: 0,
+        max_premium_pct: 0,
+        max_new_positions_per_day: 0,
+        description: "Worker not on this host.",
+      },
+      thresholds: {},
+      latch: { terminated: false },
+    },
+    costs: {
+      operating_costs: 0,
+      net_pnl: 0,
+      gross_trading_pnl: 0,
+      daily_burn: 0,
+      runway_days: null,
+      spendable_capital: 100,
+      self_sustaining: false,
+      costs_by_category: {},
+    },
+    milestones: [],
+    next_milestone: null,
+    decisions: { TOTAL: 0 },
+    last_decision: null,
+    last_cycle: null,
+    last_error: message,
+    open_positions: [],
+    config: { starting_equity: 100, base_currency: "GBP", terminal_threshold: 40 },
+  };
+  return stopped;
+}
+
 export async function paperEngineCommand(cmd: string, payload?: Record<string, unknown>) {
-  const result = await command(cmd, payload, cmd === "start" ? 120000 : 15000);
-  const error = typeof result.data_error === "string" ? publicError(result.data_error) : result.data_error;
+  if (!pythonEngineAvailable()) {
+    const result = unavailableDesk(cmd);
+    const mutating = cmd === "start" || cmd === "stop" || cmd === "cycle";
+    return Response.json(result, {
+      status: mutating ? 503 : 200,
+      headers: { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" },
+    });
+  }
+  const result = await command(cmd, payload, cmd === "start" ? 15000 : 15000);
+  const error = typeof result.data_error === "string" ? publicError(String(result.data_error)) : result.data_error;
   if (typeof error === "string") result.data_error = error;
   const failed = result.ok === false && result.data_error;
-  return Response.json(result, { status: failed ? 503 : 200 });
+  return Response.json(result, {
+    status: failed ? 503 : 200,
+    headers: { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" },
+  });
 }

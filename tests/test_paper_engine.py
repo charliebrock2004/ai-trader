@@ -54,14 +54,46 @@ def test_entry_fill_stop_and_accounting() -> None:
     assert len(fills) == 2
     assert fills[0]["reason"] == "ENTRY"
     assert fills[0]["price"] == 100.0
+    # 25% concentration cap on £100 equity at £100/unit.
+    assert fills[0]["quantity"] == 0.25
     assert fills[1]["reason"] == "STOP"
+    # Bar 2 opened at 99.5, above the 98 stop, so the stop price is achievable.
     assert fills[1]["price"] == 98.0
     account = report["account"]
-    assert account["cash"] == 98.00
-    assert account["realised_pnl"] == -2.00
+    assert account["cash"] == 99.50
+    assert account["realised_pnl"] == -0.50
     assert account["invested_value"] == 0
     assert account["positions"] == []
     assert account["fill_count"] == 2
+
+
+def test_stop_that_gaps_realises_the_gap_not_the_stop_price() -> None:
+    """A bar that opens through the stop cannot have exited at the stop."""
+    candles = [
+        _c(0, 100, 100.5, 99.5, 100),
+        _c(1, 100, 100.2, 99.8, 100),
+        _c(2, 90, 91, 88.0, 89),  # gaps far below the 98 stop
+    ]
+    sim = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False)
+    report = sim.run(_series(candles), source=ScriptedSignalSource({0: PaperAction.BUY}))
+    stop_fill = report["fills"][1]
+    assert stop_fill["reason"] == "STOP"
+    assert stop_fill["price"] == 90.0, "must fill at the gapped open, not the stop"
+    # 0.25 units * (90 - 100) = -2.50, worse than the -0.50 the stop implied.
+    assert report["account"]["realised_pnl"] == -2.50
+
+
+def test_take_profit_never_fills_on_a_favourable_gap() -> None:
+    candles = [
+        _c(0, 100, 100, 100, 100),
+        _c(1, 100, 100.1, 99.9, 100),
+        _c(2, 120, 130, 119, 125),  # gaps far above the 104 target
+    ]
+    report = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False).run(
+        _series(candles), source=ScriptedSignalSource({0: PaperAction.BUY})
+    )
+    assert report["fills"][1]["reason"] == "TARGET"
+    assert report["fills"][1]["price"] == 104.0, "favourable gaps are never credited"
 
 
 def test_take_profit() -> None:
@@ -75,8 +107,8 @@ def test_take_profit() -> None:
     )
     assert report["fills"][1]["reason"] == "TARGET"
     assert report["fills"][1]["price"] == 104.0
-    assert report["account"]["cash"] == 104.00
-    assert report["account"]["realised_pnl"] == 4.00
+    assert report["account"]["cash"] == 101.00
+    assert report["account"]["realised_pnl"] == 1.00
 
 
 def test_ambiguous_candle_uses_stop() -> None:
@@ -92,7 +124,7 @@ def test_ambiguous_candle_uses_stop() -> None:
         _series(candles), source=ScriptedSignalSource({0: PaperAction.BUY})
     )
     assert report["fills"][1]["reason"] == "STOP"
-    assert report["account"]["realised_pnl"] == -2.00
+    assert report["account"]["realised_pnl"] == -0.50
 
 
 def test_spread_and_slippage_are_adverse() -> None:
@@ -134,7 +166,9 @@ def test_daily_loss_halts_new_entries() -> None:
         _c(3, 97, 98, 96, 97),
         _c(4, 97, 98, 96, 97),
     ]
-    risk = RiskEngine(allow_orders=False, limits=RiskLimits(max_daily_loss_pct=0.01))
+    # 0.25 units losing ~3 points is a ~£0.75 hit on a £100 book, so the halt
+    # threshold has to be set against the position the engine actually takes.
+    risk = RiskEngine(allow_orders=False, limits=RiskLimits(max_daily_loss_pct=0.005))
     sim = PaperSimulator(risk=risk, spread_bps=0, slip_bps=0, flatten_at_end=False)
     report = sim.run(
         _series(candles),
@@ -143,6 +177,49 @@ def test_daily_loss_halts_new_entries() -> None:
     buys = [o for o in report["orders"] if o["side"] == "BUY"]
     assert any(o["status"] == "REJECTED" and "Daily loss" in o["reason"] for o in buys) or sim.ledger.halted
     assert sim.ledger.halted is True
+
+
+def test_a_round_trip_counts_as_one_trade() -> None:
+    """Opening and closing one position is one trade, not two."""
+    candles = [
+        _c(0, 100, 100, 100, 100),
+        _c(1, 100, 100.1, 99.9, 100),
+        _c(2, 99.5, 99.6, 96.0, 97),  # stops out
+    ]
+    sim = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False)
+    sim.run(_series(candles), source=ScriptedSignalSource({0: PaperAction.BUY}))
+    assert len(sim.ledger.closed_positions) == 1
+    assert sim.ledger.trades_today == 1
+    assert sim.ledger.round_trips == 1
+    # Two fills, one trade.
+    assert len(sim.ledger.fills) == 2
+
+
+def test_open_position_is_not_yet_a_completed_trade() -> None:
+    candles = [
+        _c(0, 100, 100, 100, 100),
+        _c(1, 100, 100.1, 99.9, 100),
+        _c(2, 100, 100.2, 99.8, 100),
+    ]
+    sim = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False)
+    sim.run(_series(candles), source=ScriptedSignalSource({0: PaperAction.BUY}))
+    assert sim.ledger.open_trades == 1
+    assert sim.ledger.trades_today == 0
+    assert sim.ledger.entries_today == 1
+
+
+def test_warmup_bars_never_trade() -> None:
+    """Historical warm-up may feed indicators but must not create fills."""
+    candles = [_c(i, 100, 101, 99, 100) for i in range(10)]
+    sim = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False)
+    sim.trade_from_index = 6
+    report = sim.run(
+        _series(candles),
+        source=ScriptedSignalSource({0: PaperAction.BUY, 2: PaperAction.BUY}),
+    )
+    assert report["orders"] == []
+    assert report["fills"] == []
+    assert report["trade_from_index"] == 6
 
 
 def test_kill_switch_blocks_new_entries() -> None:

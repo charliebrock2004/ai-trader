@@ -208,9 +208,17 @@ def connect(path: Path) -> sqlite3.Connection:
     return conn
 
 
+AGENT_SCHEMA_PATH = Path(__file__).resolve().parent / "schema_agent.sql"
+
+
+def agent_schema_sql() -> str:
+    return AGENT_SCHEMA_PATH.read_text(encoding="utf-8")
+
+
 def initialise_database(path: Path) -> sqlite3.Connection:
     conn = connect(path)
     conn.executescript(SCHEMA_SQL)
+    conn.executescript(agent_schema_sql())
     conn.commit()
     return conn
 

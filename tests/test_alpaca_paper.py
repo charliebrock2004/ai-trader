@@ -281,8 +281,9 @@ def test_orchestrator_alpaca_hold_does_not_submit(isolated_env, monkeypatch: pyt
     orch.alpaca_broker = AlpacaPaperBroker(settings, http_client=http)
     result = orch.start_paper_session(symbol="SIM-UP", bars=16, warmup=8, grok_frequency=8)
     assert result["live"] is False
-    assert result["execution"] == "alpaca_paper"
-    assert result["status"] == "ALPACA PAPER"
+    # The internal simulator is the only fill path. Alpaca is observation only.
+    assert result["execution"] == "simulated"
+    assert result["broker"] == "NOT USED"
     assert result["decision"] == "HOLD"
     assert not any(c["method"] == "POST" for c in http.calls)
     repo.close()
@@ -302,13 +303,21 @@ def test_orchestrator_kill_switch_blocks_alpaca(isolated_env, monkeypatch: pytes
     )
     orch.alpaca_broker = AlpacaPaperBroker(settings, http_client=http)
     result = orch.start_paper_session(symbol="SIM-UP", bars=12, warmup=4, grok_frequency=8)
-    assert result["status"] == "BLOCKED"
+    assert result["broker"] == "NOT USED"
     assert not any(c["method"] == "POST" for c in http.calls)
     assert result["live"] is False
     repo.close()
 
 
-def test_orchestrator_buy_submits_to_paper_host(isolated_env, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_orchestrator_never_submits_a_broker_order_even_on_buy(
+    isolated_env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A BUY decision must not reach any broker from the session path.
+
+    This used to submit an Alpaca paper order through a second, weaker risk
+    check whose fills never touched PaperLedger. The internal simulator is now
+    the only fill path.
+    """
     settings = _paper_settings(monkeypatch)
     repo = Repository(settings.resolve_database_path())
     switch = KillSwitch(settings.resolve_kill_switch_path(), initially_engaged=True)
@@ -338,12 +347,13 @@ def test_orchestrator_buy_submits_to_paper_host(isolated_env, monkeypatch: pytes
         "balance": 100.0,
     }
     out = orch._attach_alpaca_paper(report)
-    posts = [c for c in http.calls if c["method"] == "POST"]
-    assert posts
-    assert posts[0]["url"] == f"{ALPACA_PAPER_BASE_URL}/v2/orders"
-    assert is_alpaca_live_url(posts[0]["url"]) is False
-    assert out["broker"] == "alpaca_paper"
+    assert [c for c in http.calls if c["method"] == "POST"] == []
+    assert out["broker"] == "NOT USED"
+    assert out["execution"] == "simulated"
+    assert out["alpaca_submit_calls"] == 0
+    assert out["broker_submit_calls"] == 0
     assert out["live"] is False
-    assert out["status"] == "ALPACA PAPER"
-    assert out["alpaca_submit_calls"] == 1
+    # The balance shown stays the internal paper book, not the Alpaca mirror.
+    assert out["balance"] == 100.0
+    assert out["alpaca_account"]["account_equity"] != 100.0
     repo.close()

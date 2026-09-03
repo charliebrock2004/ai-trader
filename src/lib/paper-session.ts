@@ -23,6 +23,12 @@ export type PaperSessionStatus = {
   status?: string;
   execution?: string;
   currency?: string;
+  symbol?: string;
+  timeframe?: string;
+  last_price?: number | null;
+  config?: { symbol?: string; timeframe?: string; source?: string };
+  session_id?: string | null;
+  engine?: string | null;
 };
 
 export const EMPTY_SESSION: PaperSessionStatus = {

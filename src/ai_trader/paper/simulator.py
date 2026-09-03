@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any, Callable, Optional
 
-from ai_trader.account.simulated import STARTING_CASH
+from ai_trader.account.simulated import CURRENCY, STARTING_CASH
 from ai_trader.analysis.technical import analyse_series
+from ai_trader.instruments import InstrumentSpec, instrument_for
 from ai_trader.paper.execution import (
     ASSUMPTIONS,
     SPREAD_BPS,
@@ -14,6 +15,8 @@ from ai_trader.paper.execution import (
     buy_fill_price,
     resolve_intrabar,
     sell_fill_price,
+    stop_exit_price,
+    target_exit_price,
 )
 from ai_trader.paper.ledger import PaperLedger
 from ai_trader.paper.models import (
@@ -38,12 +41,25 @@ class PaperSimulator:
         spread_bps: float = SPREAD_BPS,
         slip_bps: float = SLIPPAGE_BPS,
         flatten_at_end: bool = True,
+        instrument: Optional[InstrumentSpec] = None,
+        fx_rate: float = 1.0,
+        base_currency: str = CURRENCY,
+        policy: Any = None,
+        on_decision: Optional[Callable[[dict[str, Any]], None]] = None,
     ) -> None:
-        self.ledger = PaperLedger(starting_cash=starting_cash)
+        self.ledger = PaperLedger(starting_cash=starting_cash, base_currency=base_currency)
         self.risk = risk or RiskEngine(allow_orders=False)
         self.spread_bps = spread_bps
         self.slip_bps = slip_bps
         self.flatten_at_end = flatten_at_end
+        self.instrument = instrument or instrument_for("")
+        self.fx_rate = float(fx_rate)
+        self.ledger.set_fx(self.instrument.quote_currency, self.fx_rate)
+        #: Optional survival policy. Must expose ``review(...) -> PolicyOutcome``
+        #: and may only ever make a proposal more conservative.
+        self.policy = policy
+        #: Called with every decision record, including HOLDs and rejections.
+        self.on_decision = on_decision
         self.pending: Optional[PaperOrder] = None
         self.events: list[dict[str, Any]] = []
         self.kill_switch = False
@@ -51,6 +67,14 @@ class PaperSimulator:
         self.seen_future = False  # invariant: must stay False
         self.equity_curve: list[dict[str, Any]] = []
         self.stopped_at: Optional[int] = None
+        #: Bars before this index warm indicators only and never trade.
+        self.trade_from_index = 0
+        self.rejections: list[dict[str, Any]] = []
+
+    def set_fx_rate(self, rate: float) -> None:
+        """Update the quote->base rate used for sizing and marking."""
+        self.fx_rate = float(rate)
+        self.ledger.set_fx(self.instrument.quote_currency, self.fx_rate)
 
     def _note(self, kind: str, **payload: Any) -> None:
         self.events.append({"kind": kind, **payload})
@@ -72,7 +96,7 @@ class PaperSimulator:
         if order is None:
             return
         price = buy_fill_price(candle.open, spread_bps=self.spread_bps, slip_bps=self.slip_bps)
-        cost = round(order.quantity * price, 2)
+        cost = self.ledger.to_base(order.quantity * price, self.instrument.quote_currency)
         if cost > self.ledger.cash + 0.001:
             order.status = OrderStatus.REJECTED.value
             order.reason = "Insufficient cash at fill."
@@ -91,7 +115,7 @@ class PaperSimulator:
             spread=self.spread_bps,
             slippage=self.slip_bps,
         )
-        self.ledger.apply_buy(order, fill)
+        self.ledger.apply_buy(order, fill, quote_currency=self.instrument.quote_currency)
         self.pending = None
         self._note("fill", fill=fill.to_dict(), bar=index)
 
@@ -105,11 +129,26 @@ class PaperSimulator:
                 candle=candle,
             )
             if hit is None:
-                self.ledger.mark(symbol, candle.close)
+                self.ledger.mark(symbol, candle.close, fx=self.fx_rate)
                 continue
-            raw = pos.stop_loss if hit == "stop" else pos.take_profit
-            assert raw is not None
-            price = sell_fill_price(raw, spread_bps=self.spread_bps, slip_bps=self.slip_bps)
+            if hit == "stop":
+                assert pos.stop_loss is not None
+                # Gap-aware: a bar that opened through the stop fills at the
+                # open, not at the stop price.
+                price = stop_exit_price(
+                    stop_loss=pos.stop_loss,
+                    candle=candle,
+                    spread_bps=self.spread_bps,
+                    slip_bps=self.slip_bps,
+                )
+            else:
+                assert pos.take_profit is not None
+                price = target_exit_price(
+                    take_profit=pos.take_profit,
+                    candle=candle,
+                    spread_bps=self.spread_bps,
+                    slip_bps=self.slip_bps,
+                )
             fill = PaperFill(
                 fill_id=self.ledger.next_fill_id(),
                 order_id=pos.order_id,
@@ -143,12 +182,49 @@ class PaperSimulator:
         if len(visible.candles) >= 5:
             analysis = analyse_series(visible)
         action = source.decide(index, visible, analysis)
+        proposed = action.value if hasattr(action, "value") else str(action)
+
+        policy_note = ""
+        if self.policy is not None:
+            outcome = self.policy.review_spot(
+                action=proposed,
+                account=self._account_dict(),
+                bar=index,
+            )
+            policy_note = outcome.reason
+            if outcome.action != proposed:
+                self._record_decision(
+                    index,
+                    candle,
+                    proposed=proposed,
+                    final=outcome.action,
+                    stage="policy",
+                    approved=False,
+                    reason=outcome.reason,
+                )
+                proposed = outcome.action
+                action = PaperAction(proposed)
+
         if action in {PaperAction.HOLD, "HOLD"}:
+            self._record_decision(
+                index,
+                candle,
+                proposed=proposed,
+                final="HOLD",
+                stage="signal",
+                approved=False,
+                reason=policy_note or "No trade signal.",
+            )
             return
         open_pos = self.ledger.open_positions()
         has = any(p.symbol == visible.symbol for p in open_pos)
+        multiplier = 1.0
+        terminated = False
+        if self.policy is not None:
+            multiplier = self.policy.risk_multiplier()
+            terminated = self.policy.is_terminated()
         assessment = self.risk.review_paper(
-            action.value if hasattr(action, "value") else str(action),
+            proposed,
             price=candle.close,
             account=self._account_dict(),
             open_positions=len(open_pos),
@@ -157,6 +233,10 @@ class PaperSimulator:
             has_position=has,
             halted=self.ledger.halted,
             kill_switch=kill_switch,
+            instrument=self.instrument,
+            fx_rate=self.fx_rate,
+            risk_multiplier=multiplier,
+            terminated=terminated,
         )
         if action in {PaperAction.CLOSE, PaperAction.SELL} and assessment.approved and has:
             pos = self.ledger.positions[visible.symbol]
@@ -197,8 +277,9 @@ class PaperSimulator:
         if assessment.approved:
             est = buy_fill_price(candle.close, spread_bps=self.spread_bps, slip_bps=self.slip_bps)
             pad = 1.02 if (self.spread_bps or self.slip_bps) else 1.0
-            if est > 0:
-                affordable = int((self.ledger.cash / (est * pad)) * 10000) / 10000.0
+            est_base = est * self.fx_rate
+            if est_base > 0:
+                affordable = self.instrument.floor_qty(self.ledger.cash / (est_base * pad))
                 if affordable < qty:
                     qty = affordable
         if not assessment.approved:
@@ -227,6 +308,19 @@ class PaperSimulator:
             )
             self.ledger.orders.append(order)
             self._note("reject", order=order.to_dict(), bar=index)
+            self.rejections.append(
+                {"bar": index, "action": proposed, "reason": reject_reason}
+            )
+            self._record_decision(
+                index,
+                candle,
+                proposed=proposed,
+                final="HOLD",
+                stage="risk",
+                approved=False,
+                reason=reject_reason,
+                assessment=assessment.to_dict(),
+            )
             return
         order = PaperOrder(
             order_id=self.ledger.next_order_id(),
@@ -245,6 +339,53 @@ class PaperSimulator:
         self.ledger.orders.append(order)
         self.pending = order
         self._note("pending", order=order.to_dict(), bar=index, assessment=assessment.to_dict())
+        self._record_decision(
+            index,
+            candle,
+            proposed=proposed,
+            final="BUY",
+            stage="execution",
+            approved=True,
+            reason=assessment.reason,
+            assessment=assessment.to_dict(),
+            order_id=order.order_id,
+        )
+
+    def _record_decision(
+        self,
+        index: int,
+        candle: Candle,
+        *,
+        proposed: str,
+        final: str,
+        stage: str,
+        approved: bool,
+        reason: str,
+        assessment: Optional[dict[str, Any]] = None,
+        order_id: Optional[str] = None,
+    ) -> None:
+        """Emit one decision record. HOLDs and rejections are recorded too."""
+        if self.on_decision is None:
+            return
+        self.on_decision(
+            {
+                "bar": index,
+                "timestamp": candle.timestamp,
+                "symbol": self.instrument.symbol,
+                "price": candle.close,
+                "quote_currency": self.instrument.quote_currency,
+                "fx_rate": self.fx_rate,
+                "proposed_action": proposed,
+                "final_action": final,
+                "stage": stage,
+                "approved": approved,
+                "reason": reason,
+                "assessment": assessment,
+                "order_id": order_id,
+                "equity": self.ledger.equity(),
+                "cash": self.ledger.cash,
+            }
+        )
 
     def run(
         self,
@@ -333,7 +474,7 @@ class PaperSimulator:
             elif self.pending is not None:
                 self._fill_pending(candle, i)
             self._manage_position(candle, i)
-            self.ledger.mark(series.symbol, candle.close)
+            self.ledger.mark(series.symbol, candle.close, fx=self.fx_rate)
             dd = self.ledger.drawdown()
             if dd > self.max_drawdown:
                 self.max_drawdown = dd
@@ -345,6 +486,10 @@ class PaperSimulator:
                 }
             )
             if self.kill_switch or stopped:
+                continue
+            if i < self.trade_from_index:
+                # Warm-up bar. Indicators see it; the trading path does not.
+                self._note("warmup", bar=i, timestamp=candle.timestamp)
                 continue
             self._signal(i, visible, source, kill_switch=self.kill_switch)
         return last_visible
@@ -403,6 +548,11 @@ class PaperSimulator:
             "broker_submit_calls": 0,
             "kill_switch": kill_switch,
             "stopped_at": self.stopped_at,
+            "rejections": list(self.rejections),
+            "trade_from_index": self.trade_from_index,
+            "base_currency": self.ledger.base_currency,
+            "quote_currency": self.instrument.quote_currency,
+            "fx_rate": self.fx_rate,
         }
 
 

@@ -1,6 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  browserPaperStatus,
+  startBrowserPaper,
+  stopBrowserPaper,
+  tickBrowserPaper,
+} from "@/lib/paper-browser";
+import { raceTimeout } from "@/lib/paper-core";
+import {
   EMPTY_SESSION,
   moneyAmount,
   positionLabel,
@@ -10,9 +17,17 @@ import snapshot from "@/lib/paper-session-snapshot.json";
 
 function asStatus(value: unknown): PaperSessionStatus | null {
   if (!value || typeof value !== "object") return null;
-  const row = value as Partial<PaperSessionStatus>;
-  if (typeof row.balance !== "number") return null;
-  return { ...EMPTY_SESSION, ...row };
+  const row = value as Record<string, unknown>;
+  const balance = Number(row.balance);
+  if (!Number.isFinite(balance)) return null;
+  return {
+    ...EMPTY_SESSION,
+    ...(row as Partial<PaperSessionStatus>),
+    balance,
+    today_pnl: Number(row.today_pnl) || 0,
+    open_pnl: Number(row.open_pnl) || 0,
+    trades: Number(row.trades) || 0,
+  };
 }
 
 function errorMessage(status: number, body: unknown, raw: string) {
@@ -46,6 +61,18 @@ function grokLabel(status: PaperSessionStatus) {
   return "STOPPED";
 }
 
+function readJson(raw: string) {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function apiUrl(path: string) {
+  return new URL(path, window.location.href).href;
+}
+
 const FALLBACK = asStatus(snapshot) ?? EMPTY_SESSION;
 
 export function TradingHome() {
@@ -56,41 +83,70 @@ export function TradingHome() {
   const grok = grokLabel(status);
   const decision = (status.current_decision || status.decision || "HOLD").toUpperCase();
   const currency = status.currency || "GBP";
+  const running = Boolean(status.running && !status.stopped);
+  const symbol = status.symbol || status.config?.symbol || "BTC-USD";
+  const timeframe = status.timeframe || status.config?.timeframe || "5m";
+  const lastPrice = typeof status.last_price === "number" ? status.last_price : null;
+  const failed = Boolean(
+    note &&
+      (status.data_error ||
+        note.toLowerCase().includes("fail") ||
+        note.toLowerCase().includes("unavailable") ||
+        note.toLowerCase().includes("timed out")),
+  );
+
+  useEffect(() => {
+    if (!busy) return;
+    const id = window.setTimeout(() => {
+      setBusy(false);
+      setNote((current) => current || "Start did not finish. No live orders were sent.");
+    }, 18000);
+    return () => window.clearTimeout(id);
+  }, [busy]);
 
   useEffect(() => {
     if (!status.running) return;
-    const id = window.setInterval(() => {
-      void (async () => {
-        try {
-          const res = await fetch("/api/paper-session");
-          const raw = await res.text();
-          let parsed: unknown = null;
-          try {
-            parsed = JSON.parse(raw);
-          } catch {
-            setNote(`Status failed (${res.status}).`);
-            return;
-          }
-          const next = asStatus(parsed);
+    if (status.engine === "browser") {
+      const id = window.setInterval(() => {
+        void tickBrowserPaper().then((next) => {
           if (next) {
             setStatus(next);
             if (next.data_error) setNote(cleanError(next.data_error));
           }
+        });
+      }, 15000);
+      return () => window.clearInterval(id);
+    }
+    const id = window.setInterval(() => {
+      void (async () => {
+        try {
+          const res = await raceTimeout(fetch(apiUrl("/api/paper-session"), { cache: "no-store" }), 8000, "Status timed out.");
+          const raw = await res.text();
+          const parsed = readJson(raw);
+          const next = asStatus(parsed);
+          if (!next) {
+            setNote(`Status failed (${res.status}).`);
+            return;
+          }
+          if (status.running && !next.running && !next.data_error && next.session_id !== status.session_id) {
+            return;
+          }
+          setStatus(next);
+          if (next.data_error) setNote(cleanError(next.data_error));
         } catch (error) {
           setNote(error instanceof Error ? cleanError(error.message) : "Status check failed.");
         }
       })();
     }, 2000);
     return () => window.clearInterval(id);
-  }, [status.running]);
+  }, [status.running, status.session_id, status.engine]);
 
-  async function start() {
-    setBusy(true);
-    setNote("");
-    try {
-      const res = await fetch("/api/paper-session/start", {
+  async function startFromServer() {
+    const res = await raceTimeout(
+      fetch(apiUrl("/api/paper-session/start"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        cache: "no-store",
         body: JSON.stringify({
           symbol: "BTC-USD",
           source: "public",
@@ -100,19 +156,49 @@ export function TradingHome() {
           warmup: 8,
           continuous: true,
         }),
-      });
-      const raw = await res.text();
-      let parsed: unknown = null;
+      }),
+      12000,
+      "Start timed out. The paper engine did not answer. No live orders were sent.",
+    );
+    const raw = await res.text();
+    const parsed = readJson(raw);
+    if (!parsed) throw new Error(errorMessage(res.status, null, raw));
+    if (!res.ok) throw new Error(errorMessage(res.status, parsed, raw));
+    const body = asStatus(parsed);
+    if (!body) throw new Error("Unexpected paper-session response.");
+    return body;
+  }
+
+  async function start() {
+    setBusy(true);
+    setNote("Loading public BTC-USD candles…");
+    try {
+      let body: PaperSessionStatus;
       try {
-        parsed = JSON.parse(raw);
-      } catch {
-        throw new Error(errorMessage(res.status, null, raw));
+        body = await startBrowserPaper();
+      } catch (browserError) {
+        body = await startFromServer();
+        if (!body.running && browserError instanceof Error && !body.data_error) {
+          throw browserError;
+        }
       }
-      if (!res.ok) throw new Error(errorMessage(res.status, parsed, raw));
-      const body = asStatus(parsed);
-      if (!body) throw new Error("Unexpected paper-session response.");
       setStatus(body);
-      if (body.data_error) setNote(cleanError(body.data_error));
+      if (body.data_error) {
+        setNote(cleanError(body.data_error));
+        return;
+      }
+      if (body.running && !body.stopped) {
+        const nextSymbol = body.symbol || body.config?.symbol || "BTC-USD";
+        const nextTimeframe = body.timeframe || body.config?.timeframe || "5m";
+        const price = typeof body.last_price === "number" ? ` · last ${body.last_price}` : "";
+        setNote(`Paper session running · ${nextSymbol} ${nextTimeframe}${price}`);
+        window.setTimeout(() => {
+          const later = browserPaperStatus();
+          if (later) setStatus(later);
+        }, 2500);
+      } else {
+        setNote("Paper engine did not start.");
+      }
     } catch (error) {
       setNote(error instanceof Error ? cleanError(error.message) : "Start failed.");
     } finally {
@@ -123,17 +209,21 @@ export function TradingHome() {
   async function stop() {
     setBusy(true);
     try {
-      const res = await fetch("/api/paper-session/stop", { method: "POST" });
-      const raw = await res.text();
-      let parsed: unknown = null;
+      let body = await stopBrowserPaper();
       try {
-        parsed = JSON.parse(raw);
+        const res = await raceTimeout(
+          fetch(apiUrl("/api/paper-session/stop"), { method: "POST", cache: "no-store" }),
+          6000,
+          "Stop timed out.",
+        );
+        const raw = await res.text();
+        const parsed = readJson(raw);
+        const server = asStatus(parsed);
+        if (server) body = { ...server, grok: "STOPPED", running: false, stopped: true, engine: body.engine };
       } catch {
-        throw new Error(`Stop failed (${res.status}).`);
+        /* local stop already applied */
       }
-      if (!res.ok) throw new Error(errorMessage(res.status, parsed, raw));
-      const body = asStatus(parsed);
-      if (body) setStatus({ ...body, grok: "STOPPED", running: false, stopped: true });
+      setStatus({ ...body, grok: "STOPPED", running: false, stopped: true });
       setNote("Stopped. New paper trades blocked.");
     } catch (error) {
       setStatus({ ...status, grok: "STOPPED", running: false, stopped: true });
@@ -177,7 +267,9 @@ export function TradingHome() {
           </p>
           <p className="desk-decision">{decision}</p>
           <p className="mt-3 max-w-[36ch] text-sm leading-normal text-muted">
-            Current BUY / SELL / HOLD decision. Start a paper session. Stop blocks new trades.
+            {running
+              ? `${symbol} ${timeframe} paper session${lastPrice != null ? ` · last ${lastPrice}` : ""}. Stop blocks new trades.`
+              : "Current BUY / SELL / HOLD decision. Start a paper session. Stop blocks new trades."}
           </p>
         </div>
         <aside className="desk-card">
@@ -186,15 +278,19 @@ export function TradingHome() {
               type="button"
               className="desk-btn desk-btn-primary min-h-11"
               onClick={start}
-              disabled={busy}
+              disabled={busy || running}
             >
-              {busy ? "Starting…" : "Start"}
+              {busy ? "Starting…" : running ? "Running" : "Start"}
             </button>
             <button type="button" className="desk-btn desk-btn-ghost min-h-11" onClick={stop} disabled={busy}>
               Stop
             </button>
           </div>
-          {note ? <p className="mt-3 mb-0 text-sm text-muted">{note}</p> : null}
+          {note ? (
+            <p className={`mt-3 mb-0 text-sm ${failed ? "text-halt" : "text-muted"}`} role="status">
+              {note}
+            </p>
+          ) : null}
         </aside>
       </section>
 

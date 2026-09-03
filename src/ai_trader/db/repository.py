@@ -6,14 +6,17 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
+from ai_trader.db.records import RecordStore
 from ai_trader.db.schema import initialise_database, list_tables
 from ai_trader.types import CandleSeries, MarketAnalysis, utc_now_iso
 
 
 class Repository:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, clock: Any = None) -> None:
         self.path = path
         self.conn = initialise_database(path)
+        #: The agent audit trail. See ai_trader.db.records.
+        self.records = RecordStore(self.conn, clock=clock)
 
     def close(self) -> None:
         self.conn.close()
@@ -34,22 +37,23 @@ class Repository:
         message: str,
         details: Optional[dict[str, Any]] = None,
     ) -> int:
-        cur = self.conn.execute(
-            """
-            INSERT INTO events (created_at, level, source, event_type, message, details_json)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                utc_now_iso(),
-                level.upper(),
-                source,
-                event_type,
-                message,
-                json.dumps(details) if details else None,
-            ),
-        )
-        self.conn.commit()
-        return int(cur.lastrowid)
+        with self.records._lock:
+            cur = self.conn.execute(
+                """
+                INSERT INTO events (created_at, level, source, event_type, message, details_json)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    utc_now_iso(),
+                    level.upper(),
+                    source,
+                    event_type,
+                    message,
+                    json.dumps(details) if details else None,
+                ),
+            )
+            self.conn.commit()
+            return int(cur.lastrowid)
 
     def list_events(self, limit: int = 50) -> list[dict[str, Any]]:
         rows = self.conn.execute(
@@ -359,6 +363,10 @@ class Repository:
         return result
 
     def persist_paper_run(self, report: dict[str, Any]) -> None:
+        with self.records._lock:
+            self._persist_paper_run_unlocked(report)
+
+    def _persist_paper_run_unlocked(self, report: dict[str, Any]) -> None:
         created = utc_now_iso()
         for order in report.get("orders") or []:
             self.conn.execute(

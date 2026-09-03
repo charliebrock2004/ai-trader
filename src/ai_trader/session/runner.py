@@ -9,6 +9,7 @@ from typing import Any, Optional
 from ai_trader.account.simulated import STARTING_CASH
 from ai_trader.ai.base import Analyst
 from ai_trader.ai.fixture import FixtureAnalyst
+from ai_trader.clock import Clock, default_clock
 from ai_trader.exceptions import (
     HistoricalDataNotConfiguredError,
     InvalidMarketDataError,
@@ -16,6 +17,8 @@ from ai_trader.exceptions import (
     OrderPlacementDisabledError,
     StaleMarketDataError,
 )
+from ai_trader.fx.provider import FxProvider, FxRateUnavailableError
+from ai_trader.instruments import instrument_for
 from ai_trader.market_data.generator import generate_series
 from ai_trader.market_data.validation import parse_utc
 from ai_trader.paper.execution import ASSUMPTIONS
@@ -38,11 +41,25 @@ class PaperSession:
         risk: Optional[RiskEngine] = None,
         market_data: Any = None,
         poll_seconds: float = 15.0,
+        clock: Optional[Clock] = None,
+        fx: Optional[FxProvider] = None,
+        policy: Any = None,
+        on_persist: Optional[Any] = None,
+        on_decision: Optional[Any] = None,
     ) -> None:
         self.config = (config or PaperSessionConfig()).validate()
         self.analyst = analyst or FixtureAnalyst()
         self.risk = risk or RiskEngine(allow_orders=False)
         self.market_data = market_data
+        self.clock = clock or default_clock()
+        self.fx = fx
+        self.policy = policy
+        #: Called with the public report whenever session state advances, so a
+        #: continuous run is durable rather than only persisted on Stop.
+        self.on_persist = on_persist
+        self.on_decision = on_decision
+        self.fx_rate = 1.0
+        self.fx_detail: Optional[dict[str, Any]] = None
         self.poll_seconds = max(0.05, float(poll_seconds))
         self.stopped = True
         self.running = False
@@ -170,6 +187,9 @@ class PaperSession:
                 self._series = combined
                 with self._lock:
                     self.report = self._public(report, combined)
+                # Persist on every new bar, not only on Stop, so a worker
+                # restart cannot silently discard a session's history.
+                self._persist(self.report)
         except (
             MarketDataUnavailableError,
             InvalidMarketDataError,
@@ -206,11 +226,30 @@ class PaperSession:
             return self.status()
         if generation is not None and generation != self._generation:
             return self.status()
+        instrument = instrument_for(self.config.symbol)
+        try:
+            fx_rate = self._resolve_fx(instrument.quote_currency)
+        except FxRateUnavailableError as exc:
+            if generation is None or generation == self._generation:
+                self.running = False
+                self.stopped = True
+                self.report = self._unavailable(exc)
+                return self.report
+            return self.status()
         self.sim = PaperSimulator(
             starting_cash=self.config.starting_balance,
             risk=self.risk,
             flatten_at_end=self.config.flatten_at_end,
+            instrument=instrument,
+            fx_rate=fx_rate,
+            base_currency=self.config.base_currency,
+            policy=self.policy,
+            on_decision=self.on_decision,
         )
+        # Bars already on the tape at Start are history. They warm indicators
+        # and the analyst; they do not open positions at two-hour-old prices.
+        if self.config.continuous and not self.config.trade_historical_bars:
+            self.sim.trade_from_index = len(used.candles)
         self.source = RepeatingGrokSource(
             self.analyst,
             frequency=self.config.grok_frequency,
@@ -233,7 +272,34 @@ class PaperSession:
         self._series = used
         self._cursor = len(used.candles)
         self.report = self._public(report, used)
+        self._persist(self.report)
         return self.report
+
+    def _resolve_fx(self, quote_currency: str) -> float:
+        """Base units per quote unit. Fails closed if a rate is needed and absent."""
+        base = self.config.base_currency
+        if quote_currency == base:
+            self.fx_rate = 1.0
+            self.fx_detail = {"base": base, "quote": base, "rate": 1.0, "source": "same-currency"}
+            return 1.0
+        if self.fx is None:
+            raise FxRateUnavailableError(
+                f"{self.config.symbol} is quoted in {quote_currency} but no FX provider "
+                f"is configured. Refusing to treat {quote_currency} as {base}.",
+                failure="not_configured",
+            )
+        rate = self.fx.rate(quote_currency, base)
+        self.fx_rate = float(rate.rate)
+        self.fx_detail = rate.to_dict()
+        return self.fx_rate
+
+    def _persist(self, report: dict[str, Any]) -> None:
+        if self.on_persist is None:
+            return
+        try:
+            self.on_persist(report)
+        except Exception:  # noqa: BLE001 — persistence must never kill the session
+            pass
 
     def _load_series(self) -> CandleSeries:
         if self.config.source == "simulated":
@@ -287,6 +353,7 @@ class PaperSession:
 
     def _flags(self) -> dict[str, Any]:
         public = self._is_public()
+        instrument = instrument_for(self.config.symbol)
         return {
             "ok": True,
             "banner": BANNER,
@@ -298,6 +365,10 @@ class PaperSession:
             "market_data": "public" if public else "simulated",
             "look_ahead": False,
             "execution": "simulated",
+            "currency": self.config.base_currency,
+            "quote_currency": instrument.quote_currency,
+            "fx_rate": self.fx_rate,
+            "fx": self.fx_detail,
         }
 
     def _unavailable(self, exc: Exception) -> dict[str, Any]:
@@ -413,6 +484,14 @@ class PaperSession:
             trades = len(self.sim.ledger.closed_positions)
         last = (self.source.decisions[-1] if self.source and self.source.decisions else None)
         running = self.running and not self.stopped
+        last_price = None
+        bars = 0
+        if self._series and self._series.candles:
+            last_price = self._series.candles[-1].close
+            bars = len(self._series.candles)
+        elif self.report:
+            last_price = self.report.get("last_price")
+            bars = int(self.report.get("bars") or 0)
         return {
             **self._flags(),
             "grok": self._grok_label(),
@@ -437,4 +516,8 @@ class PaperSession:
             "data_failure": None,
             "config": self.config.public(),
             "starting_cash": STARTING_CASH,
+            "symbol": self.config.symbol,
+            "timeframe": self.config.timeframe,
+            "last_price": last_price,
+            "bars": bars,
         }

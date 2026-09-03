@@ -20,7 +20,7 @@ from ai_trader.types import Action, Decision, MarketAnalysis, MarketSnapshot, ut
 
 XAI_CHAT_PATH = "/chat/completions"
 DEFAULT_MODEL = "grok-4.6"
-DEFAULT_TIMEOUT = 20.0
+DEFAULT_TIMEOUT = 8.0
 
 
 class GrokAnalyst(Analyst):

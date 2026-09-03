@@ -41,7 +41,20 @@ class Settings(BaseSettings):
 
     kill_switch_engaged: bool = True
     grok_paper_analysis: bool = False
-    xai_timeout: float = 20.0
+    xai_timeout: float = 8.0
+
+    # -- agent economics ---------------------------------------------------
+    #: The experiment's opening stake, in the base accounting currency.
+    starting_equity: float = 100.00
+    base_currency: str = "GBP"
+    #: Fraction of starting equity at which the agent is permanently shut down.
+    terminal_threshold_pct: float = 0.40
+    #: Known daily running cost, used for the runway estimate.
+    hosting_cost_per_day: float = 0.0
+    #: Optional BLS registration key. Lifts the anonymous request quota.
+    bls_api_key: Optional[str] = None
+    #: Required to call any mutating endpoint. Empty means mutations are refused.
+    api_token: Optional[SecretStr] = None
 
     dashboard_host: str = "0.0.0.0"
     dashboard_port: int = 8080
@@ -106,6 +119,14 @@ class Settings(BaseSettings):
             "dashboard_host": self.dashboard_host,
             "dashboard_port": self.dashboard_port,
             "live_trading": False,
+            "starting_equity": self.starting_equity,
+            "base_currency": self.base_currency,
+            "terminal_threshold_pct": self.terminal_threshold_pct,
+            # Presence only. The value never leaves the server.
+            "api_token_configured": bool(
+                self.api_token and self.api_token.get_secret_value().strip()
+            ),
+            "bls_api_key_configured": bool(self.bls_api_key),
         }
 
 

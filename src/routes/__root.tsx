@@ -13,6 +13,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       { name: "description", content: "Paper-only AI trading. Live trading disabled." },
       { name: "theme-color", content: "#0c0d10" },
+      { name: "ai-trader-build", content: "20260830-pwa" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

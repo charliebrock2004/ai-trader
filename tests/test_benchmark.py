@@ -158,8 +158,9 @@ def test_buy_and_hold_pnl_on_handmade_path() -> None:
     assert fills[0]["price"] == 100.0
     assert fills[-1]["reason"] == "DAY_END"
     assert fills[-1]["price"] == 102.0
-    assert report["account"]["realised_pnl"] == 2.0
-    assert report["account"]["account_equity"] == 102.0
+    # 0.25 units (the 25% concentration cap) * 2 points = 0.50.
+    assert report["account"]["realised_pnl"] == 0.5
+    assert report["account"]["account_equity"] == 100.5
     assert report["look_ahead"] is False
 
 

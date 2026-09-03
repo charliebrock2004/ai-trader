@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from ai_trader.instruments import InstrumentSpec, instrument_for
+from ai_trader.money import BASE_CURRENCY, money_float
 from ai_trader.risk.limits import RiskLimits
 from ai_trader.types import Action, Decision, RiskVerdict
 
@@ -29,6 +31,14 @@ def _floor_qty(value: float) -> float:
 
 @dataclass(frozen=True)
 class RiskAssessment:
+    """Verdict on one proposed paper order.
+
+    Prices (``stop_price``, ``take_profit_price``, ``*_distance``) are in the
+    instrument's quote currency. Money figures (``max_risk``,
+    ``proposed_notional``, ``max_loss_at_stop``, ``worst_case_loss``) are in the
+    account's base currency, so they can be compared against equity directly.
+    """
+
     approved: bool
     reason: str
     action: str
@@ -42,6 +52,12 @@ class RiskAssessment:
     max_loss_at_stop: float
     risk_reward: float
     limits: dict[str, Any] = field(default_factory=dict)
+    worst_case_loss: float = 0.0
+    base_currency: str = BASE_CURRENCY
+    quote_currency: str = BASE_CURRENCY
+    fx_rate: float = 1.0
+    risk_multiplier: float = 1.0
+    binding_constraint: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -56,8 +72,14 @@ class RiskAssessment:
             "stop_price": self.stop_price,
             "take_profit_price": self.take_profit_price,
             "max_loss_at_stop": self.max_loss_at_stop,
+            "worst_case_loss": self.worst_case_loss,
             "risk_reward": self.risk_reward,
             "limits": self.limits,
+            "base_currency": self.base_currency,
+            "quote_currency": self.quote_currency,
+            "fx_rate": self.fx_rate,
+            "risk_multiplier": self.risk_multiplier,
+            "binding_constraint": self.binding_constraint,
         }
 
 
@@ -75,35 +97,100 @@ class RiskEngine:
         self.allow_orders = allow_orders  # stays False in this build
         self.limits = limits or RiskLimits()
 
-    def size_long(self, *, price: float, equity: float, cash: float) -> RiskAssessment:
+    def size_long(
+        self,
+        *,
+        price: float,
+        equity: float,
+        cash: float,
+        instrument: Optional[InstrumentSpec] = None,
+        fx_rate: float = 1.0,
+        risk_multiplier: float = 1.0,
+        base_currency: str = BASE_CURRENCY,
+    ) -> RiskAssessment:
+        """Size a long entry.
+
+        ``price`` is in the instrument's quote currency. ``equity`` and ``cash``
+        are in the account's base currency. ``fx_rate`` is base units per quote
+        unit — 1.0 when the instrument is quoted in the base currency.
+
+        Three independent caps apply and the smallest wins:
+
+        1. **Risk budget** — worst-case loss (stop distance widened by the gap
+           buffer) must stay inside ``max_risk_amount``.
+        2. **Concentration** — notional must stay inside
+           ``max_position_notional_pct`` of equity.
+        3. **Cash** — notional must stay inside available cash. No leverage.
+
+        ``risk_multiplier`` (<= 1.0) is how the survival policy tightens
+        sizing. Values above 1.0 are clamped: nothing may size the account up.
+        """
         limits = self.limits
+        spec = instrument or instrument_for("")
         if price <= 0 or equity <= 0:
             return self._reject("Invalid price or equity.", "BUY")
+        if fx_rate <= 0:
+            return self._reject("Invalid FX rate. Refusing to size a foreign position.", "BUY")
         if limits.leverage != 0:
             return self._reject("Leverage is forbidden.", "BUY")
-        budget = limits.risk_budget(equity)
-        stop_distance = round(price * limits.default_stop_pct, 4)
+
+        # Survival can only ever tighten. Clamp defensively so a bug upstream
+        # cannot enlarge a position.
+        multiplier = min(1.0, max(0.0, float(risk_multiplier)))
+        if multiplier <= 0:
+            return self._reject("Survival policy allows no new risk.", "BUY")
+
+        budget = money_float(limits.risk_budget(equity) * multiplier)
+        if budget <= 0:
+            return self._reject("Risk budget is zero.", "BUY")
+
+        stop_distance = round(price * limits.default_stop_pct, 8)
         if stop_distance <= 0:
             return self._reject("Stop distance is zero.", "BUY")
-        qty = _floor_qty(budget / stop_distance)
-        notional = round(qty * price, 2)
-        cash_cap = round(cash * limits.max_notional_pct, 2)
-        if notional > cash_cap and price > 0:
-            qty = _floor_qty(cash_cap / price)
-            notional = round(qty * price, 2)
-        max_loss = round(qty * stop_distance, 2)
-        if max_loss - budget > 0.01:
-            qty = _floor_qty(budget / stop_distance)
-            notional = round(qty * price, 2)
-            max_loss = round(qty * stop_distance, 2)
-        if qty <= 0 or notional <= 0:
+
+        # Worst case is the stop distance widened by the gap buffer, in base
+        # currency per unit held.
+        worst_per_unit_base = limits.worst_case_stop_distance(stop_distance) * fx_rate
+        if worst_per_unit_base <= 0:
+            return self._reject("Worst-case loss per unit is zero.", "BUY")
+
+        price_base = price * fx_rate
+        qty_by_risk = budget / worst_per_unit_base
+        qty_by_concentration = (
+            equity * limits.max_position_notional_pct * multiplier
+        ) / price_base
+        qty_by_cash = (cash * limits.max_notional_pct) / price_base
+
+        caps = {
+            "risk_budget": qty_by_risk,
+            "concentration": qty_by_concentration,
+            "cash": qty_by_cash,
+        }
+        binding = min(caps, key=lambda key: caps[key])
+        qty = spec.floor_qty(min(caps.values()))
+
+        if qty <= 0 or qty < spec.min_qty:
+            return self._reject(
+                "Position size rounds to zero at this price and risk budget.", "BUY"
+            )
+
+        notional = money_float(qty * price_base)
+        max_loss = money_float(qty * stop_distance * fx_rate)
+        worst_case = money_float(qty * worst_per_unit_base)
+        if notional <= 0:
             return self._reject("Position size is zero.", "BUY")
-        stop_price = round(price - stop_distance, 4)
-        tp_distance = round(stop_distance * limits.take_profit_rr, 4)
-        take_profit = round(price + tp_distance, 4)
+        # Belt and braces: the floor step must never push us over a cap.
+        if worst_case - budget > 0.01:
+            return self._reject("Worst-case loss exceeds the risk budget.", "BUY")
+        if notional - money_float(cash * limits.max_notional_pct) > 0.01:
+            return self._reject("Position notional exceeds available cash.", "BUY")
+
+        stop_price = round(price - stop_distance, 8)
+        tp_distance = round(stop_distance * limits.take_profit_rr, 8)
+        take_profit = round(price + tp_distance, 8)
         return RiskAssessment(
             approved=True,
-            reason="Sized within paper risk limits.",
+            reason=f"Sized within paper risk limits (bound by {binding}).",
             action="BUY",
             max_risk=budget,
             proposed_qty=qty,
@@ -113,8 +200,14 @@ class RiskEngine:
             stop_price=stop_price,
             take_profit_price=take_profit,
             max_loss_at_stop=max_loss,
+            worst_case_loss=worst_case,
             risk_reward=limits.take_profit_rr,
             limits=self._limits_dict(),
+            base_currency=base_currency,
+            quote_currency=spec.quote_currency,
+            fx_rate=fx_rate,
+            risk_multiplier=multiplier,
+            binding_constraint=binding,
         )
 
     def review(
@@ -157,11 +250,17 @@ class RiskEngine:
         has_position: bool,
         halted: bool,
         kill_switch: bool,
+        instrument: Optional[InstrumentSpec] = None,
+        fx_rate: float = 1.0,
+        risk_multiplier: float = 1.0,
+        terminated: bool = False,
     ) -> RiskAssessment:
         """Approve or reject an INTERNAL simulated paper order or an Alpaca
         PAPER order. Never a live broker order. AI cannot change limits.
         """
         act = action.upper()
+        if terminated:
+            return self._reject("Agent is TERMINATED. No new orders.", act)
         if kill_switch:
             return self._reject("Kill switch engaged.", act)
         if halted:
@@ -217,7 +316,14 @@ class RiskEngine:
             return self._reject("Maximum open positions reached.", act)
         if has_position:
             return self._reject("Already in this symbol. Adds are disabled.", act)
-        return self.size_long(price=price, equity=equity, cash=cash)
+        return self.size_long(
+            price=price,
+            equity=equity,
+            cash=cash,
+            instrument=instrument,
+            fx_rate=fx_rate,
+            risk_multiplier=risk_multiplier,
+        )
 
     def health(self) -> dict:
         return {
@@ -241,6 +347,8 @@ class RiskEngine:
             "leverage": limits.leverage,
             "default_stop_pct": limits.default_stop_pct,
             "take_profit_rr": limits.take_profit_rr,
+            "max_position_notional_pct": limits.max_position_notional_pct,
+            "stop_gap_buffer": limits.stop_gap_buffer,
         }
 
     def _reject(self, reason: str, action: str) -> RiskAssessment:

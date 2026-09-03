@@ -189,8 +189,8 @@ export function ResearchDesk() {
   }
 
   const lede = killEngaged
-    ? "Market data, Grok, and Alpaca paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is on."
-    : "Dry cycle still HOLDs. Paper simulation can fill internally against the £100 book. Real Grok and Alpaca stay gated.";
+    ? "Market data, Grok, and paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is on."
+    : "Dry cycle still HOLDs. Paper simulation can fill internally against the £100 book. Real Grok stays gated.";
 
   const counts = useMemo(
     () => [

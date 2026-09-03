@@ -1,21 +1,48 @@
-"""Mutable paper ledger. Offline only. No broker, no withdrawals, no leverage."""
+"""Mutable paper ledger. Offline only. No broker, no withdrawals, no leverage.
+
+Accounting units
+----------------
+Cash, equity and every P&L figure are in the account's **base** currency
+(GBP by default). Instrument prices are in the instrument's **quote** currency.
+Crossing between them requires an explicit FX rate that has been handed to the
+ledger; there is no implicit conversion and no default of 1.0 for a
+foreign-quoted instrument.
+
+Trade counting
+--------------
+``trades_today`` counts *round trips*, not fills: it increments when a position
+is closed, not when one is opened. An open position that has not yet been
+closed is exposed as ``open_trades`` so the risk engine can still reason about
+in-flight exposure.
+"""
 
 from __future__ import annotations
 
 from typing import Optional
 
 from ai_trader.account.simulated import CURRENCY, SOURCE, STARTING_CASH
+from ai_trader.money import BASE_CURRENCY, money_float, normalise_currency
 from ai_trader.paper.models import PaperFill, PaperOrder, PaperPosition
 from ai_trader.types import PaperAccountState, utc_now_iso
 
 
 def money(value: float) -> float:
-    return round(float(value) + 1e-12, 2)
+    return money_float(value)
+
+
+class LedgerCurrencyError(RuntimeError):
+    """A foreign-quoted fill was attempted without an FX rate. Fail closed."""
 
 
 class PaperLedger:
-    def __init__(self, *, starting_cash: float = STARTING_CASH) -> None:
+    def __init__(
+        self,
+        *,
+        starting_cash: float = STARTING_CASH,
+        base_currency: str = CURRENCY,
+    ) -> None:
         cash = money(starting_cash)
+        self.base_currency = normalise_currency(base_currency)
         self.starting_cash = cash
         self.cash = cash
         self.realised_pnl = 0.0
@@ -23,6 +50,8 @@ class PaperLedger:
         self.day_start_equity = cash
         self.day_key = ""
         self.trades_today = 0
+        self.round_trips = 0
+        self.entries_today = 0
         self.halted = False
         self.positions: dict[str, PaperPosition] = {}
         self.closed_positions: list[PaperPosition] = []
@@ -30,7 +59,34 @@ class PaperLedger:
         self.fills: list[PaperFill] = []
         self._order_seq = 0
         self._fill_seq = 0
+        #: quote currency -> units of base currency per unit of quote.
+        self._fx: dict[str, float] = {self.base_currency: 1.0}
 
+    # -- FX ---------------------------------------------------------------
+    def set_fx(self, quote_currency: str, base_per_quote: float) -> None:
+        """Record the rate used to value a quote currency in base terms."""
+        code = normalise_currency(quote_currency)
+        rate = float(base_per_quote)
+        if rate <= 0:
+            raise LedgerCurrencyError(f"FX rate for {code} must be positive.")
+        self._fx[code] = rate
+
+    def fx_for(self, quote_currency: str) -> float:
+        code = normalise_currency(quote_currency)
+        if code == self.base_currency:
+            return 1.0
+        rate = self._fx.get(code)
+        if rate is None:
+            raise LedgerCurrencyError(
+                f"No FX rate for {code}->{self.base_currency}. "
+                "The ledger refuses to value a foreign position without one."
+            )
+        return rate
+
+    def to_base(self, amount_quote: float, quote_currency: str) -> float:
+        return money(float(amount_quote) * self.fx_for(quote_currency))
+
+    # -- identifiers ------------------------------------------------------
     def next_order_id(self) -> str:
         self._order_seq += 1
         return f"PAP-{self._order_seq:04d}"
@@ -39,8 +95,13 @@ class PaperLedger:
         self._fill_seq += 1
         return f"FIL-{self._fill_seq:04d}"
 
+    # -- views ------------------------------------------------------------
     def open_positions(self) -> list[PaperPosition]:
         return [p for p in self.positions.values() if p.open]
+
+    @property
+    def open_trades(self) -> int:
+        return len(self.open_positions())
 
     def invested_value(self) -> float:
         return money(sum(p.position_value for p in self.open_positions()))
@@ -69,21 +130,33 @@ class PaperLedger:
             self.day_key = key
             self.day_start_equity = self.equity()
             self.trades_today = 0
+            self.entries_today = 0
             self.halted = False
 
-    def mark(self, symbol: str, price: float) -> None:
+    def mark(self, symbol: str, price: float, *, fx: Optional[float] = None) -> None:
         pos = self.positions.get(symbol)
         if pos and pos.open:
             pos.current_price = price
+            pos.current_fx = fx if fx is not None else self.fx_for(pos.quote_currency)
         eq = self.equity()
         if eq > self.peak_equity:
             self.peak_equity = eq
 
-    def apply_buy(self, order: PaperOrder, fill: PaperFill) -> None:
-        cost = money(fill.quantity * fill.price)
-        if cost > self.cash + 0.001:
+    # -- mutations --------------------------------------------------------
+    def apply_buy(
+        self,
+        order: PaperOrder,
+        fill: PaperFill,
+        *,
+        quote_currency: str = BASE_CURRENCY,
+    ) -> None:
+        code = normalise_currency(quote_currency)
+        fx = self.fx_for(code)
+        cost_quote = fill.quantity * fill.price
+        cost_base = money(cost_quote * fx)
+        if cost_base > self.cash + 0.001:
             raise ValueError("Insufficient cash for paper fill.")
-        self.cash = money(self.cash - cost)
+        self.cash = money(self.cash - cost_base)
         self.positions[fill.symbol] = PaperPosition(
             symbol=fill.symbol,
             quantity=fill.quantity,
@@ -93,9 +166,15 @@ class PaperLedger:
             take_profit=order.take_profit,
             entry_timestamp=fill.timestamp,
             order_id=order.order_id,
+            quote_currency=code,
+            base_currency=self.base_currency,
+            entry_fx=fx,
+            current_fx=fx,
+            entry_cost_base=cost_base,
+            decision_id=order.decision_id,
         )
         self.fills.append(fill)
-        self.trades_today += 1
+        self.entries_today += 1
         order.status = "FILLED"
         order.filled_price = fill.price
         order.filled_at = fill.timestamp
@@ -110,21 +189,26 @@ class PaperLedger:
         pos = self.positions.get(symbol)
         if not pos or not pos.open:
             raise ValueError("No open position to close.")
-        proceeds = money(fill.quantity * fill.price)
-        pnl = money((fill.price - pos.average_entry) * fill.quantity)
-        self.cash = money(self.cash + proceeds)
+        fx = self.fx_for(pos.quote_currency)
+        proceeds_base = money(fill.quantity * fill.price * fx)
+        pnl = money(proceeds_base - pos.entry_cost_base)
+        self.cash = money(self.cash + proceeds_base)
         self.realised_pnl = money(self.realised_pnl + pnl)
         pos.open = False
         pos.current_price = fill.price
+        pos.current_fx = fx
         pos.exit_timestamp = fill.timestamp
         pos.realised_pnl = pnl
         pos.quantity = fill.quantity
         self.closed_positions.append(pos)
         del self.positions[symbol]
         self.fills.append(fill)
+        # One completed round trip = one trade.
         self.trades_today += 1
+        self.round_trips += 1
         return pos
 
+    # -- snapshot ---------------------------------------------------------
     def snapshot(self, as_of: Optional[str] = None) -> PaperAccountState:
         as_of = as_of or utc_now_iso()
         invested = self.invested_value()
@@ -132,7 +216,7 @@ class PaperLedger:
         total = money(self.realised_pnl + unreal)
         eq = money(self.cash + invested)
         return PaperAccountState(
-            currency=CURRENCY,
+            currency=self.base_currency,
             starting_cash=self.starting_cash,
             cash=self.cash,
             buying_power=self.cash,

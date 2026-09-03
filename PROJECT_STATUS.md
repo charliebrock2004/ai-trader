@@ -1,196 +1,233 @@
 # AI-Trader — project status
 
-**Source of truth for ChatGPT and other assistants.**  
-Read this first, then [ARCHITECTURE.md](ARCHITECTURE.md) and [DEVELOPMENT.md](DEVELOPMENT.md).
+**Source of truth. Read this first**, then [ARCHITECTURE.md](ARCHITECTURE.md),
+[DEVELOPMENT.md](DEVELOPMENT.md) and [DEPLOYMENT.md](DEPLOYMENT.md).
 
 | | |
 |---|---|
 | Repository | [charliebrock2004/ai-trader](https://github.com/charliebrock2004/ai-trader) (public) |
-| Branch | `main` |
-| Package version | `0.1.0` |
-| Product | Paper-trading research desk. **Not** a live broker. |
-| Documented commit | `054d01edfaa6d9b9b426f32600b862e1a92c0bbb` on `main` |
+| Product | Autonomous **paper** trading agent. Not a broker. |
+| Capital | £100 paper, GBP base currency |
+| Live trading | `LIVE_TRADING_ALLOWED = False`. No live path exists. |
+| Engine | Python `DeskWorker` over stdio RPC. The browser is control/monitoring only. |
+| Current strategy | BTC-USD public 5m paper session (operational fills) + BLS CPI event family (HOLDs until a venue book exists) |
+| Tests | Full Python suite + 14 frontend agent-api tests, all passing |
 
-If this file disagrees with the code, **the code wins**. Update this file after every significant change.
-
----
-
-## Current version / status
-
-**Working paper desk.** Start runs a continuous £100 paper session on public Coinbase BTC-USD 5-minute **completed** candles. Grok (or the fixture) proposes BUY / SELL / HOLD. The risk engine sizes or rejects **internal** paper fills. Stop blocks new paper trades. Live trading is disabled in code.
-
-This is a research prototype. It has **not** demonstrated a profitable trading edge.
+If this file disagrees with the code, the code wins. Update it after every
+significant change, and never mark something complete that is not tested.
 
 ---
 
-## What works
+## What the agent is
 
-- Home screen: balance, today’s P&L, Grok RUNNING/STOPPED, current decision, position, Start, Stop, Performance, System.
-- Start → `POST /api/paper-session/start` → Python stdio worker → sequential paper walk.
-- Stop → `POST /api/paper-session/stop` → pending cancelled, new paper trades blocked.
-- Public Coinbase feed: BTC-USD / ETH-USD, completed bars only, forming candle dropped, stale/malformed/timeout/network **fail closed** (HOLD, Grok STOPPED, zero trades).
-- Fixture Grok always HOLD. Real Grok paper analysis when `GROK_PAPER_ANALYSIS=true` **and** `XAI_API_KEY` is set; invalid/timeout/network → HOLD.
-- Internal paper ledger starts at **£100 GBP**. Spread 5 bps + slip 5 bps. Next-bar open fills. No look-ahead.
-- Risk limits: 2%/£2, max 2 positions, 5% daily loss, 10 trades/day, no leverage, 2% stop / 2R TP, long-only.
-- Kill switch file exists (`data/KILL_SWITCH`), default engaged. It blocks dry-run, grok-paper cycle, and benchmark. (See known issues for Start.)
-- `LIVE_TRADING_ALLOWED = False`. Alpaca live host blocked. `allow_orders=False`. SimulatedBroker.submit raises. Grok refuses `alpaca` URLs.
-- SQLite event/decision/paper-run logging. Continuous sessions persist on **Stop**.
-- Automated pytest suite (see Latest tests).
+A deterministic pipeline with an LLM in exactly one seat — as a skeptic, not a
+trader:
 
----
-
-## What is being tested
-
-pytest under `tests/` covers:
-
-- Safety invariant and live-host audit
-- Public Coinbase parse + fail-closed (stale, malformed, timeout, network)
-- Paper session sequential walk, no look-ahead, Stop
-- Risk sizing and broker-order rejection
-- Fixture + Grok paper HOLD fallbacks
-- RPC start/stop never uses a broker
-- FastAPI dashboard order routes blocked
-
----
-
-## What is unfinished
-
-- No out-of-sample proof that Grok (or any strategy) makes money. Do not claim an edge.
-- Alpaca **paper** adapter exists but Start reports `broker: NOT USED` when keys are absent (the normal state). Not wired as the default fill path.
-- Home screen does **not** GET `/api/paper-session` on first paint. It shows a snapshot until Start (then polls while running).
-- File-backed kill switch does **not** currently block the home-screen Start paper session (Start passes `kill_switch=False` into the simulator so the desk can run while the halt file stays engaged). Dry-run / benchmark **are** blocked.
-- Continuous session is not persisted on every new bar — persist on Stop.
-- Dual UI: TanStack Start is the preview; FastAPI templates exist for pytest/CLI.
-
----
-
-## Current market-data provider
-
-**Coinbase Exchange public REST**, read-only.
-
-- Implementation: `src/ai_trader/market_data/public.py` (`PublicCryptoFeed`)
-- URL: `GET https://api.exchange.coinbase.com/products/{BTC-USD|ETH-USD}/candles`
-- Not a broker. Refuses any URL containing `alpaca`.
-
-Simulated OHLCV (`SIM-UP`, etc.) still exists for tests and benchmarks.
-
----
-
-## Current symbols
-
-Public Start path: **BTC-USD** (ETH-USD is allowed by the feed).
-
-Fixture/tests also use simulated symbols (`SIM-UP`, `SIM-DOWN`, …).
-
----
-
-## Current timeframe
-
-**5m** on Start. Public feed also allows `1m`, `15m`, `1h`, `1d`. **4h is not supported** by Coinbase granularity in this adapter.
-
-Completed candles only. Forming bar excluded (`close_at > now` dropped). Stale if last completed close is older than **3 bars**.
-
----
-
-## Current Grok status
-
-| | |
-|---|---|
-| Default in Python | Fixture HOLD (`GROK_PAPER_ANALYSIS` defaults false) |
-| Preview worker | Node sets `GROK_PAPER_ANALYSIS=true` when `XAI_API_KEY` is present |
-| Model | `grok-4.6` |
-| Endpoint | `POST https://api.x.ai/v1/chat/completions` |
-| Output | JSON BUY / SELL / HOLD only. No tools. No broker. |
-| Cap | warmup 8 bars, then every 8 completed 5m bars (~1 call / 40 minutes after warmup) |
-| Fail-safe | missing key, timeout, bad JSON, network → **HOLD** |
-| Edge | **Not demonstrated.** Sitting in cash is not an edge. |
-
----
-
-## Current paper-account status
-
-- Starting cash **£100.00 GBP** (`STARTING_CASH` in `src/ai_trader/account/simulated.py`)
-- Fills go to `PaperLedger` / `PaperSimulator`, not a broker
-- Currency GBP on the simulated book (Alpaca paper would be USD **if** configured; it is not used on Start)
-
----
-
-## Current risk / safety status
-
-- Risk engine is a hard gate for paper size (`review_paper`). Broker `review()` still rejects all orders because `allow_orders=False`.
-- Kill switch file exists; default engaged.
-- `LIVE_TRADING_ALLOWED = False` with no env override.
-- Live Alpaca URL blocked.
-
----
-
-## Current Alpaca status
-
-- Adapter: `src/ai_trader/broker/alpaca_paper.py`
-- Host allowed: `paper-api.alpaca.markets` only
-- Host blocked: `api.alpaca.markets`
-- Start path: **NOT USED** unless paper keys + `TRADING_MODE=paper` (not the default)
-
----
-
-## Current live-trading status
-
-**Disabled.** There is no supported live mode. Do not enable it.
-
----
-
-## Before real-money trading (security milestone)
-
-Real-money trading is **not enabled** and is **not the next step**. Treat it as a
-separate security milestone, not a config flip.
-
-Before any real-money use:
-
-- All brokerage credentials must remain **outside GitHub**.
-- API keys must be stored as environment / secret variables on the machine or
-  host — never in source, never in `.env.example`, never in docs.
-- Credentials must **never** appear in source code.
-- Credentials must **never** appear in logs.
-- Credentials must **never** appear in the UI.
-- If a credential was ever exposed in git history, it **must be revoked and
-  replaced** before it is used. Deleting the file is not enough.
-- `LIVE_TRADING_ALLOWED` must stay `False` until that milestone is explicitly
-  designed, tested, and reviewed. There is no env override today.
-- Alpaca live (`https://api.alpaca.markets`) must stay blocked.
-- Grok must still be unable to bypass the risk engine or place broker orders.
-
-This repository is public source + documentation only. It is not a wallet and
-not a broker.
-
----
-
-## Latest tests
-
-Recorded on the documentation pass that added this file. Re-run and update after code changes.
-
-```text
-python3 -m pytest
+```
+release calendar → official data (read twice, must agree)
+  → deterministic probability → market probability → edge net of fees & spread
+  → cheap deterministic filtering → ranked shortlist
+  → analyst challenge (bull / bear / invalidators / PROCEED|PASS)
+  → policy guardian (downgrade-only)
+  → contract risk (sizes from the whole premium)
+  → depth-aware paper fill → contract ledger
+  → settlement → outcome + Brier score → calibration
+  → survival state
 ```
 
-Expected: full suite green (currently **174** tests). Safety audit must stay green.
+Every stage can only refuse more firmly than the one before it.
+
+The operational Start path today is the **spot paper session** (Coinbase
+BTC-USD, 5-minute bars) running inside the same worker, on the same £100 GBP
+book, through the same risk engine. Event-driven prediction-market fills still
+HOLD because no venue order book is attached. That is fail-closed, not a fake
+market.
 
 ---
 
-## Known issues
+## What works, and is tested
 
-1. **Start vs kill switch.** Home Start does not call `kill_switch.assert_clear()`. System halt therefore does not stop a paper session the way dry-run does. Intentional so Start works with the default engaged halt file — but it is a consistency gap.
-2. **Home does not hydrate.** Refreshing the page while a session runs shows STOPPED until Start is clicked again (Start restarts the session).
-3. **`status: SIMULATED`** can appear on a running session because `_attach_alpaca_paper` overwrites status when Alpaca is unused. The UI uses `grok` / `running`, not `status`.
-4. **No profitability claim.** Benchmarks exist; they are not a licence to say the bot wins.
+**Start / Stop / worker**
+- Open the app: £100, STOPPED, HOLD.
+- Start talks to the Python worker, not the browser. The request returns
+  immediately with STARTING; the worker loads market data on its own thread.
+- Once candles and FX are in, state becomes RUNNING and cycles continue.
+- Stop sets `desired_running=0`, blocks new trades, keeps history.
+- A process restart recovers a session that was asked to keep running.
+- A TERMINAL agent cannot be started. Live trading cannot be started.
+- Every HOLD is written to SQLite with a reason.
+
+**Accounting**
+- One base currency (GBP). Instrument prices carry their own quote currency and
+  every crossing needs an explicit FX rate. A foreign position without a rate is
+  **refused**, not valued 1:1.
+- Realised P&L includes the FX move, because that is real money.
+- Ledger invariants hold under randomised activity: equity equals cash plus
+  invested value, cash never goes negative, total P&L equals realised plus
+  unrealised.
+
+**Risk**
+- Spot sizing applies three caps and takes the smallest: risk budget,
+  concentration (25% of equity), and cash. Sizing assumes the stop can fill
+  1.5× the stop distance away, because a stop is not a guarantee.
+- Long stops fill at `min(bar_open, stop)`, so a gap through the stop is
+  realised. Take-profits never fill on a favourable gap.
+- One round trip counts as one trade.
+- Binary contracts size backwards from the **whole premium** — there is no stop
+  loss on a binary — with caps on per-position premium, total exposure,
+  per-event exposure, cash, book depth and contract count.
+
+**Survival**
+- `HEALTHY → CAUTION → DEFENSIVE → CRITICAL → TERMINAL` on equity, with
+  hysteresis. Worsening is immediate, recovery is slow. Asymmetric on purpose.
+- **Losses can never increase permitted risk.** `SurvivalConfig` refuses at
+  construction to build a policy where a worse state allows more size or a
+  smaller edge, and property tests assert monotonicity across every state pair.
+- `TERMINAL` is one-way. Written to a file *and* the database, so losing either
+  does not resurrect the agent; an unreadable latch still reads as dead; there
+  is no clear/reset/revive method and a test asserts none exists by any name.
+- The Policy Guardian can only downgrade. It raises if it ever returns something
+  more aggressive than it received, and a 500-case fuzz asserts the property.
+
+**Costs**
+- Model tokens at the published rate, hosting, data and fees. Burn and runway,
+  where runway counts only capital above the terminal threshold.
+- **Cost pressure cannot change trading.** The guardian's verdict is
+  byte-identical before and after £50 of accrued cost, and an AST walk asserts
+  no cost/runway/burn identifier appears in the guardian at all.
+
+**Event data**
+- BLS CPI, read twice over different windows; both reads must agree before a
+  value is VERIFIED. A single successful read is UNVERIFIED and not tradeable.
+- Refuses: pending, conflicting, malformed, non-numeric, wrong-series,
+  unsuccessful, timed-out and unreachable. Every case means HOLD.
+
+**Edge**
+- Probability is computed in Python from the published number and the contract's
+  own resolution rule, discounted for revision risk. **The LLM never computes
+  it.** Confidence returned by the model is treated as a label, not a
+  probability.
+- `edge = model − market − fees − spread`, computed against the **ask**, not the
+  mid. The fee model follows the venue's published `p(1−p)` formula, which peaks
+  at 50c — exactly where most trading happens.
+
+**Execution**
+- Fills walk the observed book, cross the spread, and fill partially when depth
+  runs out. Limits are never paid through. Idempotency keys prevent double-fills.
+
+**Audit trail**
+- Every decision is recorded, including HOLDs and filtered candidates, with the
+  reason and the inputs attached. A test reconstructs a complete trade from the
+  database alone and answers all six audit questions.
+- Brier score and correctness are computed on write, never supplied.
+
+**Replay**
+- Tapes record inputs, not outputs, and replay feeds them through the identical
+  code path. Two replays of one tape produce identical decisions, positions and
+  cash. Replay sources hold no HTTP client and refuse to fall back to live data.
+
+**Security**
+- Mutating endpoints require a shared secret in production. Grok Build preview
+  allows Start/Stop without a token because the operator is the only client.
+  Bodies are validated against an allow-list at the HTTP boundary *and* in Python.
+- External market and contract text is sanitised before reaching the prompt, and
+  the analyst's response schema has no field that could name a ticker, size,
+  price or venue.
 
 ---
 
-## Next sensible development step
+## What is NOT done, and why
 
-Make the desk **observable and consistent**, still paper-only:
+**There is no prediction-market venue adapter, so the event pipeline cannot
+currently fill.** The CPI ladder is registered and priced, but no order book is
+attached. Every contract reports "no order book" and the agent holds. This is
+correct fail-closed behaviour and it is visible on the System page. Connecting a
+venue means implementing `PredictionMarketAdapter` against it and passing its
+`book_source`; nothing else in the pipeline changes. Do not fabricate a book.
 
-1. On home mount, GET `/api/paper-session` so a running session survives refresh.
-2. Optionally thread the file-backed kill switch into `PaperSession` **without** enabling live trading — so System halt and Start agree.
-3. Do **not** connect Alpaca as the default fill path. Do **not** enable live.
+**No edge has been demonstrated.** Zero completed event-driven trades. The
+performance page says so plainly rather than showing an encouraging empty state.
 
-Do not start a new product (new markets, live money, strategy rewrite) until Start/Stop/status/fail-closed stay boringly reliable.
+**Vercel / grok.me cannot host the worker.** The Grok Build production target is
+Nitro `nodejs22.x` with no Python. Start on that host fails closed rather than
+faking RUNNING. The operational desk is the Grok preview process
+(`npm run dev` + `python3 -m ai_trader rpc`). A real production deploy needs a
+long-lived VM/container, not serverless.
+
+**Network access is required for public BTC-USD and FX.** Coinbase candles and
+Frankfurter USD→GBP are live public feeds. If either is missing the session
+STOPS with a reason. It does not invent prices.
+
+**The pre-release probability model is deliberately weak.** It is not expected to
+beat the market's own forecast. The strategy is meant to be right *after* a
+release, not before one.
+
+**Out-of-sample evidence does not exist yet.** The benchmark harness is built and
+splits by time, but there is no historical corpus loaded.
+
+---
+
+## Known limitations
+
+1. **Costs may dominate at £100.** At 50c the entry fee alone is 1.75 probability
+   points before spread. `break_even_edge()` makes this measurable; do the
+   arithmetic before assuming the stake is viable.
+2. **Equity carries open binaries at cost**, not marked to the book. A thin book
+   would otherwise make equity jump on one resting order, and equity drives the
+   survival state.
+3. **Spot paper and the event agent share one survival meter and one displayed
+   £100 book.** Event fills still HOLD without a venue. Spot fills use the
+   internal simulator against public BTC-USD candles.
+4. **Drawdown is computed from settlements**, not a tick-level equity path,
+   because that is what the engine records.
+5. **The Alpaca paper adapter is dormant** and observation only. The session path
+   traps `submit` on every broker.
+6. **Closing the Grok preview process stops the worker.** Closing the *browser*
+   does not. A dedicated always-on host is the remaining ops gap.
+
+---
+
+## How to run
+
+Preview (this is the operational desk):
+
+```
+npm run dev          # UI on :8080, Python worker spawned on first API call
+```
+
+Python tests:
+
+```
+PYTHONPATH=src python3 -m pytest tests -q
+```
+
+Frontend tests:
+
+```
+npm test
+```
+
+---
+
+## Before any real-money consideration
+
+Not the next step, and not a config flip. It would need all of:
+
+- A venue adapter, live, reconciling cleanly for an extended period.
+- Months of live paper evidence with a pre-registered success criterion.
+- Genuine out-of-sample results on recorded historical data.
+- Positive calibration skill, not just positive P&L.
+- A separate security review, credentials outside this repository, and
+  server-side limits at the venue as well as in code.
+- `LIVE_TRADING_ALLOWED` still `False` until that milestone is designed,
+  reviewed and explicitly requested.
+
+---
+
+## Next sensible step
+
+1. Keep paper-trading BTC-USD in the preview worker until there is a real
+   decision history.
+2. Connect one real prediction-market venue as a **read-only book source**.
+3. Put the Python worker on a long-lived host if this needs to outlive the
+   preview sandbox.

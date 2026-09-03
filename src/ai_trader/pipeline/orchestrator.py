@@ -18,8 +18,10 @@ from ai_trader.ai.grok_client import GrokAnalyst
 from ai_trader.analysis.technical import TechnicalAnalyst, analyse_series
 from ai_trader.broker.alpaca_paper import AlpacaPaperBroker
 from ai_trader.broker.simulated import SimulatedBroker
+from ai_trader.clock import Clock, default_clock
 from ai_trader.config import Settings
 from ai_trader.db.repository import Repository
+from ai_trader.fx.provider import FxProvider, PublicFxFeed
 from ai_trader.exceptions import (
     AlpacaPaperUnavailableError,
     KillSwitchEngagedError,
@@ -64,12 +66,19 @@ class Orchestrator:
         settings: Settings,
         repository: Repository,
         kill_switch: KillSwitch,
+        *,
+        clock: Optional[Clock] = None,
+        fx: Optional[FxProvider] = None,
     ) -> None:
         self.settings = settings
         self.repository = repository
         self.kill_switch = kill_switch
+        self.clock = clock or default_clock()
         self.market_data = SimulatedMarketData()
-        self.public_market_data = PublicCryptoFeed()
+        self.public_market_data = PublicCryptoFeed(now_fn=self.clock.now)
+        # Read-only public reference rates. A USD instrument on a GBP book
+        # cannot trade without one; the session fails closed if it is absent.
+        self.fx = fx or PublicFxFeed(clock=self.clock)
         self.analysis = TechnicalAnalyst()
         self.ai = FixtureAnalyst()
         self.grok = GrokAnalyst(settings)
@@ -80,7 +89,7 @@ class Orchestrator:
         self.broker = self.simulated_broker
         self.last_grok_cycle = None
         self.last_benchmark = None
-        self.paper_session = PaperSession()
+        self.paper_session = PaperSession(clock=self.clock, fx=self.fx)
         self.last_session = None
 
     def _select_broker_name(self) -> str:
@@ -575,6 +584,7 @@ class Orchestrator:
         stop_at: int | None = None,
         source: str = "simulated",
         continuous: bool = False,
+        starting_balance: float | None = None,
     ) -> dict[str, Any]:
         """Sequential paper session. Repeated Grok decisions. Never a broker."""
         assert_safe_to_run(
@@ -587,21 +597,24 @@ class Orchestrator:
             trapped.append("submit")
             raise OrderPlacementDisabledError("Paper session must not call SimulatedBroker.submit.")
 
+        # No session path may submit to any broker. Alpaca is observation only.
         self.simulated_broker.submit = trap  # type: ignore[method-assign]
-        if not self._alpaca_paper_ready():
-            self.broker.submit = trap  # type: ignore[method-assign]
-            self.alpaca_broker.submit = trap  # type: ignore[method-assign]
+        self.broker.submit = trap  # type: ignore[method-assign]
+        self.alpaca_broker.submit = trap  # type: ignore[method-assign]
         analyst = self.grok if self.settings.grok_paper_analysis else self.ai
-        config = PaperSessionConfig(
-            symbol=symbol,
-            bars=bars,
-            timeframe=timeframe,
-            grok_frequency=grok_frequency,
-            warmup=warmup,
-            source=source,
-            continuous=continuous,
-            flatten_at_end=not continuous,
-        )
+        config_kwargs: dict[str, Any] = {
+            "symbol": symbol,
+            "bars": bars,
+            "timeframe": timeframe,
+            "grok_frequency": grok_frequency,
+            "warmup": warmup,
+            "source": source,
+            "continuous": continuous,
+            "flatten_at_end": not continuous,
+        }
+        if starting_balance is not None:
+            config_kwargs["starting_balance"] = float(starting_balance)
+        config = PaperSessionConfig(**config_kwargs)
         feed = self.public_market_data if source == "public" else None
         report = self.paper_session.start(
             analyst=analyst,
@@ -675,141 +688,59 @@ class Orchestrator:
         )
 
     def _attach_alpaca_paper(self, report: dict[str, Any]) -> dict[str, Any]:
+        """Attach a **read-only** Alpaca paper account mirror, if configured.
+
+        This used to submit an order. It no longer does, for three reasons:
+
+        1. It ran its own weakened risk check — ``trades_today=0``,
+           ``halted=False``, ``day_start_equity`` set to current equity — so
+           the daily-loss limit and the trade cap could never fire on that path.
+        2. Any fill it produced never reached ``PaperLedger``, so the internal
+           book and the reported balance silently disagreed.
+        3. It was the only code in the repository that sent an order to an
+           external venue, reached directly from the Start button.
+
+        The authoritative fill path is the internal simulator. Alpaca is now
+        observation only, and ``submit`` is trapped by the caller.
+        """
         payload = dict(report)
         payload["live"] = False
         payload["live_trading_allowed"] = False
         payload["alpaca_submit_calls"] = 0
+        payload["broker_submit_calls"] = 0
+        payload["execution"] = "simulated"
+        payload["broker"] = "NOT USED"
         if LIVE_TRADING_ALLOWED:
             payload["status"] = "BLOCKED"
-            payload["execution"] = "simulated"
-            payload["broker"] = "NOT USED"
             payload["data_error"] = "Live trading is disabled."
             return payload
+        running = bool(payload.get("running") and not payload.get("stopped"))
+        if running:
+            payload["status"] = "RUNNING"
+            return payload
         if not self._alpaca_paper_ready():
-            payload["execution"] = "simulated"
-            payload["status"] = "SIMULATED"
-            payload["broker"] = "NOT USED"
-            payload["broker_submit_calls"] = 0
+            payload["status"] = payload.get("status") or "SIMULATED"
             return payload
 
         account = self.alpaca_broker.account()
         if not account.get("available"):
-            payload["execution"] = "simulated"
-            payload["status"] = "UNAVAILABLE"
-            payload["broker"] = "NOT USED"
-            payload["data_error"] = account.get("reason") or "Alpaca paper unavailable."
-            payload["data_failure"] = account.get("failure")
+            payload["status"] = "SIMULATED"
             payload["alpaca_account"] = account
+            payload["alpaca_error"] = account.get("reason") or "Alpaca paper unavailable."
+            payload["alpaca_failure"] = account.get("failure")
             return payload
 
-        payload["currency"] = account.get("currency") or "USD"
-        payload["balance"] = account.get("account_equity")
-        payload["today_pnl"] = account.get("today_pnl")
+        # Observation only. The account balance shown to the user stays the
+        # internal GBP paper book; the Alpaca mirror sits beside it.
+        payload["status"] = "SIMULATED"
         payload["alpaca_account"] = {
             k: v for k, v in account.items() if k not in {"id", "account_number"}
         }
         try:
-            positions = self.alpaca_broker.positions()
+            payload["alpaca_positions"] = self.alpaca_broker.positions()
         except AlpacaPaperUnavailableError as exc:
-            payload["execution"] = "simulated"
-            payload["status"] = "UNAVAILABLE"
-            payload["broker"] = "NOT USED"
-            payload["data_error"] = str(exc)
-            payload["data_failure"] = exc.failure
-            return payload
-        if positions:
-            payload["position"] = positions[0]
-            payload["open_pnl"] = positions[0].get("unrealised_pnl") or 0.0
-        else:
-            payload["position"] = "flat"
-            payload["open_pnl"] = 0.0
-
-        if self.kill_switch.is_engaged():
-            payload["execution"] = "alpaca_paper"
-            payload["status"] = "BLOCKED"
-            payload["broker"] = "alpaca_paper"
-            payload["decision"] = payload.get("current_decision") or "HOLD"
-            payload["data_error"] = "Kill switch engaged. Alpaca paper order blocked."
-            return payload
-
-        last = None
-        decisions = payload.get("ai_decisions") or []
-        if decisions:
-            last = decisions[-1]
-        action = str((last or {}).get("action") or "HOLD").upper()
-        payload["decision"] = action
-        payload["current_decision"] = action
-        if action == "HOLD":
-            payload["execution"] = "alpaca_paper"
-            payload["status"] = "ALPACA PAPER"
-            payload["broker"] = "alpaca_paper"
-            payload["broker_submit_calls"] = 0
-            return payload
-
-        price = float(payload.get("last_price") or 0)
-        assessment = self.risk.review_paper(
-            action,
-            price=price,
-            account={
-                "account_equity": account.get("account_equity") or 0,
-                "cash": account.get("cash") or 0,
-                "day_start_equity": account.get("account_equity") or 0,
-                "starting_cash": account.get("account_equity") or 0,
-            },
-            open_positions=len(positions),
-            trades_today=0,
-            daily_pnl=float(account.get("today_pnl") or 0),
-            has_position=bool(positions),
-            halted=False,
-            kill_switch=False,
-        )
-        if not assessment.approved:
-            payload["execution"] = "alpaca_paper"
-            payload["status"] = "ALPACA PAPER"
-            payload["broker"] = "alpaca_paper"
-            payload["risk_approved"] = False
-            payload["risk_reason"] = assessment.reason
-            payload["broker_submit_calls"] = 0
-            return payload
-
-        side = Side.BUY if action == "BUY" else Side.SELL
-        qty = assessment.proposed_qty if action == "BUY" else float(positions[0].get("quantity") or 0)
-        if qty <= 0:
-            payload["execution"] = "alpaca_paper"
-            payload["status"] = "ALPACA PAPER"
-            payload["broker"] = "alpaca_paper"
-            payload["risk_approved"] = False
-            payload["risk_reason"] = "Position size is zero."
-            return payload
-        verdict = RiskVerdict(approved=True, reason=assessment.reason, max_qty=qty)
-        try:
-            placed = self.alpaca_broker.submit(
-                IntendedOrder(symbol=str(payload.get("symbol") or "BTC-USD"), side=side, qty=qty),
-                verdict,
-                kill_switch=False,
-            )
-        except (
-            AlpacaPaperUnavailableError,
-            KillSwitchEngagedError,
-            OrderPlacementDisabledError,
-            LiveTradingBlockedError,
-        ) as exc:
-            payload["execution"] = "simulated"
-            payload["status"] = "UNAVAILABLE"
-            payload["broker"] = "NOT USED"
-            payload["data_error"] = str(exc)
-            payload["data_failure"] = getattr(exc, "failure", "unavailable")
-            payload["alpaca_submit_calls"] = self.alpaca_broker.submit_calls
-            return payload
-        payload["execution"] = "alpaca_paper"
-        payload["status"] = "ALPACA PAPER"
-        payload["broker"] = "alpaca_paper"
-        payload["broker_submit_calls"] = 1
-        payload["alpaca_submit_calls"] = self.alpaca_broker.submit_calls
-        payload["alpaca_order"] = placed
-        payload["trades"] = int(payload.get("trades") or 0) + 1
-        payload["risk_approved"] = True
-        payload["live"] = False
+            payload["alpaca_error"] = str(exc)
+            payload["alpaca_failure"] = exc.failure
         return payload
 
 

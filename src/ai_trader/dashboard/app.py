@@ -187,13 +187,13 @@ def create_app() -> FastAPI:
     @app.get("/api/paper-session")
     def get_paper_session() -> dict:
         runtime = get_runtime()
-        return runtime.orchestrator.paper_session.status()
+        return runtime.worker.status()
 
     @app.post("/api/paper-session/start")
     def start_paper_session(body: PaperSessionStartRequest | None = None) -> dict:
         runtime = get_runtime()
         payload = body or PaperSessionStartRequest()
-        return runtime.orchestrator.start_paper_session(
+        return runtime.worker.start(
             symbol=payload.symbol,
             bars=payload.bars,
             timeframe=payload.timeframe,
@@ -206,7 +206,7 @@ def create_app() -> FastAPI:
     @app.post("/api/paper-session/stop")
     def stop_paper_session() -> dict:
         runtime = get_runtime()
-        return runtime.orchestrator.stop_paper_session()
+        return runtime.worker.stop()
 
     @app.post("/api/orders")
     def orders_blocked(request: Request) -> None:

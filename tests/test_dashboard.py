@@ -192,7 +192,7 @@ def test_continuous_start_is_paper_only(client: TestClient) -> None:
     assert body["banner"] == "PAPER SIMULATION — NO REAL TRADING"
     assert body["live"] is False
     assert body["broker"] == "NOT USED"
-    assert body["grok"] == "RUNNING"
+    assert body["grok"] in {"RUNNING", "STARTING"}
     assert body["running"] is True
     stopped = client.post("/api/paper-session/stop")
     assert stopped.json()["grok"] == "STOPPED"

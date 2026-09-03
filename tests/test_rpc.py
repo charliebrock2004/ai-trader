@@ -27,10 +27,13 @@ def test_rpc_start_stop_never_uses_broker(isolated_env) -> None:
     )
     assert started["live"] is False
     assert started["broker"] == "NOT USED"
-    assert started["grok"] == "RUNNING"
+    assert started["grok"] in {"RUNNING", "STARTING"}
+    assert started["running"] is True
+    assert started["engine"] == "python-worker"
     assert started["balance"] == 100 or started["balance"] == 100.0
     stopped = handle({"cmd": "stop"})
     assert stopped["grok"] == "STOPPED"
+    assert stopped["running"] is False
     assert stopped["live"] is False
     assert LIVE_TRADING_ALLOWED is False
 

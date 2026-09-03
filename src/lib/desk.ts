@@ -112,10 +112,10 @@ export const MODULES: ModuleRow[] = [
     detail: "Local stub. No orders are sent anywhere.",
   },
   {
-    id: "broker_alpaca",
-    title: "Alpaca paper",
+    id: "broker_external_paper",
+    title: "External paper adapter",
     status: "held",
-    detail: "Future adapter will authenticate against the Alpaca paper API only. The live API host is rejected by the safety module.",
+    detail: "Observation only. No session path submits to any external venue. The live host is rejected by the safety module.",
   },
 ];
 
