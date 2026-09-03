@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ai_trader.safety import ALPACA_PAPER_BASE_URL, assert_safe_to_run
@@ -54,10 +54,21 @@ class Settings(BaseSettings):
     #: Optional BLS registration key. Lifts the anonymous request quota.
     bls_api_key: Optional[str] = None
     #: Required to call any mutating endpoint. Empty means mutations are refused.
-    api_token: Optional[SecretStr] = None
+    #: The Node frontend reads AI_TRADER_API_TOKEN, so Python has to read the
+    #: same name or the two halves disagree about whether control is enabled.
+    api_token: Optional[SecretStr] = Field(
+        default=None,
+        validation_alias=AliasChoices("AI_TRADER_API_TOKEN", "API_TOKEN"),
+    )
 
     dashboard_host: str = "0.0.0.0"
     dashboard_port: int = 8080
+
+    #: The persistent worker (``python -m ai_trader http``). PORT is what a
+    #: managed host injects; binding anything else means the host reports no
+    #: open ports and fails the deploy.
+    worker_host: str = "0.0.0.0"
+    worker_port: int = Field(default=8090, validation_alias=AliasChoices("PORT", "WORKER_PORT"))
 
     @field_validator("trading_mode", mode="before")
     @classmethod

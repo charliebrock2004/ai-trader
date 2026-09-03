@@ -23,6 +23,11 @@ class DeskWorker:
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._lock = threading.Lock()
+        # Start and Stop are serialised against each other. Over stdio commands
+        # arrived one at a time; over HTTP a double-clicked button or a retrying
+        # tab can deliver two Starts at once, and interleaving them would tear
+        # down a live session halfway through building its replacement.
+        self._control_lock = threading.Lock()
         self._ensure_columns()
 
     def _store(self):
@@ -66,7 +71,15 @@ class DeskWorker:
             return
         self._store().update_agent_life(paper_equity=value)
 
+    def _already_running(self) -> bool:
+        session = self.runtime.orchestrator.paper_session
+        return bool(session.running and not session.stopped)
+
     def start(self, **payload: Any) -> dict[str, Any]:
+        with self._control_lock:
+            return self._start_locked(**payload)
+
+    def _start_locked(self, **payload: Any) -> dict[str, Any]:
         if LIVE_TRADING_ALLOWED:
             return {
                 "ok": False,
@@ -87,6 +100,13 @@ class DeskWorker:
                 "data_error": str(exc),
             }
         self._set_desired(True)
+        # Start is idempotent. A second Start against a live session used to
+        # replace it, which reset the bar cursor and discarded the open
+        # position — the account survived, but the session's history did not.
+        # Asking a running desk to run is not a request to restart it.
+        if self._already_running():
+            self._ensure_cycle_loop()
+            return self.status()
         starting = self._persisted_equity()
         report = self.runtime.orchestrator.start_paper_session(
             symbol=str(payload.get("symbol") or "BTC-USD"),
@@ -104,12 +124,13 @@ class DeskWorker:
         return self.status(paper=report)
 
     def stop(self) -> dict[str, Any]:
-        self._set_desired(False)
-        self._stop.set()
-        report = self.runtime.orchestrator.stop_paper_session()
-        if report.get("balance") is not None:
-            self._remember_equity(report.get("balance"))
-        return self.status(paper=report)
+        with self._control_lock:
+            self._set_desired(False)
+            self._stop.set()
+            report = self.runtime.orchestrator.stop_paper_session()
+            if report.get("balance") is not None:
+                self._remember_equity(report.get("balance"))
+            return self.status(paper=report)
 
     def shutdown(self) -> None:
         """Halt loops for process exit. Does not clear the recover latch."""

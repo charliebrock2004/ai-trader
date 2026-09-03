@@ -232,7 +232,8 @@ async function command(cmd: string, payload?: Record<string, unknown>, timeoutMs
 
 function unavailableDesk(cmd: string): EngineResult {
   const message =
-    "The paper worker cannot run on this host. A persistent Python process is required; serverless deploys cannot run the desk.";
+    "No trading worker is reachable. This host cannot run Python itself, so the " +
+    "engine must run as a persistent service and PAPER_WORKER_URL must point at it.";
   const stopped: EngineResult = {
     ok: cmd !== "start" && cmd !== "stop" && cmd !== "cycle",
     live: false,
@@ -315,7 +316,28 @@ function unavailableDesk(cmd: string): EngineResult {
   return stopped;
 }
 
+/**
+ * Run one engine command, whichever transport is available.
+ *
+ * The order matters and is deliberate:
+ *
+ * 1. **A configured remote worker wins.** It is the deployed engine, and when
+ *    an operator points a local UI at it they mean it — silently preferring a
+ *    local sidecar would give them two desks and two ledgers.
+ * 2. **Otherwise spawn the local stdio worker.** This is `npm run dev` on a
+ *    machine that has Python.
+ * 3. **Otherwise say so.** No third transport, and nothing invented to fill
+ *    the gap.
+ */
 export async function paperEngineCommand(cmd: string, payload?: Record<string, unknown>) {
+  const { remoteWorkerConfigured, callWorker } = await import("@/lib/worker-remote.server");
+  if (remoteWorkerConfigured()) {
+    const reply = await callWorker(cmd, payload ?? {});
+    return Response.json(reply.body, {
+      status: reply.status,
+      headers: { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" },
+    });
+  }
   if (!pythonEngineAvailable()) {
     const result = unavailableDesk(cmd);
     const mutating = cmd === "start" || cmd === "stop" || cmd === "cycle";

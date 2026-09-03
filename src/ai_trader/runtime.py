@@ -158,16 +158,26 @@ class Runtime:
 
 _RUNTIME: Optional[Runtime] = None
 
+# Over stdio, commands arrive one at a time and a bare `if None` was enough.
+# Over HTTP they arrive concurrently, and two simultaneous first requests would
+# each build a Runtime — two schedulers, two sessions, two writers on one
+# ledger. The lock is what keeps "one process, one agent" true.
+_RUNTIME_LOCK = threading.Lock()
+
 
 def get_runtime() -> Runtime:
     global _RUNTIME
-    if _RUNTIME is None:
-        _RUNTIME = Runtime()
-    return _RUNTIME
+    if _RUNTIME is not None:
+        return _RUNTIME
+    with _RUNTIME_LOCK:
+        if _RUNTIME is None:
+            _RUNTIME = Runtime()
+        return _RUNTIME
 
 
 def reset_runtime() -> None:
     global _RUNTIME
-    if _RUNTIME is not None:
-        _RUNTIME.close()
-    _RUNTIME = None
+    with _RUNTIME_LOCK:
+        if _RUNTIME is not None:
+            _RUNTIME.close()
+        _RUNTIME = None

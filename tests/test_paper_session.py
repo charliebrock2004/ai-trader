@@ -304,8 +304,20 @@ def test_orchestrator_public_session_never_calls_broker(isolated_env) -> None:
     assert result["broker"] == "NOT USED"
     assert result["broker_submit_calls"] == 0
     assert result["live"] is False
-    assert result["real_market_data"] is True
     assert result["look_ahead"] is False
+    # A public session either gets real prices or fails closed. Both outcomes
+    # are acceptable here — this machine may have no egress — but the payload
+    # has to say which one happened. Asserting `real_market_data is True`
+    # unconditionally used to pass even when the session had died on the FX
+    # lookup and held no prices at all, which is the claim this system must
+    # never make.
+    if result["ok"]:
+        assert result["real_market_data"] is True
+        assert result["last_price"] is not None
+    else:
+        assert result["real_market_data"] is False
+        assert result["running"] is False
+        assert result["data_error"], "a failed session must say why"
     assert trapped == []
     assert orch.alpaca_broker.health()["connected"] is False
     repo.close()

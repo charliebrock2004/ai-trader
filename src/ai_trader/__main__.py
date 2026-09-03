@@ -1,4 +1,9 @@
-"""CLI: python -m ai_trader [dashboard|status|init-db]"""
+"""CLI: python -m ai_trader [http|dashboard|status|init-db|...]
+
+``http`` is the deployment entry point: one long-lived process that owns the
+paper session and serves the desk's command surface over a socket, so the
+frontend can live on a serverless host that has no Python at all.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,16 @@ def main(argv: list[str] | None = None) -> int:
         "command",
         nargs="?",
         default="dashboard",
-        choices=("dashboard", "status", "init-db", "grok-paper", "benchmark", "paper-session", "rpc"),
+        choices=(
+            "http",
+            "dashboard",
+            "status",
+            "init-db",
+            "grok-paper",
+            "benchmark",
+            "paper-session",
+            "rpc",
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -26,6 +40,13 @@ def main(argv: list[str] | None = None) -> int:
     from ai_trader.runtime import get_runtime
 
     settings = get_settings()
+
+    if args.command == "http":
+        # The persistent worker. Binds $PORT so a managed host can reach it,
+        # and owns the session for as long as the process lives.
+        from ai_trader.http_api import serve as serve_http
+
+        return serve_http()
 
     if args.command == "init-db":
         runtime = get_runtime()

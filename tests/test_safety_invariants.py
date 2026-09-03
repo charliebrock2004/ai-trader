@@ -239,6 +239,68 @@ def test_an_unconfigured_deployment_refuses_mutations_rather_than_allowing_them(
     assert "503" in auth, "no token configured must refuse, not allow"
 
 
+# ==========================================================================
+# The deployed worker
+# ==========================================================================
+def test_the_worker_gates_every_mutating_route() -> None:
+    """The worker enforces its own token.
+
+    The frontend attaching a token is a convenience; the worker refusing
+    without one is the security property, because the worker is the thing with
+    a public URL.
+    """
+    body = (PYTHON_ROOT / "http_api.py").read_text(encoding="utf-8")
+    assert "compare_digest" in body, "token comparison must be constant time"
+    assert "MUTATING_COMMANDS" in body, "mutations must be recognised as such"
+    assert "_configured_token()" in body
+    # No token configured must refuse rather than allow.
+    assert "503" in body and "401" in body
+
+
+def test_the_worker_never_hands_the_browser_a_key() -> None:
+    """No CORS on the worker, so the browser cannot be the one holding a token."""
+    body = (PYTHON_ROOT / "http_api.py").read_text(encoding="utf-8")
+    assert "CORSMiddleware" not in body, (
+        "adding CORS would mean the browser calls the worker directly, which "
+        "means the browser holds the control token"
+    )
+
+
+def test_the_worker_client_lives_on_the_server_only() -> None:
+    """A `.server.ts` suffix is what keeps the token out of the client bundle."""
+    remote = ROOT / "src" / "lib" / "worker-remote.server.ts"
+    assert remote.exists(), "the worker client must exist"
+    body = remote.read_text(encoding="utf-8")
+    assert "process.env.AI_TRADER_API_TOKEN" in body
+    # Reads, not prose: the file explains the `VITE_` rule in a comment.
+    assert "import.meta.env.VITE_" not in body
+    assert "process.env.VITE_" not in body
+    # No component may import it: that would pull a server module, and the
+    # token read inside it, toward the browser.
+    for path in _ts_files():
+        if path.name.endswith(".server.ts") or path.name.endswith(".server.test.ts"):
+            continue
+        if "src/routes/api/" in path.as_posix():
+            continue
+        text = path.read_text(encoding="utf-8")
+        assert "worker-remote.server" not in text, path
+
+
+def test_the_worker_url_is_never_a_browser_variable() -> None:
+    """`VITE_`-prefixed values are inlined into the bundle."""
+    for path in _ts_files():
+        body = path.read_text(encoding="utf-8")
+        assert "VITE_PAPER_WORKER_URL" not in body, path
+        assert "VITE_WORKER_URL" not in body, path
+
+
+def test_the_http_worker_exposes_no_live_trading_route() -> None:
+    body = (PYTHON_ROOT / "http_api.py").read_text(encoding="utf-8")
+    for forbidden in ("/api/live", "live_order", "submit_order", "place_order"):
+        assert forbidden not in body, forbidden
+    assert LIVE_TRADING_ALLOWED is False
+
+
 def test_the_public_config_view_never_leaks_a_secret() -> None:
     from ai_trader.config import Settings
 

@@ -380,6 +380,11 @@ class PaperSession:
         payload = {
             **self._flags(),
             "ok": False,
+            # _flags() reports the *configured* feed. Nothing arrived, so the
+            # claim is withdrawn: a dashboard reading this field alone must not
+            # be able to conclude the desk has real prices when it has none.
+            "real_market_data": False,
+            "market_data": "unavailable",
             "grok": "STOPPED",
             "grok_model": self._model_label(),
             "running": False,
