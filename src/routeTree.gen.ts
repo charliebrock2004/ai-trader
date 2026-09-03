@@ -10,16 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DecisionsRouteImport } from './routes/decisions'
 import { Route as PaperRouteImport } from './routes/paper'
 import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as SystemRouteImport } from './routes/system'
+import { Route as ApiAgentRouteImport } from './routes/api/agent'
+import { Route as ApiDecisionsRouteImport } from './routes/api/decisions'
 import { Route as ApiPaperSessionRouteImport } from './routes/api/paper-session'
+import { Route as ApiPerformanceRouteImport } from './routes/api/performance'
+import { Route as ApiSystemRouteImport } from './routes/api/system'
+import { Route as DecisionsIdRouteImport } from './routes/decisions.$id'
+import { Route as ApiAgentCycleRouteImport } from './routes/api/agent.cycle'
+import { Route as ApiDecisionsIdRouteImport } from './routes/api/decisions.$id'
+import { Route as ApiPaperSessionGrokRouteImport } from './routes/api/paper-session.grok'
 import { Route as ApiPaperSessionStartRouteImport } from './routes/api/paper-session.start'
 import { Route as ApiPaperSessionStopRouteImport } from './routes/api/paper-session.stop'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionsRoute = DecisionsRouteImport.update({
+  id: '/decisions',
+  path: '/decisions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaperRoute = PaperRouteImport.update({
@@ -37,10 +51,50 @@ const SystemRoute = SystemRouteImport.update({
   path: '/system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentRoute = ApiAgentRouteImport.update({
+  id: '/api/agent',
+  path: '/api/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDecisionsRoute = ApiDecisionsRouteImport.update({
+  id: '/api/decisions',
+  path: '/api/decisions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaperSessionRoute = ApiPaperSessionRouteImport.update({
   id: '/api/paper-session',
   path: '/api/paper-session',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPerformanceRoute = ApiPerformanceRouteImport.update({
+  id: '/api/performance',
+  path: '/api/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSystemRoute = ApiSystemRouteImport.update({
+  id: '/api/system',
+  path: '/api/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionsIdRoute = DecisionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DecisionsRoute,
+} as any)
+const ApiAgentCycleRoute = ApiAgentCycleRouteImport.update({
+  id: '/cycle',
+  path: '/cycle',
+  getParentRoute: () => ApiAgentRoute,
+} as any)
+const ApiDecisionsIdRoute = ApiDecisionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiDecisionsRoute,
+} as any)
+const ApiPaperSessionGrokRoute = ApiPaperSessionGrokRouteImport.update({
+  id: '/grok',
+  path: '/grok',
+  getParentRoute: () => ApiPaperSessionRoute,
 } as any)
 const ApiPaperSessionStartRoute = ApiPaperSessionStartRouteImport.update({
   id: '/start',
@@ -55,29 +109,56 @@ const ApiPaperSessionStopRoute = ApiPaperSessionStopRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/decisions': typeof DecisionsRouteWithChildren
   '/paper': typeof PaperRoute
   '/performance': typeof PerformanceRoute
   '/system': typeof SystemRoute
+  '/api/agent': typeof ApiAgentRouteWithChildren
+  '/api/decisions': typeof ApiDecisionsRouteWithChildren
   '/api/paper-session': typeof ApiPaperSessionRouteWithChildren
+  '/api/performance': typeof ApiPerformanceRoute
+  '/api/system': typeof ApiSystemRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/api/agent/cycle': typeof ApiAgentCycleRoute
+  '/api/decisions/$id': typeof ApiDecisionsIdRoute
+  '/api/paper-session/grok': typeof ApiPaperSessionGrokRoute
   '/api/paper-session/start': typeof ApiPaperSessionStartRoute
   '/api/paper-session/stop': typeof ApiPaperSessionStopRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/decisions': typeof DecisionsRouteWithChildren
   '/paper': typeof PaperRoute
   '/performance': typeof PerformanceRoute
   '/system': typeof SystemRoute
+  '/api/agent': typeof ApiAgentRouteWithChildren
+  '/api/decisions': typeof ApiDecisionsRouteWithChildren
   '/api/paper-session': typeof ApiPaperSessionRouteWithChildren
+  '/api/performance': typeof ApiPerformanceRoute
+  '/api/system': typeof ApiSystemRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/api/agent/cycle': typeof ApiAgentCycleRoute
+  '/api/decisions/$id': typeof ApiDecisionsIdRoute
+  '/api/paper-session/grok': typeof ApiPaperSessionGrokRoute
   '/api/paper-session/start': typeof ApiPaperSessionStartRoute
   '/api/paper-session/stop': typeof ApiPaperSessionStopRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/decisions': typeof DecisionsRouteWithChildren
   '/paper': typeof PaperRoute
   '/performance': typeof PerformanceRoute
   '/system': typeof SystemRoute
+  '/api/agent': typeof ApiAgentRouteWithChildren
+  '/api/decisions': typeof ApiDecisionsRouteWithChildren
   '/api/paper-session': typeof ApiPaperSessionRouteWithChildren
+  '/api/performance': typeof ApiPerformanceRoute
+  '/api/system': typeof ApiSystemRoute
+  '/decisions/$id': typeof DecisionsIdRoute
+  '/api/agent/cycle': typeof ApiAgentCycleRoute
+  '/api/decisions/$id': typeof ApiDecisionsIdRoute
+  '/api/paper-session/grok': typeof ApiPaperSessionGrokRoute
   '/api/paper-session/start': typeof ApiPaperSessionStartRoute
   '/api/paper-session/stop': typeof ApiPaperSessionStopRoute
 }
@@ -85,38 +166,70 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/decisions'
     | '/paper'
     | '/performance'
     | '/system'
+    | '/api/agent'
+    | '/api/decisions'
     | '/api/paper-session'
+    | '/api/performance'
+    | '/api/system'
+    | '/decisions/$id'
+    | '/api/agent/cycle'
+    | '/api/decisions/$id'
+    | '/api/paper-session/grok'
     | '/api/paper-session/start'
     | '/api/paper-session/stop'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/decisions'
     | '/paper'
     | '/performance'
     | '/system'
+    | '/api/agent'
+    | '/api/decisions'
     | '/api/paper-session'
+    | '/api/performance'
+    | '/api/system'
+    | '/decisions/$id'
+    | '/api/agent/cycle'
+    | '/api/decisions/$id'
+    | '/api/paper-session/grok'
     | '/api/paper-session/start'
     | '/api/paper-session/stop'
   id:
     | '__root__'
     | '/'
+    | '/decisions'
     | '/paper'
     | '/performance'
     | '/system'
+    | '/api/agent'
+    | '/api/decisions'
     | '/api/paper-session'
+    | '/api/performance'
+    | '/api/system'
+    | '/decisions/$id'
+    | '/api/agent/cycle'
+    | '/api/decisions/$id'
+    | '/api/paper-session/grok'
     | '/api/paper-session/start'
     | '/api/paper-session/stop'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DecisionsRoute: typeof DecisionsRouteWithChildren
   PaperRoute: typeof PaperRoute
   PerformanceRoute: typeof PerformanceRoute
   SystemRoute: typeof SystemRoute
+  ApiAgentRoute: typeof ApiAgentRouteWithChildren
+  ApiDecisionsRoute: typeof ApiDecisionsRouteWithChildren
   ApiPaperSessionRoute: typeof ApiPaperSessionRouteWithChildren
+  ApiPerformanceRoute: typeof ApiPerformanceRoute
+  ApiSystemRoute: typeof ApiSystemRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -126,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decisions': {
+      id: '/decisions'
+      path: '/decisions'
+      fullPath: '/decisions'
+      preLoaderRoute: typeof DecisionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/paper': {
@@ -149,12 +269,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agent': {
+      id: '/api/agent'
+      path: '/api/agent'
+      fullPath: '/api/agent'
+      preLoaderRoute: typeof ApiAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/decisions': {
+      id: '/api/decisions'
+      path: '/api/decisions'
+      fullPath: '/api/decisions'
+      preLoaderRoute: typeof ApiDecisionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/paper-session': {
       id: '/api/paper-session'
       path: '/api/paper-session'
       fullPath: '/api/paper-session'
       preLoaderRoute: typeof ApiPaperSessionRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/performance': {
+      id: '/api/performance'
+      path: '/api/performance'
+      fullPath: '/api/performance'
+      preLoaderRoute: typeof ApiPerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/system': {
+      id: '/api/system'
+      path: '/api/system'
+      fullPath: '/api/system'
+      preLoaderRoute: typeof ApiSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decisions/$id': {
+      id: '/decisions/$id'
+      path: '/$id'
+      fullPath: '/decisions/$id'
+      preLoaderRoute: typeof DecisionsIdRouteImport
+      parentRoute: typeof DecisionsRoute
+    }
+    '/api/agent/cycle': {
+      id: '/api/agent/cycle'
+      path: '/cycle'
+      fullPath: '/api/agent/cycle'
+      preLoaderRoute: typeof ApiAgentCycleRouteImport
+      parentRoute: typeof ApiAgentRoute
+    }
+    '/api/decisions/$id': {
+      id: '/api/decisions/$id'
+      path: '/$id'
+      fullPath: '/api/decisions/$id'
+      preLoaderRoute: typeof ApiDecisionsIdRouteImport
+      parentRoute: typeof ApiDecisionsRoute
+    }
+    '/api/paper-session/grok': {
+      id: '/api/paper-session/grok'
+      path: '/grok'
+      fullPath: '/api/paper-session/grok'
+      preLoaderRoute: typeof ApiPaperSessionGrokRouteImport
+      parentRoute: typeof ApiPaperSessionRoute
     }
     '/api/paper-session/start': {
       id: '/api/paper-session/start'
@@ -173,12 +349,50 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DecisionsRouteChildren {
+  DecisionsIdRoute: typeof DecisionsIdRoute
+}
+
+const DecisionsRouteChildren: DecisionsRouteChildren = {
+  DecisionsIdRoute: DecisionsIdRoute,
+}
+
+const DecisionsRouteWithChildren = DecisionsRoute._addFileChildren(
+  DecisionsRouteChildren,
+)
+
+interface ApiAgentRouteChildren {
+  ApiAgentCycleRoute: typeof ApiAgentCycleRoute
+}
+
+const ApiAgentRouteChildren: ApiAgentRouteChildren = {
+  ApiAgentCycleRoute: ApiAgentCycleRoute,
+}
+
+const ApiAgentRouteWithChildren = ApiAgentRoute._addFileChildren(
+  ApiAgentRouteChildren,
+)
+
+interface ApiDecisionsRouteChildren {
+  ApiDecisionsIdRoute: typeof ApiDecisionsIdRoute
+}
+
+const ApiDecisionsRouteChildren: ApiDecisionsRouteChildren = {
+  ApiDecisionsIdRoute: ApiDecisionsIdRoute,
+}
+
+const ApiDecisionsRouteWithChildren = ApiDecisionsRoute._addFileChildren(
+  ApiDecisionsRouteChildren,
+)
+
 interface ApiPaperSessionRouteChildren {
+  ApiPaperSessionGrokRoute: typeof ApiPaperSessionGrokRoute
   ApiPaperSessionStartRoute: typeof ApiPaperSessionStartRoute
   ApiPaperSessionStopRoute: typeof ApiPaperSessionStopRoute
 }
 
 const ApiPaperSessionRouteChildren: ApiPaperSessionRouteChildren = {
+  ApiPaperSessionGrokRoute: ApiPaperSessionGrokRoute,
   ApiPaperSessionStartRoute: ApiPaperSessionStartRoute,
   ApiPaperSessionStopRoute: ApiPaperSessionStopRoute,
 }
@@ -189,10 +403,15 @@ const ApiPaperSessionRouteWithChildren = ApiPaperSessionRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DecisionsRoute: DecisionsRouteWithChildren,
   PaperRoute: PaperRoute,
   PerformanceRoute: PerformanceRoute,
   SystemRoute: SystemRoute,
+  ApiAgentRoute: ApiAgentRouteWithChildren,
+  ApiDecisionsRoute: ApiDecisionsRouteWithChildren,
   ApiPaperSessionRoute: ApiPaperSessionRouteWithChildren,
+  ApiPerformanceRoute: ApiPerformanceRoute,
+  ApiSystemRoute: ApiSystemRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
