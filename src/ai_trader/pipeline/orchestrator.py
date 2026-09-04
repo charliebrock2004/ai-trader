@@ -421,7 +421,7 @@ class Orchestrator:
             series=(visible,),
         )
         account = self.paper_account.snapshot().to_dict()
-        analyst = self.grok if self.settings.grok_paper_analysis else self.ai
+        analyst = self.grok if (self.settings.grok_paper_analysis or self.settings.grok_configured()) else self.ai
         proposed = analyst.propose(
             snapshot,
             analysis,
@@ -532,7 +532,7 @@ class Orchestrator:
         self.alpaca_broker.submit = trap  # type: ignore[method-assign]
         analyst = grok_analyst
         if analyst is None:
-            analyst = self.grok if self.settings.grok_paper_analysis else self.ai
+            analyst = self.grok if (self.settings.grok_paper_analysis or self.settings.grok_configured()) else self.ai
         report = run_benchmark(grok_analyst=analyst, risk=self.risk)
         if trapped or self.simulated_broker.submit_calls:
             raise OrderPlacementDisabledError("Broker was touched during benchmark.")
@@ -601,7 +601,7 @@ class Orchestrator:
         self.simulated_broker.submit = trap  # type: ignore[method-assign]
         self.broker.submit = trap  # type: ignore[method-assign]
         self.alpaca_broker.submit = trap  # type: ignore[method-assign]
-        analyst = self.grok if self.settings.grok_paper_analysis else self.ai
+        analyst = self.grok if (self.settings.grok_paper_analysis or self.settings.grok_configured()) else self.ai
         config_kwargs: dict[str, Any] = {
             "symbol": symbol,
             "bars": bars,

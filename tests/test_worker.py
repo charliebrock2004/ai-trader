@@ -74,6 +74,30 @@ def test_worker_records_hold_with_reason(isolated_env) -> None:
     runtime.worker.stop()
 
 
+def test_running_spot_session_does_not_show_event_hold_as_the_reason(isolated_env) -> None:
+    """CPI/event HOLDs are recorded. They must not masquerade as the BTC desk's reason."""
+    runtime = get_runtime()
+    started = runtime.worker.start(
+        symbol="SIM-UP", source="simulated", timeframe="5m", bars=12, continuous=True
+    )
+    assert started["running"] is True
+    runtime.repository.records.record_decision(
+        {
+            "kind": "binary",
+            "ticker": "CPI-2026-07-ABOVE-4",
+            "final_action": "HOLD",
+            "notes": "Official data status is unavailable, not verified. Uncertainty means HOLD.",
+            "stage": "opportunity",
+            "executed": False,
+        }
+    )
+    status = runtime.worker.status()
+    reason = str(status.get("hold_reason") or "")
+    assert "Official data" not in reason
+    assert "SIM-UP" in reason or "paper session" in reason.lower()
+    runtime.worker.stop()
+
+
 def test_worker_shutdown_keeps_recover_latch(isolated_env) -> None:
     runtime = get_runtime()
     runtime.worker.start(

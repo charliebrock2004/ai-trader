@@ -36,6 +36,10 @@ class GrokAnalyst(Analyst):
     ) -> None:
         self.settings = settings
         requested = settings.grok_paper_analysis if enable_paper is None else bool(enable_paper)
+        # A deployed worker with a key should analyse paper candidates without
+        # an extra flag. The flag still cannot enable live trading.
+        if enable_paper is None and settings.grok_configured():
+            requested = True
         # Env/flag enables PAPER ANALYSIS only. It cannot enable live trading.
         self.paper_requested = bool(requested)
         self.enabled = self.paper_requested

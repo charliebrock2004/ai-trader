@@ -67,7 +67,7 @@ class Runtime:
         thread, which fails closed if the rate is missing.
         """
         analyst = None
-        if self.settings.grok_paper_analysis and self.settings.grok_configured():
+        if self.settings.grok_configured() or self.settings.grok_paper_analysis:
             analyst = GrokSkeptic(self.settings)
 
         event_source = BLSCPISource(clock=self.clock, api_key=self.settings.bls_api_key)

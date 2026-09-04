@@ -322,11 +322,13 @@ class GrokSkeptic:
         on_usage: Any = None,
     ) -> None:
         self.settings = settings
-        self.enabled = (
-            bool(getattr(settings, "grok_paper_analysis", False))
-            if enabled is None
-            else bool(enabled)
-        )
+        if enabled is None:
+            flag = bool(getattr(settings, "grok_paper_analysis", False))
+            checker = getattr(settings, "grok_configured", None)
+            has_key = bool(checker()) if callable(checker) else False
+            self.enabled = flag or has_key
+        else:
+            self.enabled = bool(enabled)
         self._http = http_client
         self.timeout = float(
             timeout if timeout is not None else getattr(settings, "xai_timeout", 20.0) or 20.0

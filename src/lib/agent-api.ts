@@ -257,8 +257,40 @@ export class ApiError extends Error {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const response = await fetch(path, { headers: { accept: "application/json" }, cache: "no-store" });
-  return readBody<T>(response);
+  let lastError: Error | null = null;
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    try {
+      const response = await fetch(path, {
+        headers: { accept: "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(12_000),
+      });
+      const body = await readBody<T>(response);
+      const row = body as { engine?: unknown };
+      if (
+        attempt < 4 &&
+        (row.engine === "sleeping" || row.engine === "unreachable" || row.engine === "unavailable")
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 4000));
+        continue;
+      }
+      return body;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const text = lastError.message.toLowerCase();
+      const retryable =
+        text.includes("timeout") ||
+        text.includes("timed out") ||
+        text.includes("abort") ||
+        text.includes("asleep") ||
+        text.includes("not responding") ||
+        text.includes("failed (503)") ||
+        text.includes("failed (502)");
+      if (!retryable || attempt === 4) throw lastError;
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+    }
+  }
+  throw lastError ?? new Error("Could not reach the paper engine.");
 }
 
 async function mutate<T>(path: string, body?: unknown, timeoutMs = 25000): Promise<T> {

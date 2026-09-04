@@ -237,12 +237,20 @@ class DeskWorker:
             hold_reason = paper.get("data_error") or "Stopped. New paper trades blocked."
         elif not session_ready:
             hold_reason = "Starting. Loading market data."
-        elif last.get("notes"):
-            hold_reason = last.get("notes")
-        elif last.get("final_action") == "HOLD":
-            hold_reason = last.get("policy_reason") or last.get("risk_reason") or last.get("stage")
-        if running and session_ready and not hold_reason:
+        elif paper.get("data_error"):
             hold_reason = paper.get("data_error")
+        elif last.get("kind") == "spot":
+            hold_reason = last.get("notes") or last.get("policy_reason") or last.get("risk_reason")
+        else:
+            # The operational path is the BTC paper session. Event-pipeline HOLDs
+            # (no venue book / unverified BLS) are recorded, but they must not
+            # be presented as the reason the spot desk did not fill.
+            symbol = paper.get("symbol") or "BTC-USD"
+            timeframe = paper.get("timeframe") or "5m"
+            hold_reason = (
+                f"{symbol} {timeframe} paper session is running against public candles. "
+                "No paper fill this bar."
+            )
         account = dict(agent.get("account") or {})
         account["equity"] = paper_balance
         account["daily_pnl"] = paper.get("today_pnl", account.get("daily_pnl", 0))
