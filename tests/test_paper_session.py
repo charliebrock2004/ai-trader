@@ -239,10 +239,8 @@ def test_orchestrator_session_never_calls_broker(isolated_env) -> None:
     assert trapped == []
     assert orch.simulated_broker.submit_calls == 0
     assert orch.alpaca_broker.health()["connected"] is False
-    stored = repo.list_decisions(limit=20)
-    assert stored
-    assert all(row["status"] == "paper_session" for row in stored)
-    # Every paper trade (and empty book) is recorded. Broker stays untouched.
+    # The paper run is persisted even when the SMA filter never fires and
+    # Grok is not called. Empty Grok rows are honest, not a missing audit.
     assert repo.list_paper_orders(50) is not None
     perf = repo.latest_performance()
     assert perf is not None

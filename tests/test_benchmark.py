@@ -105,7 +105,7 @@ def test_grok_sees_only_visible_bars(isolated_env, monkeypatch: pytest.MonkeyPat
     assert source.decisions[0]["bar"] == 20
     body = http.calls[0]["json"]["messages"][1]["content"]
     assert "SIM-UP" in body
-    assert http.calls[0]["json"]["model"] == "grok-4.6"
+    assert http.calls[0]["json"]["model"] == "grok-4.3"
     assert "tools" not in http.calls[0]["json"]
     assert all("alpaca" not in c["url"] for c in http.calls)
 

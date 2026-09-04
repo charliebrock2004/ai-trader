@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     trading_mode: str = "simulate"
 
     xai_api_key: Optional[SecretStr] = None
-    xai_model: str = "grok-4.6"
+    xai_model: str = "grok-4.3"
     xai_base_url: str = "https://api.x.ai/v1"
 
     alpaca_api_key: Optional[SecretStr] = None
@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     kill_switch_engaged: bool = True
     grok_paper_analysis: bool = False
     xai_timeout: float = 8.0
+    #: Hard cap on paper-analysis HTTP calls per UTC day. Exhaustion is HOLD
+    #: or the deterministic filter — never a reason to widen risk.
+    grok_daily_call_budget: int = 8
+    #: Minimum seconds between Grok HTTP calls.
+    grok_min_interval_seconds: int = 1800
 
     # -- agent economics ---------------------------------------------------
     #: The experiment's opening stake, in the base accounting currency.
@@ -121,6 +126,8 @@ class Settings(BaseSettings):
             "xai_model": self.xai_model,
             "xai_base_url": self.xai_base_url,
             "xai_configured": self.grok_configured(),
+            "grok_daily_call_budget": self.grok_daily_call_budget,
+            "grok_min_interval_seconds": self.grok_min_interval_seconds,
             "alpaca_base_url": self.alpaca_base_url,
             "alpaca_configured": self.alpaca_configured(),
             "database_path": str(self.resolve_database_path()),

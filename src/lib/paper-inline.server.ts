@@ -82,7 +82,7 @@ async function grokDecision(symbol: string, candle: Candle, equity: number): Pro
     return { action: "HOLD", model: "fixture-hold" };
   }
   const base = (process.env.XAI_BASE_URL || "https://api.x.ai/v1").replace(/\/$/, "");
-  const model = process.env.XAI_MODEL || "grok-4.6";
+  const model = process.env.XAI_MODEL || "grok-4.3";
   const body = {
     model,
     temperature: 0,

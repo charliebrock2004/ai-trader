@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 from ai_trader.agent.runtime import AgentRuntime
 from ai_trader.agent.worker import DeskWorker
+from ai_trader.ai.budget import GrokBudget
 from ai_trader.ai.skeptic import GrokSkeptic
 from ai_trader.clock import SystemClock
 from ai_trader.config import Settings, get_settings
@@ -41,7 +42,18 @@ class Runtime:
         self.orchestrator = Orchestrator(
             self.settings, self.repository, self.kill_switch, clock=self.clock
         )
+        self.budget = GrokBudget(
+            self.repository.records,
+            clock=self.clock,
+            daily_limit=self.settings.grok_daily_call_budget,
+            min_interval_seconds=self.settings.grok_min_interval_seconds,
+            model=self.settings.xai_model or "grok-4.3",
+        )
+        self.orchestrator.paper_session.budget = self.budget
+        self.orchestrator.paper_session.gate_with_deterministic = True
         self.agent = self._build_agent()
+        self.orchestrator.grok.budget = self.budget
+        self.orchestrator.grok.on_usage = self._record_llm
         self.worker = DeskWorker(self)
         self.orchestrator.paper_session.on_persist = self.orchestrator._persist_session
         self.orchestrator.paper_session.on_decision = self._record_spot_decision
@@ -68,7 +80,11 @@ class Runtime:
         """
         analyst = None
         if self.settings.grok_configured() or self.settings.grok_paper_analysis:
-            analyst = GrokSkeptic(self.settings)
+            analyst = GrokSkeptic(
+                self.settings,
+                budget=self.budget,
+                on_usage=self._record_llm,
+            )
 
         event_source = BLSCPISource(clock=self.clock, api_key=self.settings.bls_api_key)
         # Register the contract ladder so the pipeline has something concrete to
@@ -96,6 +112,7 @@ class Runtime:
             fx_rate=1.0,
             quote_currency="USD",
             hosting_per_day=self.settings.hosting_cost_per_day,
+            grok_budget=self.budget,
         )
         agent.fx_source = "deferred"  # type: ignore[attr-defined]
         return agent
@@ -113,6 +130,17 @@ class Runtime:
                 pass
 
         threading.Thread(target=_load, daemon=True, name="ai-trader-fx").start()
+
+    def _record_llm(self, model: str, input_tokens: int, output_tokens: int) -> None:
+        """Cost ledger only. Must never influence sizing or survival."""
+        try:
+            self.agent.costs.record_llm_call(
+                model=str(model),
+                input_tokens=int(input_tokens),
+                output_tokens=int(output_tokens),
+            )
+        except Exception:
+            pass
 
     def _record_spot_decision(self, payload: dict[str, Any]) -> None:
         """Write every paper-session decision, including HOLDs, into the audit trail."""

@@ -55,9 +55,10 @@ class TokenPrice:
 #: rates before relying on the absolute numbers; the mechanism does not depend
 #: on them being exact, but the runway figure does.
 XAI_PRICES: dict[str, TokenPrice] = {
+    "grok-4.3": TokenPrice("grok-4.3", input_per_million_usd=1.25, output_per_million_usd=2.50),
     "grok-4.6": TokenPrice("grok-4.6", input_per_million_usd=3.00, output_per_million_usd=15.00),
 }
-DEFAULT_TOKEN_PRICE = TokenPrice("unknown", input_per_million_usd=3.00, output_per_million_usd=15.00)
+DEFAULT_TOKEN_PRICE = TokenPrice("unknown", input_per_million_usd=1.25, output_per_million_usd=2.50)
 
 
 class CostLedger:

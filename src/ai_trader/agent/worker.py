@@ -217,6 +217,28 @@ class DeskWorker:
                 "warning": "Persistence status unavailable.",
             }
 
+    def _grok_usage(self) -> dict[str, Any]:
+        settings = self.runtime.settings
+        connected = bool(settings.grok_configured())
+        budget = getattr(self.runtime, "budget", None)
+        snap = budget.snapshot() if budget is not None else {}
+        return {
+            "connected": connected,
+            "status": "connected" if connected else "disconnected",
+            "model": settings.xai_model or "grok-4.3",
+            "calls_today": int(snap.get("calls_today") or 0),
+            "daily_budget": int(snap.get("daily_budget") or settings.grok_daily_call_budget),
+            "remaining": int(snap.get("remaining") if snap.get("remaining") is not None else settings.grok_daily_call_budget),
+            "estimated_cost": float(snap.get("estimated_cost") or 0.0),
+            "min_interval_seconds": int(
+                snap.get("min_interval_seconds") or settings.grok_min_interval_seconds
+            ),
+            "last_call_at": snap.get("last_call_at"),
+            "allowed": bool(snap.get("allowed")) if snap else False,
+            "filter": "SMA 10/20 cross",
+            "operates_without_grok": True,
+        }
+
     def status(self, paper: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         paper = paper or self.runtime.orchestrator.paper_session.status()
         agent = self.runtime.agent.status()
@@ -299,6 +321,7 @@ class DeskWorker:
             "currency": "GBP",
             "engine": "python-worker",
             "persistence": self._persistence_view(),
+            "grok_usage": self._grok_usage(),
         }
         if paper.get("data_error") and not running:
             merged["data_error"] = paper.get("data_error")

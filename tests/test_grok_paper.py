@@ -109,7 +109,7 @@ def test_valid_buy_sell_hold(isolated_env: object, monkeypatch: pytest.MonkeyPat
         assert proposed.context["validated"] is True
         assert "alpaca" not in http.calls[0]["url"]
         assert "tools" not in http.calls[0]["json"]
-        assert http.calls[0]["json"]["model"] == "grok-4.6"
+        assert http.calls[0]["json"]["model"] == "grok-4.3"
 
 
 def test_timeout_and_network_become_hold(isolated_env: object, monkeypatch: pytest.MonkeyPatch) -> None:

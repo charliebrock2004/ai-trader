@@ -320,6 +320,7 @@ class GrokSkeptic:
         enabled: Optional[bool] = None,
         timeout: Optional[float] = None,
         on_usage: Any = None,
+        budget: Any = None,
     ) -> None:
         self.settings = settings
         if enabled is None:
@@ -335,6 +336,7 @@ class GrokSkeptic:
         )
         #: Called with (model, input_tokens, output_tokens) so cost is recorded.
         self.on_usage = on_usage
+        self.budget = budget
         self.http_calls: list[dict[str, Any]] = []
 
     def is_configured(self) -> bool:
@@ -343,7 +345,7 @@ class GrokSkeptic:
 
     @property
     def model(self) -> str:
-        return getattr(self.settings, "xai_model", None) or "grok-4.6"
+        return getattr(self.settings, "xai_model", None) or "grok-4.3"
 
     def review(
         self,
@@ -359,6 +361,10 @@ class GrokSkeptic:
             return _pass("Analyst review is not enabled. Defaulting to PASS.", model=self.model)
         if not self.is_configured():
             return _pass("XAI_API_KEY is missing. Analyst was not called.", model=self.model)
+        if self.budget is not None:
+            ok, reason = self.budget.consume()
+            if not ok:
+                return _pass(reason, model=self.model)
 
         payload = build_skeptic_payload(
             contract=contract, observation=observation, estimate=estimate,

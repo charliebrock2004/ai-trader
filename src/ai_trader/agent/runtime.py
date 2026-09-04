@@ -48,8 +48,10 @@ class AgentRuntime:
         filters: Optional[OpportunityFilters] = None,
         risk_limits: Optional[ContractRiskLimits] = None,
         require_analyst: bool = True,
+        grok_budget: Any = None,
     ) -> None:
         self.require_analyst = require_analyst
+        self.grok_budget = grok_budget
         self.clock = clock or default_clock()
         self.store = store
         self.data_dir = Path(data_dir)
@@ -165,6 +167,7 @@ class AgentRuntime:
             fx_rate=self.fx_rate,
             quote_currency=self.quote_currency,
             require_analyst=self.require_analyst,
+            grok_budget=self.grok_budget,
         )
         report: CycleReport = cycle.run()
         self.last_cycle = report.to_dict()

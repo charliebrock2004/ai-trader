@@ -110,6 +110,7 @@ class AgentCycle:
         fx_rate: float = 1.0,
         quote_currency: str = "USD",
         require_analyst: bool = True,
+        grok_budget: Any = None,
     ) -> None:
         #: When True (the default) a missing or unconfigured analyst means HOLD.
         #: An adversarial review is part of the strategy, so losing it is a
@@ -126,6 +127,7 @@ class AgentCycle:
         self.opportunities = opportunities or OpportunityEngine()
         self.analyst = analyst
         self.cost_ledger = cost_ledger
+        self.grok_budget = grok_budget
         self.clock = clock or default_clock()
         self.fx_rate = float(fx_rate)
         self.quote_currency = quote_currency
@@ -312,6 +314,17 @@ class AgentCycle:
             )
             return
         if self.analyst is not None:
+            if self.grok_budget is not None:
+                allowed, reason = self.grok_budget.allow()
+                if not allowed:
+                    self._record_hold(
+                        report,
+                        ticker=contract.ticker,
+                        stage="analyst",
+                        reason=reason,
+                        opportunity=opportunity,
+                    )
+                    return
             review = self.analyst.review(
                 contract=contract,
                 observation=opportunity.observation,

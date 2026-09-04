@@ -89,7 +89,9 @@ class Orchestrator:
         self.broker = self.simulated_broker
         self.last_grok_cycle = None
         self.last_benchmark = None
-        self.paper_session = PaperSession(clock=self.clock, fx=self.fx)
+        self.paper_session = PaperSession(
+            clock=self.clock, fx=self.fx, gate_with_deterministic=True
+        )
         self.last_session = None
 
     def _select_broker_name(self) -> str:

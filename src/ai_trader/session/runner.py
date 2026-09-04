@@ -26,7 +26,7 @@ from ai_trader.paper.simulator import PaperSimulator
 from ai_trader.risk.engine import RiskEngine
 from ai_trader.safety import LIVE_TRADING_ALLOWED
 from ai_trader.session.config import BANNER, PaperSessionConfig
-from ai_trader.session.source import RepeatingGrokSource
+from ai_trader.session.source import DeterministicFirstSource, RepeatingGrokSource
 from ai_trader.types import CandleSeries
 
 
@@ -46,6 +46,8 @@ class PaperSession:
         policy: Any = None,
         on_persist: Optional[Any] = None,
         on_decision: Optional[Any] = None,
+        budget: Any = None,
+        gate_with_deterministic: bool = False,
     ) -> None:
         self.config = (config or PaperSessionConfig()).validate()
         self.analyst = analyst or FixtureAnalyst()
@@ -58,13 +60,15 @@ class PaperSession:
         #: continuous run is durable rather than only persisted on Stop.
         self.on_persist = on_persist
         self.on_decision = on_decision
+        self.budget = budget
+        self.gate_with_deterministic = bool(gate_with_deterministic)
         self.fx_rate = 1.0
         self.fx_detail: Optional[dict[str, Any]] = None
         self.poll_seconds = max(0.05, float(poll_seconds))
         self.stopped = True
         self.running = False
         self.sim: Optional[PaperSimulator] = None
-        self.source: Optional[RepeatingGrokSource] = None
+        self.source: Optional[Any] = None
         self.report: Optional[dict[str, Any]] = None
         self._stop_at: Optional[int] = None
         self._thread: Optional[threading.Thread] = None
@@ -250,15 +254,26 @@ class PaperSession:
         # and the analyst; they do not open positions at two-hour-old prices.
         if self.config.continuous and not self.config.trade_historical_bars:
             self.sim.trade_from_index = len(used.candles)
-        self.source = RepeatingGrokSource(
-            self.analyst,
-            frequency=self.config.grok_frequency,
-            warmup=self.config.warmup,
-            account_fn=lambda: self.sim.ledger.snapshot().to_dict() if self.sim else {},
-            stop_fn=lambda: self.stopped or (
-                generation is not None and generation != self._generation
-            ),
-        )
+        if self.gate_with_deterministic:
+            self.source = DeterministicFirstSource(
+                self.analyst,
+                budget=self.budget,
+                warmup=self.config.warmup,
+                account_fn=lambda: self.sim.ledger.snapshot().to_dict() if self.sim else {},
+                stop_fn=lambda: self.stopped or (
+                    generation is not None and generation != self._generation
+                ),
+            )
+        else:
+            self.source = RepeatingGrokSource(
+                self.analyst,
+                frequency=self.config.grok_frequency,
+                warmup=self.config.warmup,
+                account_fn=lambda: self.sim.ledger.snapshot().to_dict() if self.sim else {},
+                stop_fn=lambda: self.stopped or (
+                    generation is not None and generation != self._generation
+                ),
+            )
         report = self.sim.run(
             used,
             source=self.source,

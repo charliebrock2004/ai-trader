@@ -102,6 +102,19 @@ export type AgentStatus = {
     warning?: string | null;
     updated_at?: string | null;
   };
+  grok_usage?: {
+    connected?: boolean;
+    status?: string;
+    model?: string;
+    calls_today?: number;
+    daily_budget?: number;
+    remaining?: number;
+    estimated_cost?: number;
+    min_interval_seconds?: number;
+    last_call_at?: string | null;
+    filter?: string;
+    operates_without_grok?: boolean;
+  };
 };
 
 export type OpenPosition = {

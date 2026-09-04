@@ -6,7 +6,6 @@ import {
   ago,
   api,
   money,
-  percent,
   points,
   probability,
   shortDate,
@@ -102,7 +101,12 @@ export function AgentHome() {
     ? (status.balance as number)
     : (status.account?.equity ?? 100);
   const deskStatus = status.status ?? (running ? (starting ? "STARTING" : "RUNNING") : "STOPPED");
-  const grok = status.grok ?? (running ? "RUNNING" : "STOPPED");
+  const grokUsage = status.grok_usage;
+  const grokConnected = Boolean(grokUsage?.connected);
+  const grokCalls = grokUsage?.calls_today ?? 0;
+  const grokBudget = grokUsage?.daily_budget ?? 8;
+  const grokCost = grokUsage?.estimated_cost ?? status.costs?.costs_by_category?.llm ?? 0;
+  const grokModel = grokUsage?.model ?? "grok-4.3";
   const decision = (status.current_decision || status.decision || last?.final_action || "HOLD").toUpperCase();
   const today = status.today_pnl ?? status.account?.daily_pnl ?? 0;
   const startLabel = busy === "start" || starting ? "Starting…" : running ? "Running" : "Start";
@@ -118,7 +122,11 @@ export function AgentHome() {
       <section className="desk-hero">
         <div>
           <p className="mb-2.5 font-mono text-[11px] tracking-[0.18em] text-faint uppercase">
-            {status.terminated ? "Agent status" : `Grok ${grok}`}
+            {status.terminated
+              ? "Agent status"
+              : grokConnected
+                ? `Grok connected · ${grokModel}`
+                : "Grok disconnected"}
           </p>
           <p className={`desk-decision ${status.terminated ? "text-halt" : ""}`}>
             {status.terminated ? "TERMINATED" : decision}
@@ -184,13 +192,39 @@ export function AgentHome() {
 
       <dl className="desk-counts">
         <Count label="Trades" value={String(status.trades ?? status.decisions?.EXECUTED ?? 0)} />
-        <Count label="Decisions" value={String(status.decisions?.TOTAL ?? 0)} />
         <Count
-          label="Drawdown"
-          value={percent(status.survival?.drawdown_from_peak_pct, 2)}
+          label="P&L"
+          value={signedMoney(netPnl, currency)}
         />
-        <Count label="Costs" value={money(status.costs?.operating_costs, currency)} />
+        <Count label="Equity" value={money(equity, currency)} />
+        <Count
+          label="Survival"
+          value={status.survival?.state ?? "—"}
+        />
       </dl>
+
+      <section className="desk-panel">
+        <header className="desk-panel-head">
+          <h2 className="desk-panel-title">Grok</h2>
+          <span className="font-mono text-[10px] text-faint">
+            {grokConnected ? "connected" : "disconnected"}
+          </span>
+        </header>
+        <dl className="desk-reason-grid">
+          <Reason label="Model" value={grokModel} />
+          <Reason label="Calls today" value={`${grokCalls} / ${grokBudget}`} />
+          <Reason label="API cost" value={money(grokCost, currency)} />
+          <Reason
+            label="Filter"
+            value={grokUsage?.filter ?? "SMA 10/20"}
+          />
+        </dl>
+        <p className="mt-3 mb-0 text-sm leading-normal text-muted">
+          {grokConnected
+            ? `Grok is only called when the SMA 10/20 filter fires, at most ${grokBudget} times per day, at least ${Math.round((grokUsage?.min_interval_seconds ?? 1800) / 60)} minutes apart. Exhausting the budget does not stop paper trading.`
+            : "No xAI key on the worker. The paper desk still runs on the SMA 10/20 filter and risk engine. Grok is not inventing decisions."}
+        </p>
+      </section>
 
       <section className="desk-panel">
         <header className="desk-panel-head">

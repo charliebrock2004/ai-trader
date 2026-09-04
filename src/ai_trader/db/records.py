@@ -489,6 +489,29 @@ class RecordStore:
         )
         return round(float(row["total"]) if row else 0.0, 4)
 
+    def llm_stats_since(self, since_iso: str) -> dict[str, Any]:
+        row = self._one(
+            """
+            SELECT COUNT(*) AS n,
+                   COALESCE(SUM(amount_base),0) AS total,
+                   MAX(incurred_at) AS last_at
+            FROM costs
+            WHERE category='llm' AND incurred_at >= ?
+            """,
+            (since_iso,),
+        )
+        return {
+            "n": int(row["n"]) if row else 0,
+            "total": round(float(row["total"]) if row and row["total"] is not None else 0.0, 6),
+            "last_at": row["last_at"] if row else None,
+        }
+
+    def last_llm_call_at(self) -> Optional[str]:
+        row = self._one(
+            "SELECT incurred_at FROM costs WHERE category='llm' ORDER BY id DESC LIMIT 1"
+        )
+        return str(row["incurred_at"]) if row and row.get("incurred_at") else None
+
     def list_costs(self, limit: int = 100) -> list[dict[str, Any]]:
         return self._query("SELECT * FROM costs ORDER BY id DESC LIMIT ?", (limit,))
 

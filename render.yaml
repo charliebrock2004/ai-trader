@@ -58,6 +58,15 @@ services:
       - key: LOG_LEVEL
         value: INFO
 
+      # Cheapest current general-purpose xAI model for the analyst/skeptic.
+      # The key itself is set in the Render dashboard, never committed.
+      - key: XAI_MODEL
+        value: grok-4.3
+      - key: GROK_DAILY_CALL_BUDGET
+        value: "8"
+      - key: GROK_MIN_INTERVAL_SECONDS
+        value: "1800"
+
       - key: GROK_PAPER_ANALYSIS
         value: "false"
 
