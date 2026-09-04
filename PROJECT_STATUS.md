@@ -12,7 +12,7 @@
 | Engine | One Python `DeskWorker`. The browser is control/monitoring only. |
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
 | Hosting | Frontend on Vercel, persistent worker on Render with a disk at `/var/data` |
-| Current strategy | BTC-USD public 5m paper session (operational fills) + BLS CPI event family (HOLDs until a venue book exists) |
+| Current strategy | BTC-USD public 5m trend-pullback (operational fills) + BLS CPI event family (HOLDs until a venue book exists) |
 | Tests | 482 Python tests passing |
 
 If this file disagrees with the code, the code wins. Update it after every
@@ -138,6 +138,60 @@ market.
 
 ---
 
+## The strategy the desk actually runs
+
+`ai_trader/strategy/signal.py`. Long-only, close-only, on 5-minute BTC-USD.
+
+A trade needs a **regime** and a **trigger**, and they are different kinds of
+thing:
+
+| | Condition | Why |
+|---|---|---|
+| Regime | SMA10 above SMA20 | There is an uptrend to continue |
+| Regime | Gap between them ≥ 0.10% | Entangled averages are noise, not a trend |
+| Regime | SMA20 rising over 5 bars | The trend is confirmed, not a crossing artefact |
+| Quality | Volatility inside 0.25x–4x normal for the timeframe | Too quiet and costs dominate; too wild and a 2% stop is inside the noise |
+| Edge | Plausible move over the horizon ≥ 5x round-trip cost | Below this only the exchange is reliably paid |
+| Trigger | Price within 1.5% of SMA10 | Do not chase an extended leg |
+| Trigger | Pulled back to within 0.4% of SMA10 in the last 5 bars | Buy the pullback, not the top |
+| Trigger | Latest close up and above SMA10 | The pullback has turned |
+| Exit | SMA10 below SMA20 | The regime is over |
+
+The predecessor required an exact SMA 10/20 **crossover**, which is a point
+event: true on one bar per trend and false on every other. Miss that bar —
+because the host slept, restarted, or refetched its tape — and the whole trend
+that followed was invisible. That is why the desk sat at zero trades with a
+healthy feed and a live Grok key.
+
+This is not a looser filter. A crossover asks nothing about separation, slope,
+extension, volatility or costs, and this asks all five; on real BTC history it
+produces slightly *fewer* candidates. It just asks a question that can be true
+more than once.
+
+Volatility bounds and the holding horizon are derived from the bar duration by
+square-root-of-time scaling, not hard-coded. Hard-coding them makes the strategy
+silently different per timeframe — bounds sized for daily bars reject nearly
+every 5-minute bar, which reproduces the silent desk exactly.
+
+**No edge is claimed.** This is a textbook trend-continuation strategy on a
+liquid instrument. Its job is to produce genuine, explainable candidates so the
+recorded paper trades can settle the question either way.
+
+### Why it did not trade
+
+Every hold names itself from a published vocabulary and is stored in
+`decisions.rejection`, so silence is a query rather than a code review:
+
+```sql
+SELECT rejection, COUNT(*) FROM decisions WHERE kind='spot' GROUP BY 1;
+```
+
+A spread of reasons means the market offered nothing. One reason accounting for
+almost everything means a gate is mis-set — which is how the timeframe-scaling
+bug above was caught before it shipped.
+
+---
+
 ## What is NOT done, and why
 
 **There is no prediction-market venue adapter, so the event pipeline cannot
@@ -187,12 +241,27 @@ splits by time, but there is no historical corpus loaded.
    because that is what the engine records.
 5. **The Alpaca paper adapter is dormant** and observation only. The session path
    traps `submit` on every broker.
-6. **The worker runs on Render free.** It sleeps when idle; the UI reports
-   asleep, not RUNNING. There is no paid disk. SQLite and the TERMINAL latch
-   are restored from GitHub `worker-endpoint/snapshot.json` on boot. A 10-minute
-   Actions job copies the snapshot. Until the first checkpoint, a restart would
-   start a fresh £100 book and the UI says so.
-7. **Page access is the frontend's only gate by default.** Anyone who can load
+6. **The worker runs on Render free, so it trades in bursts, not continuously.**
+   It sleeps when idle and only wakes when something pings it. The GitHub
+   Actions job that does the pinging is scheduled every ten minutes but GitHub
+   throttles scheduled runs hard — the observed rate is roughly every two to
+   five hours. On each wake the desk catches up on every candle since the last
+   one it processed, so no decision is skipped inside that window, but the
+   agent is awake for a minute or two at a time rather than all day.
+
+   The window is 280 five-minute bars, just over 23 hours. A sleep longer than
+   that loses candles permanently: the desk never sees them, never decides on
+   them, and never records why.
+
+   Evidence therefore accumulates slowly. **A Render Starter instance with a
+   1 GB disk removes all of this** — no sleeping, no snapshot round-trip, and a
+   genuinely continuous desk. It is the single change that would most improve
+   the quality of the evidence.
+7. **There is no paid disk.** SQLite and the TERMINAL latch are restored from
+   GitHub `worker-endpoint/snapshot.json` on boot, copied there by the Actions
+   job. Until the first checkpoint after a deploy, a restart would start a
+   fresh £100 book and the UI says so.
+8. **Page access is the frontend's only gate by default.** Anyone who can load
    the Vercel URL can press Start. The System page states this. Live trading
    is still impossible.
 

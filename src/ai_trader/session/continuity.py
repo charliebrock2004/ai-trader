@@ -18,9 +18,19 @@ from ai_trader.market_data.validation import parse_utc
 #: Closed bars loaded on every continuous public start so SMA20 is the same
 #: function of history it is on a full tape, not a 24-bar stub.
 INDICATOR_HISTORY_BARS = 60
-#: Fetch window: 60 bars of indicator context plus several hours of 5m
-#: catch-up after a free-host sleep. Coinbase returns ~300; this stays inside.
-CONTINUOUS_FETCH_BARS = 120
+#: Fetch window: 60 bars of indicator context plus catch-up after a host sleep.
+#:
+#: This is the hard limit on how long the desk may be asleep without losing
+#: evidence. Any candle older than this window is gone: the desk never sees it,
+#: never decides on it, and never records why. At 120 bars that was ten hours,
+#: and the wake schedule is not reliable enough to promise that — the host
+#: sleeps when idle and the external ping is throttled, so multi-hour gaps are
+#: normal rather than exceptional.
+#:
+#: 280 five-minute bars is just over 23 hours, and stays inside the ~300 the
+#: public feed returns in one request. It costs one slightly larger fetch per
+#: wake and buys a full day of tolerance.
+CONTINUOUS_FETCH_BARS = 280
 
 
 def fetch_limit(*, bars: int, continuous: bool, source: str) -> int:
