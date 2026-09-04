@@ -621,6 +621,7 @@ class Orchestrator:
             config_kwargs["starting_balance"] = float(starting_balance)
         if last_processed_candle_ts:
             config_kwargs["last_processed_candle_ts"] = last_processed_candle_ts
+        config_kwargs["score_threshold"] = self.settings.strategy_score_threshold
         if restore_cash is not None:
             config_kwargs["restore_cash"] = float(restore_cash)
         if restore_positions:

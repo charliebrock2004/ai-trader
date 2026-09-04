@@ -103,14 +103,36 @@ export type AgentStatus = {
    */
   signal?: {
     strategy?: string;
+    timeframe?: string;
     bars_evaluated?: number;
     candidates?: number;
+    /** Score at or above which a setup becomes a candidate and reaches Grok. */
+    threshold?: number;
     grok_calls?: number;
     filter_holds?: number;
     budget_skips?: number;
     warmup_holds?: number;
+    /** How many candles fell in each market regime. */
+    regimes?: Record<string, number>;
+    /** Named entry patterns the detector recognised. */
+    setups_seen?: Record<string, number>;
     rejections?: Record<string, number>;
     rejection_meanings?: Record<string, string>;
+    score_median?: number | null;
+    score_best?: number | null;
+    /** The most recent bar in full: regime, setup, score and its components. */
+    latest?: {
+      action?: string;
+      regime?: string;
+      setup?: string | null;
+      score?: number;
+      components?: Record<string, number>;
+      rejection?: string | null;
+      reason?: string;
+      entry?: number | null;
+      stop?: number | null;
+      target?: number | null;
+    } | null;
   };
   persistence?: {
     kind?: string;

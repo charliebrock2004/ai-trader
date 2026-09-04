@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     #: Minimum seconds between Grok HTTP calls.
     grok_min_interval_seconds: int = 1800
 
+    #: Opportunity-score threshold: a setup at or above this becomes a candidate
+    #: and reaches the analyst. This is where the strategy's selectivity lives,
+    #: as one number that can be tuned against recorded outcomes instead of by
+    #: bolting on another filter. Raising it trades less; lowering it trades
+    #: more. It can never bypass the guardian or the risk engine.
+    strategy_score_threshold: float = 0.68
+
     # -- agent economics ---------------------------------------------------
     #: The experiment's opening stake, in the base accounting currency.
     starting_equity: float = 100.00
@@ -128,6 +135,7 @@ class Settings(BaseSettings):
             "xai_configured": self.grok_configured(),
             "grok_daily_call_budget": self.grok_daily_call_budget,
             "grok_min_interval_seconds": self.grok_min_interval_seconds,
+            "strategy_score_threshold": self.strategy_score_threshold,
             "alpaca_base_url": self.alpaca_base_url,
             "alpaca_configured": self.alpaca_configured(),
             "database_path": str(self.resolve_database_path()),

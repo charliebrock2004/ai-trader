@@ -83,32 +83,47 @@ def test_stop_that_gaps_realises_the_gap_not_the_stop_price() -> None:
     assert report["account"]["realised_pnl"] == -2.50
 
 
+def _target_from(entry: float) -> float:
+    """Where the risk engine puts the target for an entry at ``entry``.
+
+    Derived rather than pinned. The reward multiple is a strategy-economics
+    choice that has changed once and may change again; what these tests are
+    actually about is *where the fill lands*, which must be the target price
+    itself and never a better one.
+    """
+    limits = RiskLimits()
+    return entry + entry * limits.default_stop_pct * limits.take_profit_rr
+
+
 def test_take_profit_never_fills_on_a_favourable_gap() -> None:
+    target = _target_from(100.0)
     candles = [
         _c(0, 100, 100, 100, 100),
         _c(1, 100, 100.1, 99.9, 100),
-        _c(2, 120, 130, 119, 125),  # gaps far above the 104 target
+        _c(2, 200, 260, 199, 250),  # gaps far above the target
     ]
     report = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False).run(
         _series(candles), source=ScriptedSignalSource({0: PaperAction.BUY})
     )
     assert report["fills"][1]["reason"] == "TARGET"
-    assert report["fills"][1]["price"] == 104.0, "favourable gaps are never credited"
+    assert report["fills"][1]["price"] == target, "favourable gaps are never credited"
 
 
 def test_take_profit() -> None:
+    target = _target_from(100.0)
     candles = [
         _c(0, 100, 100, 100, 100),
         _c(1, 100, 100.1, 99.9, 100),
-        _c(2, 101, 105, 100.5, 104),
+        _c(2, 101, target + 1.0, 100.5, target),
     ]
     report = PaperSimulator(spread_bps=0, slip_bps=0, flatten_at_end=False).run(
         _series(candles), source=ScriptedSignalSource({0: PaperAction.BUY})
     )
-    assert report["fills"][1]["reason"] == "TARGET"
-    assert report["fills"][1]["price"] == 104.0
-    assert report["account"]["cash"] == 101.00
-    assert report["account"]["realised_pnl"] == 1.00
+    fill = report["fills"][1]
+    assert fill["reason"] == "TARGET"
+    assert fill["price"] == target
+    gain = (target - 100.0) * fill["quantity"]
+    assert report["account"]["realised_pnl"] == round(gain, 2)
 
 
 def test_ambiguous_candle_uses_stop() -> None:

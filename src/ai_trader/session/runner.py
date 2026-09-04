@@ -37,6 +37,13 @@ from ai_trader.session.source import DeterministicFirstSource, RepeatingGrokSour
 from ai_trader.types import CandleSeries
 
 
+def _holding_limit(config: PaperSessionConfig) -> Optional[int]:
+    """How long a position may stay open without resolving, in bars."""
+    from ai_trader.strategy.signal import SignalConfig
+
+    return SignalConfig.for_timeframe(config.timeframe).max_holding_bars
+
+
 class PaperSession:
     """Start/stop paper session. STOP blocks new paper trades immediately."""
 
@@ -274,6 +281,9 @@ class PaperSession:
                 ),
                 positions=list(self.config.restore_positions),
             )
+        # The detector owns the holding limit; the simulator enforces it.
+        if self.gate_with_deterministic:
+            self.sim.max_holding_bars = _holding_limit(self.config)
         # Bars already on the tape at Start are history unless a persisted
         # last_processed_candle_ts says some of them arrived after the last
         # live bar this worker actually handled. Warm-up never opens a position.
@@ -286,6 +296,8 @@ class PaperSession:
                 self.analyst,
                 budget=self.budget,
                 warmup=self.config.warmup,
+                timeframe=self.config.timeframe,
+                score_threshold=self.config.score_threshold,
                 account_fn=lambda: self.sim.ledger.snapshot().to_dict() if self.sim else {},
                 stop_fn=lambda: self.stopped or (
                     generation is not None and generation != self._generation

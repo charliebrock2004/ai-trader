@@ -18,8 +18,12 @@ def test_size_long_is_bound_by_concentration_not_just_risk_budget() -> None:
     assert sized.max_risk == 2.0
     assert sized.stop_distance == 2.0
     assert sized.stop_price == 98.0
-    assert sized.take_profit_price == 104.0
-    assert sized.risk_reward == 2.0
+    # Derived from the limit, not pinned: the take-profit multiple is a
+    # strategy-economics choice that may change, while "target sits at rr times
+    # the stop above entry" is the invariant worth asserting.
+    expected_target = 100.0 + sized.stop_distance * RiskLimits().take_profit_rr
+    assert sized.take_profit_price == expected_target
+    assert sized.risk_reward == RiskLimits().take_profit_rr
     # 25% of £100 equity at £100/unit.
     assert sized.binding_constraint == "concentration"
     assert sized.proposed_qty == 0.25

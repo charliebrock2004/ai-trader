@@ -107,8 +107,15 @@ class RiskEngine:
         fx_rate: float = 1.0,
         risk_multiplier: float = 1.0,
         base_currency: str = BASE_CURRENCY,
+        stop_pct_hint: Optional[float] = None,
     ) -> RiskAssessment:
         """Size a long entry.
+
+        ``stop_pct_hint`` is a stop distance the strategy derived from current
+        volatility. It is advisory: the engine clamps it into the limits' band
+        and remains the only thing that sets the stop. A hint can therefore make
+        a position smaller or larger within the existing risk budget, but it can
+        never raise the amount at risk — that is still ``max_risk_amount``.
 
         ``price`` is in the instrument's quote currency. ``equity`` and ``cash``
         are in the account's base currency. ``fx_rate`` is base units per quote
@@ -144,7 +151,8 @@ class RiskEngine:
         if budget <= 0:
             return self._reject("Risk budget is zero.", "BUY")
 
-        stop_distance = round(price * limits.default_stop_pct, 8)
+        stop_pct, stop_source = limits.clamp_stop_pct(stop_pct_hint)
+        stop_distance = round(price * stop_pct, 8)
         if stop_distance <= 0:
             return self._reject("Stop distance is zero.", "BUY")
 
@@ -190,7 +198,10 @@ class RiskEngine:
         take_profit = round(price + tp_distance, 8)
         return RiskAssessment(
             approved=True,
-            reason=f"Sized within paper risk limits (bound by {binding}).",
+            reason=(
+                f"Sized within paper risk limits (bound by {binding}, "
+                f"stop {stop_pct:.2%} from {stop_source})."
+            ),
             action="BUY",
             max_risk=budget,
             proposed_qty=qty,
@@ -254,6 +265,7 @@ class RiskEngine:
         fx_rate: float = 1.0,
         risk_multiplier: float = 1.0,
         terminated: bool = False,
+        stop_pct_hint: Optional[float] = None,
     ) -> RiskAssessment:
         """Approve or reject an INTERNAL simulated paper order or an Alpaca
         PAPER order. Never a live broker order. AI cannot change limits.
@@ -323,6 +335,7 @@ class RiskEngine:
             instrument=instrument,
             fx_rate=fx_rate,
             risk_multiplier=risk_multiplier,
+            stop_pct_hint=stop_pct_hint,
         )
 
     def health(self) -> dict:

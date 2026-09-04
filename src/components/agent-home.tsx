@@ -391,13 +391,54 @@ function Reason({ label, value }: { label: string; value: string }) {
  */
 function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
   if (!signal || !signal.bars_evaluated) return null;
+  const latest = signal.latest;
   const rejections = Object.entries(signal.rejections ?? {}).sort((a, b) => b[1] - a[1]);
   const meanings = signal.rejection_meanings ?? {};
   const total = rejections.reduce((sum, [, count]) => sum + count, 0);
+  const regimes = Object.entries(signal.regimes ?? {}).sort((a, b) => b[1] - a[1]);
+  const setups = Object.entries(signal.setups_seen ?? {}).sort((a, b) => b[1] - a[1]);
+  const score = latest?.score ?? 0;
+  const threshold = signal.threshold ?? 0;
 
   return (
     <div className="desk-signal">
-      <p className="m-0 text-sm leading-normal text-muted">
+      {latest ? (
+        <div className="desk-reason-grid mb-3">
+          <Reason label="Regime" value={latest.regime ?? "—"} />
+          <Reason label="Setup" value={latest.setup ?? "none"} />
+          <Reason
+            label="Score"
+            value={`${score.toFixed(2)} / ${threshold.toFixed(2)}`}
+          />
+          <Reason label="Decision" value={latest.action ?? "—"} />
+        </div>
+      ) : null}
+
+      {latest?.components && Object.keys(latest.components).length ? (
+        <ul className="desk-components-bars">
+          {Object.entries(latest.components).map(([name, value]) => (
+            <li key={name}>
+              <span className="desk-component-name">{name.replace(/_/g, " ")}</span>
+              <span className="desk-component-track" aria-hidden="true">
+                <span
+                  className="desk-component-fill"
+                  style={{ width: `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%` }}
+                />
+              </span>
+              <span className="desk-component-value">{value.toFixed(2)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {latest?.entry && latest.stop && latest.target ? (
+        <p className="mt-3 mb-0 font-mono text-[11px] text-faint">
+          entry {latest.entry.toFixed(2)} · stop {latest.stop.toFixed(2)} · target{" "}
+          {latest.target.toFixed(2)}
+        </p>
+      ) : null}
+
+      <p className="mt-3 mb-0 text-sm leading-normal text-muted">
         Looked at <strong>{signal.bars_evaluated}</strong>{" "}
         {signal.bars_evaluated === 1 ? "candle" : "candles"} and found{" "}
         <strong>{signal.candidates ?? 0}</strong>{" "}
@@ -407,6 +448,18 @@ function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
           : ""}
         .
       </p>
+
+      {regimes.length ? (
+        <p className="mt-1.5 mb-0 font-mono text-[11px] text-faint">
+          regimes: {regimes.map(([name, n]) => `${name} ${n}`).join(" · ")}
+        </p>
+      ) : null}
+      {setups.length ? (
+        <p className="mt-1 mb-0 font-mono text-[11px] text-faint">
+          setups seen: {setups.map(([name, n]) => `${name} ${n}`).join(" · ")}
+        </p>
+      ) : null}
+
       {rejections.length ? (
         <ul className="desk-rejections">
           {rejections.map(([key, count]) => (

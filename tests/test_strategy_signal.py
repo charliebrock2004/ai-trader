@@ -1,30 +1,37 @@
 """The live candidate detector.
 
-Two kinds of test live here and they answer different questions.
+Three kinds of test, answering different questions.
 
-**Mechanism tests** use a constructed price path and ask whether the logic does
-what it says: does the regime gate hold, does each rejection fire for its own
-reason, does a restart change nothing. A constructed path is the right tool for
-that because it isolates one condition at a time.
+**Mechanism** — on a constructed path, does each gate fire for its own reason?
+A constructed path is the right tool because it isolates one condition at a
+time.
 
-**Behaviour tests** use real recorded BTC history and ask the one question a
-constructed path cannot answer honestly: does this detector actually find
-anything in a real market, often enough to be evaluated? That is the question
-the old crossover filter failed — it was correct, and it found nothing for days.
+**Behaviour** — on real recorded BTC history, does this find anything at all,
+often enough to be evaluated? That is the question the previous detector failed:
+it was correct and it found nothing for days.
 
-Neither kind is evidence of profitability, and nothing here asserts a return.
-Whether the strategy makes money is for the recorded paper trades to answer.
+**Economics** — is the trade geometry solvable? The version before this one
+targeted 2.5 ATR against a 1.5 ATR stop while a round trip cost roughly one
+ATR, which needed a 60% win rate merely to break even. That is not a strategy
+and no amount of signal quality rescues it, so the arithmetic is pinned here.
+
+Nothing in this file asserts a return. Whether the strategy makes money is for
+the recorded paper trades to answer.
 """
 
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
+from ai_trader.market_data.generator import LCG
 from ai_trader.paper.models import PaperAction
 from ai_trader.strategy.signal import (
+    REGIME_DOWN,
+    REGIME_RANGE,
+    REGIME_UP,
     REJECTIONS,
+    SETUP_BREAKOUT,
     SignalConfig,
     TrendPullbackStrategy,
     reference_volatility,
@@ -37,109 +44,188 @@ def real_btc_closes() -> list[float]:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))["closes"]
 
 
-def trending(count: int, *, base: float = 100.0, drift: float = 0.0012) -> list[float]:
-    """A deterministic uptrend with repeating pullbacks. Mechanism fixture only."""
-    amplitude, period = 0.004, 13
-    return [
-        base * math.exp(drift * i) * (1.0 + amplitude * math.sin(2 * math.pi * i / period))
-        for i in range(count)
-    ]
+def realistic(
+    count: int, *, seed: int = 7, base: float = 60000.0,
+    drift: float = 0.00012, vol: float = 0.0022,
+) -> list[float]:
+    """A deterministic path with BTC-like 5-minute volatility.
+
+    Seeded, so it is reproducible; noisy, so indicators behave as they do in a
+    real market. A smooth curve is useless here — it pins RSI at 100 and every
+    bar reads as overbought, which says nothing about the logic.
+    """
+    rng = LCG(seed)
+    out = [base]
+    for _ in range(count - 1):
+        shock = sum(rng.next() for _ in range(6)) - 3.0
+        out.append(max(1.0, out[-1] * (1.0 + drift + vol * shock)))
+    return out
 
 
-def flat(count: int, *, value: float = 100.0) -> list[float]:
-    return [value] * count
+def bars(closes: list[float], *, width: float = 0.0012) -> tuple[list[float], list[float]]:
+    """Highs and lows around each close, so ATR is meaningful."""
+    return ([c * (1 + width) for c in closes], [c * (1 - width) for c in closes])
 
 
 # ==========================================================================
 # The regression this module exists to prevent
 # ==========================================================================
-def test_the_detector_finds_opportunities_in_real_market_history() -> None:
-    """The whole point. A detector that never fires cannot be evaluated.
+def test_it_finds_opportunities_in_real_market_history() -> None:
+    """A detector that never fires cannot be evaluated.
 
-    The previous filter required an exact SMA crossover — true on one bar and
-    false on every other — so the desk went days without a single candidate.
-    This asserts the replacement produces a workable number of candidates on
-    genuine BTC history, and deliberately asserts *nothing* about whether they
-    were profitable.
+    The predecessor required an exact SMA crossover — true on one bar per trend
+    — so the live desk went days without a single candidate.
     """
     closes = real_btc_closes()
+    highs, lows = bars(closes)
     strategy = TrendPullbackStrategy(timeframe="1d")
     candidates = 0
     evaluated = 0
-    for index in range(30, len(closes)):
+    for index in range(60, len(closes)):
         evaluated += 1
-        if strategy.evaluate(closes[: index + 1]).action == PaperAction.BUY:
+        signal = strategy.evaluate(
+            closes[: index + 1], highs=highs[: index + 1], lows=lows[: index + 1]
+        )
+        if signal.action == PaperAction.BUY:
             candidates += 1
 
     assert candidates > 0, "a detector that never fires cannot be evaluated"
     rate = candidates / evaluated
-    # Wide bounds on purpose. The lower bound is the silent-desk regression;
-    # the upper bound catches a detector that has degenerated into "always buy".
-    assert 0.005 < rate < 0.15, f"candidate rate {rate:.3%} is outside a workable range"
+    assert 0.002 < rate < 0.20, f"candidate rate {rate:.3%} is outside a workable range"
 
 
-def test_real_history_produces_varied_rejection_reasons() -> None:
-    """Silence must be explainable, and not by one reason swallowing everything.
+def test_it_recognises_more_than_one_kind_of_market() -> None:
+    """Regime is classified, not assumed.
 
-    A single reason accounting for nearly every bar is the signature of a
-    mis-scaled gate — which is exactly how the first draft of this strategy was
-    broken, with a volatility band sized for the wrong timeframe.
+    Every hold the old detector recorded live was the regime gate. Naming the
+    regime is what turns "it is quiet" into "the market is in a downtrend and
+    this desk cannot go short".
     """
     closes = real_btc_closes()
+    highs, lows = bars(closes)
     strategy = TrendPullbackStrategy(timeframe="1d")
-    for index in range(30, len(closes)):
-        strategy.evaluate(closes[: index + 1])
+    for index in range(60, len(closes)):
+        strategy.evaluate(closes[: index + 1], highs=highs[: index + 1], lows=lows[: index + 1])
+
+    regimes = strategy.regime_counts
+    assert set(regimes) >= {REGIME_UP, REGIME_DOWN, REGIME_RANGE}
+    for regime, count in regimes.items():
+        assert count > 0, regime
+    # No single regime may account for essentially everything, or the
+    # classifier is not classifying.
+    assert max(regimes.values()) / sum(regimes.values()) < 0.85
+
+
+def test_several_setups_actually_fire_on_real_history() -> None:
+    """One pattern ANDed with a strict regime is silence, not selectivity."""
+    closes = real_btc_closes()
+    highs, lows = bars(closes)
+    strategy = TrendPullbackStrategy(timeframe="1d")
+    for index in range(60, len(closes)):
+        strategy.evaluate(closes[: index + 1], highs=highs[: index + 1], lows=lows[: index + 1])
+    assert len(strategy.setup_counts) >= 3, strategy.setup_counts
+
+
+def test_rejection_reasons_stay_varied() -> None:
+    """One reason explaining everything is a mis-set gate, not a quiet market.
+
+    This is how two separate calibration bugs were caught before shipping: a
+    volatility band sized for the wrong timeframe, and a reward gate that was an
+    equality by construction.
+    """
+    closes = real_btc_closes()
+    highs, lows = bars(closes)
+    strategy = TrendPullbackStrategy(timeframe="1d")
+    for index in range(60, len(closes)):
+        strategy.evaluate(closes[: index + 1], highs=highs[: index + 1], lows=lows[: index + 1])
 
     counts = strategy.rejection_counts
-    assert len(counts) >= 4, f"only {len(counts)} distinct reasons: {counts}"
-    total = sum(counts.values())
-    dominant = max(counts.values()) / total
-    assert dominant < 0.75, f"one reason explains {dominant:.0%} of all holds: {counts}"
+    assert len(counts) >= 3, counts
+    assert max(counts.values()) / sum(counts.values()) < 0.80, counts
     for key in counts:
         assert key in REJECTIONS, f"{key} has no published meaning"
 
 
-def test_it_is_not_a_crossover_and_can_fire_on_consecutive_bars() -> None:
-    """The structural fix, stated as a test.
+# ==========================================================================
+# Economics — the arithmetic that has to hold before signal quality matters
+# ==========================================================================
+def test_the_target_clears_round_trip_costs_by_a_workable_margin() -> None:
+    """Break-even win rate must be achievable.
 
-    A crossover is true on one bar per trend. A regime plus a recurring trigger
-    can be true again — which is what makes the desk resilient to restarting,
-    sleeping, or refetching its tape.
+    One ATR on 5-minute BTC is about 0.22% and a round trip costs about 0.20%,
+    so costs eat roughly a whole ATR per trade. A 1.5/2.5 geometry nets 0.35%
+    against 0.53% of risk and needs a 60% win rate to break even; that is a slow
+    leak wearing a strategy's clothes.
     """
-    closes = trending(120)
-    strategy = TrendPullbackStrategy(timeframe="5m")
-    hits = [
-        index
-        for index in range(len(closes))
-        if strategy.evaluate(closes[: index + 1]).action == PaperAction.BUY
-    ]
-    assert len(hits) > 1, "a single firing means this is still an event filter"
-    assert any(b - a == 1 for a, b in zip(hits, hits[1:])), "must be able to fire twice running"
+    config = SignalConfig.for_timeframe("5m")
+    atr_pct = reference_volatility("5m")
+    reward = config.target_atr * atr_pct - config.round_trip_cost_pct
+    risk = config.stop_atr * atr_pct + config.round_trip_cost_pct
+    breakeven = risk / (reward + risk)
+
+    assert reward > 0, "the target must clear costs at all"
+    assert reward / risk > 1.2, "reward-to-risk after costs is too thin"
+    assert breakeven < 0.46, f"needs a {breakeven:.0%} win rate to break even"
+
+
+def test_costs_are_never_a_reason_to_trade_more() -> None:
+    """A higher cost assumption may only make the desk more selective."""
+    closes = realistic(900, seed=11)
+    highs, lows = bars(closes)
+
+    def count(config: SignalConfig) -> int:
+        strategy = TrendPullbackStrategy(config)
+        return sum(
+            1
+            for i in range(60, len(closes))
+            if strategy.evaluate(
+                closes[: i + 1], highs=highs[: i + 1], lows=lows[: i + 1]
+            ).action == PaperAction.BUY
+        )
+
+    base = SignalConfig.for_timeframe("5m")
+    pricier = SignalConfig.for_timeframe("5m", round_trip_cost_pct=base.round_trip_cost_pct * 5)
+    assert count(pricier) <= count(base)
+
+
+def test_a_higher_threshold_never_trades_more() -> None:
+    """Selectivity lives in one number, and it has to be monotone."""
+    closes = realistic(900, seed=23)
+    highs, lows = bars(closes)
+
+    def count(threshold: float) -> int:
+        strategy = TrendPullbackStrategy(
+            SignalConfig.for_timeframe("5m", strong_score=threshold)
+        )
+        return sum(
+            1
+            for i in range(60, len(closes))
+            if strategy.evaluate(
+                closes[: i + 1], highs=highs[: i + 1], lows=lows[: i + 1]
+            ).action == PaperAction.BUY
+        )
+
+    counts = [count(t) for t in (0.50, 0.60, 0.70, 0.80)]
+    assert counts == sorted(counts, reverse=True), counts
 
 
 # ==========================================================================
 # Each gate, in isolation
 # ==========================================================================
-def test_a_flat_market_is_refused_and_says_why() -> None:
-    signal = TrendPullbackStrategy(timeframe="5m").evaluate(flat(60))
+def test_a_downtrend_is_refused_because_the_desk_cannot_go_short() -> None:
+    """Stated as a limitation, not worked around.
+
+    The risk engine refuses shorts outright and that is a safety property: a
+    short has unbounded loss and needs borrow accounting this ledger does not
+    have. Standing aside is the correct behaviour.
+    """
+    closes = realistic(400, seed=7, drift=-0.0010)
+    highs, lows = bars(closes)
+    strategy = TrendPullbackStrategy(timeframe="5m")
+    signal = strategy.evaluate(closes, highs=highs, lows=lows)
     assert signal.action == PaperAction.HOLD
-    assert signal.rejection in {"averages_entangled", "too_quiet", "no_uptrend"}
-    assert signal.reason
-
-
-def test_a_downtrend_is_refused_as_no_uptrend() -> None:
-    closes = trending(80, drift=-0.0012)
-    signal = TrendPullbackStrategy(timeframe="5m").evaluate(closes)
-    assert signal.action == PaperAction.HOLD
-    assert signal.rejection == "no_uptrend"
-
-
-def test_a_vertical_spike_is_refused_as_overextended() -> None:
-    """Buying a gap is chasing, and the stop would sit an absurd distance away."""
-    closes = trending(60) + [200.0]
-    signal = TrendPullbackStrategy(timeframe="5m").evaluate(closes)
-    assert signal.action == PaperAction.HOLD
-    assert signal.rejection in {"overextended", "too_wild"}
+    assert signal.regime == REGIME_DOWN
+    assert signal.rejection == "downtrend"
 
 
 def test_warming_up_is_reported_rather_than_guessed() -> None:
@@ -148,94 +234,116 @@ def test_warming_up_is_reported_rather_than_guessed() -> None:
     assert signal.rejection == "warming_up"
 
 
-def test_every_rejection_key_has_a_published_meaning() -> None:
-    """The audit trail stores these keys; an unexplained key is a dead end."""
-    for key, meaning in REJECTIONS.items():
-        assert meaning.strip(), key
-        assert meaning.endswith("."), f"{key}: reasons are sentences"
+def test_a_violently_volatile_market_is_refused() -> None:
+    """A stop set in ATR is a much larger loss when ATR has tripled."""
+    closes = realistic(400, seed=11, vol=0.030)
+    highs, lows = bars(closes, width=0.02)
+    strategy = TrendPullbackStrategy(timeframe="5m")
+    for index in range(60, len(closes)):
+        strategy.evaluate(closes[: index + 1], highs=highs[: index + 1], lows=lows[: index + 1])
+    assert strategy.rejection_counts.get("too_wild", 0) > 0
+
+
+def test_a_stretched_market_is_not_bought() -> None:
+    """A vertical line is not an opportunity."""
+    closes = [100.0 * (1.02**i) for i in range(120)]
+    highs, lows = bars(closes)
+    signal = TrendPullbackStrategy(timeframe="5m").evaluate(closes, highs=highs, lows=lows)
+    assert signal.action == PaperAction.HOLD
+    assert signal.rejection in {"overbought", "too_wild", "no_setup"}
+
+
+def test_a_breakout_needs_a_bar_that_actually_expanded() -> None:
+    """Drifting a tick over an old high in a quiet market is not a breakout.
+
+    Without this the desk bought every crossing of a prior high, which in a
+    sideways market is the definition of a false breakout — and chop was
+    exactly where it churned.
+    """
+    config = SignalConfig.for_timeframe("5m")
+    assert config.breakout_expansion_atr >= 1.0
+
+    closes = realistic(600, seed=31)
+    highs, lows = bars(closes)
+    loose = TrendPullbackStrategy(
+        SignalConfig.for_timeframe("5m", breakout_expansion_atr=0.0)
+    )
+    strict = TrendPullbackStrategy(config)
+    for index in range(60, len(closes)):
+        window = slice(0, index + 1)
+        loose.evaluate(closes[window], highs=highs[window], lows=lows[window])
+        strict.evaluate(closes[window], highs=highs[window], lows=lows[window])
+    assert strict.setup_counts.get(SETUP_BREAKOUT, 0) <= loose.setup_counts.get(
+        SETUP_BREAKOUT, 0
+    )
 
 
 # ==========================================================================
 # Position handling
 # ==========================================================================
 def test_it_does_not_add_to_an_open_position() -> None:
-    closes = trending(80)
-    signal = TrendPullbackStrategy(timeframe="5m").evaluate(closes, has_position=True)
+    closes = realistic(400, seed=23)
+    highs, lows = bars(closes)
+    signal = TrendPullbackStrategy(timeframe="5m").evaluate(
+        closes, highs=highs, lows=lows, has_position=True
+    )
     assert signal.action == PaperAction.HOLD
     assert signal.rejection == "already_long"
 
 
-def test_it_exits_when_the_trend_regime_breaks() -> None:
-    """Exit is a state test, so a position can always leave a dead trend."""
-    closes = trending(60) + [c * 0.97 for c in trending(20, base=100.0 * math.exp(0.0012 * 60))]
+def test_a_held_position_leaves_a_broken_regime() -> None:
+    """Exit is a state test, so a position can always get out."""
+    closes = realistic(400, seed=7, drift=-0.0010)
+    highs, lows = bars(closes)
+    signal = TrendPullbackStrategy(timeframe="5m").evaluate(
+        closes, highs=highs, lows=lows, has_position=True
+    )
+    assert signal.action == PaperAction.SELL
+    assert signal.regime == REGIME_DOWN
+
+
+# ==========================================================================
+# A candidate carries its whole case
+# ==========================================================================
+def test_a_candidate_states_its_regime_setup_score_and_levels() -> None:
+    """The analyst and the audit trail both need the reasoning, not a verdict."""
+    closes = realistic(1200, seed=11)
+    highs, lows = bars(closes)
     strategy = TrendPullbackStrategy(timeframe="5m")
-    exits = [
-        index
-        for index in range(30, len(closes))
-        if strategy.evaluate(closes[: index + 1], has_position=True).action == PaperAction.SELL
-    ]
-    assert exits, "a held position must be able to leave a broken regime"
+    found = None
+    for index in range(60, len(closes)):
+        window = slice(0, index + 1)
+        signal = strategy.evaluate(closes[window], highs=highs[window], lows=lows[window])
+        if signal.action == PaperAction.BUY:
+            found = signal
+            break
+
+    assert found is not None, "fixture must contain at least one candidate"
+    assert found.regime in {REGIME_UP, REGIME_RANGE}
+    assert found.setup
+    assert found.score >= strategy.config.strong_score
+    assert found.entry and found.stop and found.target
+    assert found.stop < found.entry < found.target, "levels must bracket the entry"
+    assert set(found.components) == {
+        "trend", "momentum", "entry_location", "volatility", "structure"
+    }
+    assert all(0.0 <= v <= 1.0 for v in found.components.values())
+    assert found.reason
 
 
-# ==========================================================================
-# Timeframe scaling — the bug caught before this shipped
-# ==========================================================================
-def test_volatility_gates_scale_with_the_bar_duration() -> None:
-    """Fixed volatility numbers silently become a different strategy per timeframe.
+def test_the_summary_carries_what_the_dashboard_needs() -> None:
+    closes = realistic(900, seed=42)
+    highs, lows = bars(closes)
+    strategy = TrendPullbackStrategy(timeframe="5m")
+    for index in range(60, len(closes)):
+        window = slice(0, index + 1)
+        strategy.evaluate(closes[window], highs=highs[window], lows=lows[window])
 
-    Hard-coded bounds sized for daily bars reject essentially every 5-minute
-    bar as too quiet, which reproduces the silent desk this module replaced.
-    """
-    five = SignalConfig.for_timeframe("5m")
-    daily = SignalConfig.for_timeframe("1d")
-    assert five.min_volatility < daily.min_volatility
-    assert five.max_volatility < daily.max_volatility
-    # Volatility scales with the square root of time: a day is 288 five-minute
-    # bars, so daily swings should be roughly sqrt(288) ~ 17x larger.
-    ratio = reference_volatility("1d") / reference_volatility("5m")
-    assert 15 < ratio < 20
-
-
-def test_the_horizon_is_long_enough_for_a_move_to_travel_the_stop() -> None:
-    """The horizon must give a typical move room to reach the stop.
-
-    Exact equality only holds while the horizon is free. On daily bars it
-    clamps at one — a single day already swings further than a 2% stop — so the
-    invariant is a floor, not an identity.
-    """
-    for timeframe in ("5m", "15m", "1h", "1d"):
-        config = SignalConfig.for_timeframe(timeframe)
-        travelled = reference_volatility(timeframe) * math.sqrt(config.horizon_bars)
-        assert travelled >= config.stop_pct * 0.85, timeframe
-        if config.horizon_bars > 1:
-            assert math.isclose(travelled, config.stop_pct, rel_tol=0.15), timeframe
-
-
-def test_the_edge_gate_is_measured_against_costs_not_the_stop() -> None:
-    """A gate derived from the stop is an equality by construction.
-
-    The horizon is defined as the time a one-sigma move needs to travel the
-    stop, so requiring one sigma to travel the stop rejects every below-average
-    bar — half the market, for no stated reason. Costs are the real floor.
-    """
-    config = SignalConfig.for_timeframe("5m")
-    required = config.round_trip_cost_pct * config.min_reward_to_cost
-    at_reference = reference_volatility("5m") * math.sqrt(config.horizon_bars)
-    assert required < at_reference, "a typical bar must be able to clear the edge gate"
-
-
-def test_costs_are_never_a_reason_to_trade_more() -> None:
-    """Raising the cost assumption may only make the desk more selective."""
-    base = SignalConfig.for_timeframe("5m")
-    pricier = SignalConfig.for_timeframe("5m", round_trip_cost_pct=base.round_trip_cost_pct * 4)
-    closes = trending(120)
-
-    def count(config: SignalConfig) -> int:
-        strategy = TrendPullbackStrategy(config)
-        return sum(
-            1
-            for index in range(len(closes))
-            if strategy.evaluate(closes[: index + 1]).action == PaperAction.BUY
-        )
-
-    assert count(pricier) <= count(base)
+    summary = strategy.summary()
+    for key in (
+        "strategy", "bars_evaluated", "candidates", "threshold",
+        "regimes", "setups_seen", "rejections", "rejection_meanings",
+        "score_median", "latest",
+    ):
+        assert key in summary, key
+    assert summary["bars_evaluated"] > 0

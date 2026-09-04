@@ -40,6 +40,8 @@ class PaperSessionConfig:
     #: Cash and open positions carried over from a previous process. Without
     #: these a restart rebuilds the book from marked equity alone, which turns
     #: an open position into cash at its mark with no exit fill and no stop.
+    #: Opportunity-score threshold for the detector. None uses its default.
+    score_threshold: Optional[float] = None
     restore_cash: Optional[float] = None
     restore_positions: Optional[list] = None
 
@@ -78,6 +80,7 @@ class PaperSessionConfig:
             "trade_historical_bars": self.trade_historical_bars,
             "base_currency": self.base_currency,
             "last_processed_candle_ts": self.last_processed_candle_ts,
+            "score_threshold": self.score_threshold,
             "live": False,
             "real_market_data": is_public,
             "allowed_timeframes": sorted(TIMEFRAME_SECONDS),

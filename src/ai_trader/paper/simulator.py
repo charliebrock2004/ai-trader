@@ -45,6 +45,21 @@ def _source_rejection(source: Any) -> Optional[str]:
     return str(key) if key else None
 
 
+def _source_stop_hint(source: Any) -> Optional[float]:
+    """The stop distance the strategy derived from current volatility.
+
+    Advisory only. The risk engine clamps it and remains the sole authority on
+    what the stop is; a hint can change position size within the existing risk
+    budget but can never raise the amount at risk.
+    """
+    signal = getattr(source, "latest_signal", None)
+    entry = getattr(signal, "entry", None)
+    stop = getattr(signal, "stop", None)
+    if not entry or not stop or entry <= 0 or stop >= entry:
+        return None
+    return (entry - stop) / entry
+
+
 class PaperSimulator:
     def __init__(
         self,
@@ -82,6 +97,11 @@ class PaperSimulator:
         self.stopped_at: Optional[int] = None
         #: Bars before this index warm indicators only and never trade.
         self.trade_from_index = 0
+        #: Close an unresolved position after this many bars. ``None`` disables.
+        #: The exit is a real fill at the market, paying spread and slippage
+        #: like any other — never a silent write-off.
+        self.max_holding_bars: Optional[int] = None
+        self._entry_bar: dict[str, int] = {}
         self.rejections: list[dict[str, Any]] = []
 
     def set_fx_rate(self, rate: float) -> None:
@@ -129,8 +149,40 @@ class PaperSimulator:
             slippage=self.slip_bps,
         )
         self.ledger.apply_buy(order, fill, quote_currency=self.instrument.quote_currency)
+        self._entry_bar[order.symbol] = index
         self.pending = None
         self._note("fill", fill=fill.to_dict(), bar=index)
+
+    def _close_at_market(
+        self, symbol: str, pos: Any, candle: Candle, index: int, why: str
+    ) -> None:
+        """Close a position at the market, as a real recorded fill.
+
+        Used by the holding-period exit. It pays spread and slippage like any
+        other exit: an position that leaves the book without a fill is P&L with
+        no trade behind it, which is the one number this system must not print.
+        """
+        price = sell_fill_price(
+            candle.close, spread_bps=self.spread_bps, slip_bps=self.slip_bps
+        )
+        fill = PaperFill(
+            fill_id=self.ledger.next_fill_id(),
+            order_id=pos.order_id,
+            symbol=symbol,
+            side="SELL",
+            quantity=pos.quantity,
+            price=price,
+            timestamp=candle.timestamp,
+            reason=FillReason.CLOSE.value,
+            spread=self.spread_bps,
+            slippage=self.slip_bps,
+        )
+        closed = self.ledger.close_position(symbol, fill, reason=fill.reason)
+        for order in self.ledger.orders:
+            if order.order_id == pos.order_id:
+                order.status = OrderStatus.CLOSED.value
+        self._entry_bar.pop(symbol, None)
+        self._note("exit", fill=fill.to_dict(), pnl=closed.realised_pnl, bar=index, why=why)
 
     def _manage_position(self, candle: Candle, index: int) -> None:
         for symbol, pos in list(self.ledger.positions.items()):
@@ -142,6 +194,10 @@ class PaperSimulator:
                 candle=candle,
             )
             if hit is None:
+                held = index - self._entry_bar.get(symbol, index)
+                if self.max_holding_bars is not None and held >= self.max_holding_bars:
+                    self._close_at_market(symbol, pos, candle, index, "time")
+                    continue
                 self.ledger.mark(symbol, candle.close, fx=self.fx_rate)
                 continue
             if hit == "stop":
@@ -254,6 +310,7 @@ class PaperSimulator:
             fx_rate=self.fx_rate,
             risk_multiplier=multiplier,
             terminated=terminated,
+            stop_pct_hint=_source_stop_hint(source),
         )
         if action in {PaperAction.CLOSE, PaperAction.SELL} and assessment.approved and has:
             pos = self.ledger.positions[visible.symbol]

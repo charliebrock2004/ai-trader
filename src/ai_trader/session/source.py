@@ -124,12 +124,24 @@ class DeterministicFirstSource:
         technical: Any = None,
         warmup: int = 8,
         timeframe: str = "5m",
+        score_threshold: Optional[float] = None,
         account_fn: Optional[Callable[[], dict[str, Any]]] = None,
         stop_fn: Optional[Callable[[], bool]] = None,
     ) -> None:
         self.analyst = analyst
         self.budget = budget
-        self.technical = technical or TrendPullbackStrategy(timeframe=timeframe)
+        if technical is None:
+            from ai_trader.strategy.signal import SignalConfig
+
+            overrides = (
+                {"strong_score": float(score_threshold)}
+                if score_threshold is not None
+                else {}
+            )
+            technical = TrendPullbackStrategy(
+                SignalConfig.for_timeframe(timeframe, **overrides), timeframe=timeframe
+            )
+        self.technical = technical
         self.warmup = max(0, int(warmup))
         self.account_fn = account_fn or (lambda: {})
         self.stop_fn = stop_fn or (lambda: False)
@@ -280,13 +292,35 @@ class DeterministicFirstSource:
             "reason": signal.reason,
             "features": dict(signal.features),
         }
-        proposed = self.analyst.propose(  # type: ignore[union-attr]
-            snapshot,
-            analysis,
-            account=account,
-            positions=list(account.get("positions") or []),
-            candidate=candidate,
-        )
+        try:
+            proposed = self.analyst.propose(  # type: ignore[union-attr]
+                snapshot,
+                analysis,
+                account=account,
+                positions=list(account.get("positions") or []),
+                candidate=candidate,
+            )
+        except Exception as exc:  # noqa: BLE001
+            # An analyst that raises must not take the desk down with it. The
+            # client turns transport failures into a HOLD context, but a bug or
+            # an unexpected error type would otherwise propagate out of the
+            # session thread and stop the worker trading at all. Any exception
+            # is the same answer as any other failure: HOLD, recorded.
+            self.consults += 1
+            self._record(
+                index,
+                series,
+                analysis,
+                action="HOLD",
+                reasoning=f"Analyst call failed ({type(exc).__name__}). Holding.",
+                model=getattr(self.analyst, "name", "analyst"),
+                source="grok-failure",
+                failure="exception",
+                validated=False,
+                network=True,
+                features=signal.features,
+            )
+            return PaperAction.HOLD
         self.consults += 1
         grok_name = _action_name(proposed.decision.action)
         failure = proposed.context.get("failure")
