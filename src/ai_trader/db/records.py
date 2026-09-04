@@ -558,6 +558,7 @@ class RecordStore:
             "terminal_threshold",
             "desired_running",
             "paper_equity",
+            "last_processed_candle_ts",
         }
         sets = [f"{k} = ?" for k in fields if k in allowed]
         params = [fields[k] for k in fields if k in allowed]

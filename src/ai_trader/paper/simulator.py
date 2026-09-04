@@ -395,6 +395,7 @@ class PaperSimulator:
         kill_switch: bool = False,
         stop_check: Optional[Callable[[int], bool]] = None,
         on_bar: Optional[Callable[[int, CandleSeries], None]] = None,
+        on_processed: Optional[Callable[[int, CandleSeries], None]] = None,
         finalize: bool = True,
     ) -> dict[str, Any]:
         source = source or FixtureHoldSource()
@@ -407,6 +408,7 @@ class PaperSimulator:
             source=source,
             stop_check=stop_check,
             on_bar=on_bar,
+            on_processed=on_processed,
         )
         if finalize:
             self._finalize(last_visible)
@@ -421,6 +423,7 @@ class PaperSimulator:
         kill_switch: bool = False,
         stop_check: Optional[Callable[[int], bool]] = None,
         on_bar: Optional[Callable[[int, CandleSeries], None]] = None,
+        on_processed: Optional[Callable[[int, CandleSeries], None]] = None,
         finalize: bool = False,
     ) -> dict[str, Any]:
         """Process only new bars. Does not replay earlier candles. No look-ahead."""
@@ -432,6 +435,7 @@ class PaperSimulator:
             source=source,
             stop_check=stop_check,
             on_bar=on_bar,
+            on_processed=on_processed,
         )
         if finalize:
             self._finalize(last_visible)
@@ -446,6 +450,7 @@ class PaperSimulator:
         source: SignalSource,
         stop_check: Optional[Callable[[int], bool]],
         on_bar: Optional[Callable[[int, CandleSeries], None]],
+        on_processed: Optional[Callable[[int, CandleSeries], None]] = None,
     ) -> Optional[CandleSeries]:
         candles = series.candles
         last_visible: Optional[CandleSeries] = None
@@ -492,6 +497,8 @@ class PaperSimulator:
                 self._note("warmup", bar=i, timestamp=candle.timestamp)
                 continue
             self._signal(i, visible, source, kill_switch=self.kill_switch)
+            if on_processed is not None:
+                on_processed(i, visible)
         return last_visible
 
     def _finalize(self, last_visible: Optional[CandleSeries]) -> None:

@@ -179,11 +179,18 @@ def build_snapshot(db_path: Optional[Path] = None) -> dict[str, Any]:
         conn = sqlite3.connect(str(path))
         try:
             row = conn.execute(
-                "SELECT desired_running, paper_equity, survival_state, terminated_at "
+                "SELECT desired_running, paper_equity, survival_state, terminated_at, "
+                "last_processed_candle_ts "
                 "FROM agent_life LIMIT 1"
             ).fetchone()
         except sqlite3.Error:
-            row = None
+            try:
+                row = conn.execute(
+                    "SELECT desired_running, paper_equity, survival_state, terminated_at "
+                    "FROM agent_life LIMIT 1"
+                ).fetchone()
+            except sqlite3.Error:
+                row = None
         finally:
             conn.close()
         if row:
@@ -191,11 +198,13 @@ def build_snapshot(db_path: Optional[Path] = None) -> dict[str, Any]:
             meta["paper_equity"] = row[1]
             meta["survival_state"] = row[2]
             meta["terminated"] = bool(row[3]) or bool(latch and latch.get("terminated"))
+            meta["last_processed_candle_ts"] = row[4] if len(row) > 4 else None
         else:
             meta["desired_running"] = False
             meta["paper_equity"] = 100.0
             meta["survival_state"] = "HEALTHY"
             meta["terminated"] = bool(latch and latch.get("terminated"))
+            meta["last_processed_candle_ts"] = None
     except Exception:  # noqa: BLE001
         meta["desired_running"] = False
         meta["paper_equity"] = 100.0

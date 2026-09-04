@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 from ai_trader.account.simulated import STARTING_CASH
 from ai_trader.exceptions import HistoricalDataNotConfiguredError, InvalidMarketDataError
@@ -33,6 +34,9 @@ class PaperSessionConfig:
     #: indicators; they must not create trades that pretend to be live.
     trade_historical_bars: bool = False
     base_currency: str = "GBP"
+    #: Last live candle the worker successfully processed. On recover, only
+    #: later candles are tradeable. None = first session, baseline the fetch.
+    last_processed_candle_ts: Optional[str] = None
 
     def validate(self) -> "PaperSessionConfig":
         source = (self.source or "").strip().lower()
@@ -68,6 +72,7 @@ class PaperSessionConfig:
             "continuous": self.continuous,
             "trade_historical_bars": self.trade_historical_bars,
             "base_currency": self.base_currency,
+            "last_processed_candle_ts": self.last_processed_candle_ts,
             "live": False,
             "real_market_data": is_public,
             "allowed_timeframes": sorted(TIMEFRAME_SECONDS),

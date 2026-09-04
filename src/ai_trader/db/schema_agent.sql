@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS agent_life (
     terminal_reason TEXT,
     desired_running INTEGER NOT NULL DEFAULT 0,
     paper_equity REAL,
+    last_processed_candle_ts TEXT,
     updated_at TEXT NOT NULL
 );
 

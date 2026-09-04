@@ -29,6 +29,7 @@ class DeskWorker:
         # down a live session halfway through building its replacement.
         self._control_lock = threading.Lock()
         self._ensure_columns()
+        self.runtime.orchestrator.paper_session.on_candle_processed = self._remember_processed
 
     def _store(self):
         return self.runtime.repository.records
@@ -42,6 +43,8 @@ class DeskWorker:
             )
         if "paper_equity" not in cols:
             conn.execute("ALTER TABLE agent_life ADD COLUMN paper_equity REAL")
+        if "last_processed_candle_ts" not in cols:
+            conn.execute("ALTER TABLE agent_life ADD COLUMN last_processed_candle_ts TEXT")
         conn.commit()
 
     def _set_desired(self, running: bool) -> None:
@@ -70,6 +73,20 @@ class DeskWorker:
         if value <= 0:
             return
         self._store().update_agent_life(paper_equity=value)
+
+    def _last_processed_ts(self) -> Optional[str]:
+        life = self._store().agent_life() or {}
+        stamp = life.get("last_processed_candle_ts")
+        if stamp is None:
+            return None
+        text = str(stamp).strip()
+        return text or None
+
+    def _remember_processed(self, timestamp: Any) -> None:
+        stamp = str(timestamp or "").strip()
+        if not stamp:
+            return
+        self._store().update_agent_life(last_processed_candle_ts=stamp)
 
     def _already_running(self) -> bool:
         session = self.runtime.orchestrator.paper_session
@@ -108,15 +125,22 @@ class DeskWorker:
             self._ensure_cycle_loop()
             return self.status()
         starting = self._persisted_equity()
+        source = str(payload.get("source") or "public")
+        bars = int(payload.get("bars") or 24)
+        if source == "public":
+            from ai_trader.session.continuity import CONTINUOUS_FETCH_BARS
+
+            bars = max(bars, CONTINUOUS_FETCH_BARS)
         report = self.runtime.orchestrator.start_paper_session(
             symbol=str(payload.get("symbol") or "BTC-USD"),
-            bars=int(payload.get("bars") or 24),
+            bars=bars,
             timeframe=str(payload.get("timeframe") or "5m"),
             grok_frequency=int(payload.get("grok_frequency") or 8),
             warmup=int(payload.get("warmup") or 8),
-            source=str(payload.get("source") or "public"),
+            source=source,
             continuous=True,
             starting_balance=starting,
+            last_processed_candle_ts=self._last_processed_ts(),
         )
         if report.get("balance") is not None:
             self._remember_equity(report.get("balance"))
@@ -317,7 +341,18 @@ class DeskWorker:
                 "symbol": paper.get("symbol"),
                 "last_price": paper.get("last_price"),
                 "bars": paper.get("bars"),
+                "last_processed_candle_ts": paper.get("last_processed_candle_ts"),
+                "latest_candle_ts": paper.get("latest_candle_ts"),
+                "sma10": paper.get("sma10"),
+                "sma20": paper.get("sma20"),
             },
+            "last_processed_candle_ts": paper.get("last_processed_candle_ts") or self._last_processed_ts(),
+            "latest_candle_ts": paper.get("latest_candle_ts"),
+            "sma10": paper.get("sma10"),
+            "sma20": paper.get("sma20"),
+            "sma_relationship": paper.get("sma_relationship"),
+            "indicator_history_bars": paper.get("indicator_history_bars"),
+            "trade_from_index": paper.get("trade_from_index"),
             "currency": "GBP",
             "engine": "python-worker",
             "persistence": self._persistence_view(),

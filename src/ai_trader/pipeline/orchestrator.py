@@ -587,6 +587,7 @@ class Orchestrator:
         source: str = "simulated",
         continuous: bool = False,
         starting_balance: float | None = None,
+        last_processed_candle_ts: str | None = None,
     ) -> dict[str, Any]:
         """Sequential paper session. Repeated Grok decisions. Never a broker."""
         assert_safe_to_run(
@@ -616,6 +617,8 @@ class Orchestrator:
         }
         if starting_balance is not None:
             config_kwargs["starting_balance"] = float(starting_balance)
+        if last_processed_candle_ts:
+            config_kwargs["last_processed_candle_ts"] = last_processed_candle_ts
         config = PaperSessionConfig(**config_kwargs)
         feed = self.public_market_data if source == "public" else None
         report = self.paper_session.start(

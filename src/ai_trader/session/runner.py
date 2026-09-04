@@ -26,6 +26,13 @@ from ai_trader.paper.simulator import PaperSimulator
 from ai_trader.risk.engine import RiskEngine
 from ai_trader.safety import LIVE_TRADING_ALLOWED
 from ai_trader.session.config import BANNER, PaperSessionConfig
+from ai_trader.session.continuity import (
+    INDICATOR_HISTORY_BARS,
+    baseline_timestamp,
+    fetch_limit,
+    indicator_snapshot,
+    resolve_trade_from_index,
+)
 from ai_trader.session.source import DeterministicFirstSource, RepeatingGrokSource
 from ai_trader.types import CandleSeries
 
@@ -60,6 +67,7 @@ class PaperSession:
         #: continuous run is durable rather than only persisted on Stop.
         self.on_persist = on_persist
         self.on_decision = on_decision
+        self.on_candle_processed = None
         self.budget = budget
         self.gate_with_deterministic = bool(gate_with_deterministic)
         self.fx_rate = 1.0
@@ -70,6 +78,7 @@ class PaperSession:
         self.sim: Optional[PaperSimulator] = None
         self.source: Optional[Any] = None
         self.report: Optional[dict[str, Any]] = None
+        self.last_processed_candle_ts: Optional[str] = self.config.last_processed_candle_ts
         self._stop_at: Optional[int] = None
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
@@ -120,6 +129,7 @@ class PaperSession:
         self.report = None
         self._cursor = 0
         self._series = None
+        self.last_processed_candle_ts = self.config.last_processed_candle_ts
         if self.config.continuous and series is None and stop_at is None:
             self._thread = threading.Thread(
                 target=self._run_loop, args=(None, generation), daemon=True
@@ -174,6 +184,9 @@ class PaperSession:
                     continue
                 last_ts = parse_utc(current.candles[-1].timestamp)
                 extra = [c for c in fresh.candles if parse_utc(c.timestamp) > last_ts]
+                if self.last_processed_candle_ts:
+                    cutoff = parse_utc(self.last_processed_candle_ts)
+                    extra = [c for c in extra if parse_utc(c.timestamp) > cutoff]
                 if not extra:
                     continue
                 combined = replace(current, candles=current.candles + tuple(extra))
@@ -185,6 +198,7 @@ class PaperSession:
                     source=self.source,
                     kill_switch=False,
                     stop_check=lambda index, gen=generation: self._should_stop(index) or gen != self._generation,
+                    on_processed=self._on_bar_processed,
                     finalize=False,
                 )
                 self._cursor = len(combined.candles)
@@ -250,10 +264,13 @@ class PaperSession:
             policy=self.policy,
             on_decision=self.on_decision,
         )
-        # Bars already on the tape at Start are history. They warm indicators
-        # and the analyst; they do not open positions at two-hour-old prices.
+        # Bars already on the tape at Start are history unless a persisted
+        # last_processed_candle_ts says some of them arrived after the last
+        # live bar this worker actually handled. Warm-up never opens a position.
         if self.config.continuous and not self.config.trade_historical_bars:
-            self.sim.trade_from_index = len(used.candles)
+            self.sim.trade_from_index = resolve_trade_from_index(
+                used.candles, self.last_processed_candle_ts
+            )
         if self.gate_with_deterministic:
             self.source = DeterministicFirstSource(
                 self.analyst,
@@ -280,12 +297,22 @@ class PaperSession:
             kill_switch=False,
             stop_check=lambda index: self._should_stop(index)
             or (generation is not None and generation != self._generation),
+            on_processed=self._on_bar_processed,
             finalize=finalize,
         )
         if report.get("look_ahead"):
             raise RuntimeError("Look-ahead bias detected in paper session.")
         self._series = used
         self._cursor = len(used.candles)
+        if (
+            used.candles
+            and self.sim.trade_from_index >= len(used.candles)
+        ):
+            # First session / nothing new: baseline so a restart does not
+            # retroactively trade this warm-up window.
+            stamp = baseline_timestamp(used.candles, self.sim.trade_from_index)
+            if stamp:
+                self._mark_processed(stamp)
         self.report = self._public(report, used)
         self._persist(self.report)
         return self.report
@@ -308,6 +335,24 @@ class PaperSession:
         self.fx_detail = rate.to_dict()
         return self.fx_rate
 
+    def _mark_processed(self, timestamp: str) -> None:
+        if not timestamp:
+            return
+        self.last_processed_candle_ts = timestamp
+        callback = self.on_candle_processed
+        if callback is None:
+            return
+        try:
+            callback(timestamp)
+        except Exception:  # noqa: BLE001 — persistence must never kill the session
+            pass
+
+    def _on_bar_processed(self, index: int, visible: CandleSeries) -> None:
+        if not visible.candles:
+            return
+        candle = visible.candles[min(index, len(visible.candles) - 1)]
+        self._mark_processed(candle.timestamp)
+
     def _persist(self, report: dict[str, Any]) -> None:
         if self.on_persist is None:
             return
@@ -321,7 +366,11 @@ class PaperSession:
             return generate_series(
                 self.config.symbol,
                 timeframe=self.config.timeframe,
-                limit=self.config.bars,
+                limit=fetch_limit(
+                    bars=self.config.bars,
+                    continuous=self.config.continuous,
+                    source=self.config.source,
+                ),
                 seed=self.config.seed,
                 source="simulated",
             )
@@ -338,7 +387,11 @@ class PaperSession:
         return provider.candles(
             self.config.symbol,
             timeframe=self.config.timeframe,
-            limit=self.config.bars,
+            limit=fetch_limit(
+                bars=self.config.bars,
+                continuous=self.config.continuous,
+                source=self.config.source,
+            ),
         )
 
     def _should_stop(self, index: int) -> bool:
@@ -386,6 +439,22 @@ class PaperSession:
             "fx": self.fx_detail,
         }
 
+    def _continuity_fields(self, series: Optional[CandleSeries] = None) -> dict[str, Any]:
+        tape = series or self._series
+        candles = tape.candles if tape is not None else ()
+        snap = indicator_snapshot(candles)
+        trade_from = self.sim.trade_from_index if self.sim is not None else None
+        return {
+            "last_processed_candle_ts": self.last_processed_candle_ts,
+            "latest_candle_ts": snap.get("latest_candle_ts"),
+            "sma10": snap.get("sma10"),
+            "sma20": snap.get("sma20"),
+            "sma_relationship": snap.get("sma_relationship"),
+            "indicator_history_bars": snap.get("indicator_history_bars") or 0,
+            "indicator_history_required": INDICATOR_HISTORY_BARS,
+            "trade_from_index": trade_from,
+        }
+
     def _unavailable(self, exc: Exception) -> dict[str, Any]:
         if isinstance(exc, InvalidMarketDataError):
             failure = getattr(exc, "failure", None) or "malformed"
@@ -431,6 +500,7 @@ class PaperSession:
             "closed": [],
             "performance": {"total_trades": 0, "maximum_drawdown": 0.0},
             "last_price": None,
+            **self._continuity_fields(),
         }
         return payload
 
@@ -477,6 +547,7 @@ class PaperSession:
             "closed": report.get("closed_positions") or [],
             "performance": performance,
             "last_price": series.candles[-1].close if series.candles else None,
+            **self._continuity_fields(series),
         }
 
     def status(self) -> dict[str, Any]:
@@ -540,4 +611,5 @@ class PaperSession:
             "timeframe": self.config.timeframe,
             "last_price": last_price,
             "bars": bars,
+            **self._continuity_fields(),
         }
