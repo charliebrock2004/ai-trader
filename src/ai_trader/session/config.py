@@ -37,6 +37,11 @@ class PaperSessionConfig:
     #: Last live candle the worker successfully processed. On recover, only
     #: later candles are tradeable. None = first session, baseline the fetch.
     last_processed_candle_ts: Optional[str] = None
+    #: Cash and open positions carried over from a previous process. Without
+    #: these a restart rebuilds the book from marked equity alone, which turns
+    #: an open position into cash at its mark with no exit fill and no stop.
+    restore_cash: Optional[float] = None
+    restore_positions: Optional[list] = None
 
     def validate(self) -> "PaperSessionConfig":
         source = (self.source or "").strip().lower()

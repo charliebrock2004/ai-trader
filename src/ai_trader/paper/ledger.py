@@ -18,12 +18,22 @@ in-flight exposure.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from ai_trader.account.simulated import CURRENCY, SOURCE, STARTING_CASH
 from ai_trader.money import BASE_CURRENCY, money_float, normalise_currency
 from ai_trader.paper.models import PaperFill, PaperOrder, PaperPosition
 from ai_trader.types import PaperAccountState, utc_now_iso
+
+
+def _opt_float(value: Any) -> Optional[float]:
+    """A stop of ``None`` means no stop; 0.0 would mean "exit at zero"."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def money(value: float) -> float:
@@ -61,6 +71,50 @@ class PaperLedger:
         self._fill_seq = 0
         #: quote currency -> units of base currency per unit of quote.
         self._fx: dict[str, float] = {self.base_currency: 1.0}
+
+    # -- restart recovery -------------------------------------------------
+    def restore(self, *, cash: float, positions: list[dict[str, Any]]) -> int:
+        """Re-open positions carried over from a previous process.
+
+        The worker's host restarts often, and a position that does not survive
+        that is worse than one that does not exist: the old behaviour rebuilt
+        the ledger from marked equity alone, so an open position silently
+        became cash at its mark price — no exit fill, no spread, no slippage,
+        and the stop loss quietly gone. That is invented P&L, and on a host
+        that restarts every few minutes it would have been most of the record.
+
+        Restoring cash and the position separately keeps equity identical while
+        leaving the trade genuinely open, still carrying its stop and target.
+        """
+        self.cash = money(cash)
+        restored = 0
+        for row in positions or []:
+            if not isinstance(row, dict) or not row.get("open", True):
+                continue
+            symbol = row.get("symbol")
+            quantity = float(row.get("quantity") or 0.0)
+            if not symbol or quantity <= 0:
+                continue
+            self.positions[str(symbol)] = PaperPosition(
+                symbol=str(symbol),
+                quantity=quantity,
+                average_entry=float(row.get("average_entry") or 0.0),
+                current_price=float(row.get("current_price") or row.get("average_entry") or 0.0),
+                stop_loss=_opt_float(row.get("stop_loss")),
+                take_profit=_opt_float(row.get("take_profit")),
+                entry_timestamp=str(row.get("entry_timestamp") or ""),
+                order_id=str(row.get("order_id") or ""),
+                quote_currency=str(row.get("quote_currency") or self.base_currency),
+                base_currency=self.base_currency,
+                entry_fx=float(row.get("entry_fx") or 1.0),
+                current_fx=float(row.get("current_fx") or row.get("entry_fx") or 1.0),
+                entry_cost_base=float(row.get("entry_cost_base") or 0.0),
+            )
+            restored += 1
+        equity = self.equity()
+        self.peak_equity = max(self.peak_equity, equity)
+        self.day_start_equity = equity
+        return restored
 
     # -- FX ---------------------------------------------------------------
     def set_fx(self, quote_currency: str, base_per_quote: float) -> None:

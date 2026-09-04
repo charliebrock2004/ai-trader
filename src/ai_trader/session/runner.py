@@ -264,6 +264,16 @@ class PaperSession:
             policy=self.policy,
             on_decision=self.on_decision,
         )
+        # Carry the previous process's book across, before any bar is walked.
+        if self.config.restore_positions:
+            self.sim.ledger.restore(
+                cash=(
+                    self.config.restore_cash
+                    if self.config.restore_cash is not None
+                    else self.config.starting_balance
+                ),
+                positions=list(self.config.restore_positions),
+            )
         # Bars already on the tape at Start are history unless a persisted
         # last_processed_candle_ts says some of them arrived after the last
         # live bar this worker actually handled. Warm-up never opens a position.

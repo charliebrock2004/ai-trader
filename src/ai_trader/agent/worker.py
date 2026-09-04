@@ -48,6 +48,10 @@ class DeskWorker:
             conn.execute("ALTER TABLE agent_life ADD COLUMN last_processed_candle_ts TEXT")
         if "desired_session_json" not in cols:
             conn.execute("ALTER TABLE agent_life ADD COLUMN desired_session_json TEXT")
+        if "paper_cash" not in cols:
+            conn.execute("ALTER TABLE agent_life ADD COLUMN paper_cash REAL")
+        if "open_positions_json" not in cols:
+            conn.execute("ALTER TABLE agent_life ADD COLUMN open_positions_json TEXT")
         conn.commit()
 
     def _set_desired(self, running: bool) -> None:
@@ -103,6 +107,59 @@ class DeskWorker:
             return
         self._store().update_agent_life(paper_equity=value)
 
+    def _remember_book(self, *, force: bool = False) -> None:
+        """Persist cash and open positions, not just marked equity.
+
+        Equity alone is not enough to rebuild the book: restoring from it puts
+        the whole account in cash, which silently closes any open position at
+        its mark with no exit fill, no spread and no stop. On a host that
+        restarts every few minutes that would have been most of the trade
+        record, and all of it invented.
+        """
+        session = self.runtime.orchestrator.paper_session
+        sim = getattr(session, "sim", None)
+        if sim is None:
+            return
+        # A simulator exists from the moment Start builds one, which is before
+        # its thread has walked a bar and before a restore has run. Writing
+        # then persists an empty book over a real one — and a Start that fails
+        # on market data leaves exactly that empty ledger behind. Only a
+        # running session, or an explicit Stop, may rewrite the book.
+        running = bool(getattr(session, "running", False) and not getattr(session, "stopped", True))
+        if not running and not force:
+            return
+        try:
+            positions = [p.to_dict() for p in sim.ledger.open_positions()]
+            for row, pos in zip(positions, sim.ledger.open_positions()):
+                # to_dict() is the display shape; these are what rebuilding needs.
+                row["entry_cost_base"] = pos.entry_cost_base
+                row["entry_fx"] = pos.entry_fx
+                row["current_fx"] = pos.current_fx
+                row["order_id"] = pos.order_id
+                row["quote_currency"] = pos.quote_currency
+            self._store().update_agent_life(
+                paper_cash=float(sim.ledger.cash),
+                open_positions_json=json.dumps(positions),
+            )
+        except Exception:  # noqa: BLE001 — bookkeeping must not break a cycle
+            pass
+
+    def _restored_book(self) -> tuple[Optional[float], list]:
+        life = self._store().agent_life() or {}
+        cash = life.get("paper_cash")
+        raw = life.get("open_positions_json")
+        try:
+            positions = json.loads(str(raw)) if raw else []
+        except (TypeError, ValueError):
+            positions = []
+        if not isinstance(positions, list):
+            positions = []
+        try:
+            cash_value = float(cash) if cash is not None else None
+        except (TypeError, ValueError):
+            cash_value = None
+        return cash_value, positions
+
     def _last_processed_ts(self) -> Optional[str]:
         life = self._store().agent_life() or {}
         stamp = life.get("last_processed_candle_ts")
@@ -112,10 +169,17 @@ class DeskWorker:
         return text or None
 
     def _remember_processed(self, timestamp: Any) -> None:
+        """Called after each candle the session actually handled.
+
+        This is the only moment the book is guaranteed to be current: a
+        continuous Start returns before its thread has walked a single bar, so
+        checkpointing there persists an empty book and the restore is a no-op.
+        """
         stamp = str(timestamp or "").strip()
         if not stamp:
             return
         self._store().update_agent_life(last_processed_candle_ts=stamp)
+        self._remember_book()
 
     def _already_running(self) -> bool:
         session = self.runtime.orchestrator.paper_session
@@ -161,6 +225,7 @@ class DeskWorker:
             from ai_trader.session.continuity import CONTINUOUS_FETCH_BARS
 
             bars = max(bars, CONTINUOUS_FETCH_BARS)
+        restore_cash, restore_positions = self._restored_book()
         report = self.runtime.orchestrator.start_paper_session(
             symbol=str(payload.get("symbol") or "BTC-USD"),
             bars=bars,
@@ -171,6 +236,8 @@ class DeskWorker:
             continuous=True,
             starting_balance=starting,
             last_processed_candle_ts=self._last_processed_ts(),
+            restore_cash=restore_cash,
+            restore_positions=restore_positions,
         )
         if report.get("balance") is not None:
             self._remember_equity(report.get("balance"))
@@ -185,6 +252,7 @@ class DeskWorker:
             report = self.runtime.orchestrator.stop_paper_session()
             if report.get("balance") is not None:
                 self._remember_equity(report.get("balance"))
+            self._remember_book(force=True)
             self._checkpoint()
             return self.status(paper=report)
 
@@ -255,6 +323,7 @@ class DeskWorker:
                 try:
                     equity = paper.sim.ledger.equity()
                     self._remember_equity(equity)
+                    self._remember_book()
                     self.runtime.agent.survival.observe(equity, reason="paper session mark")
                 except Exception:
                     pass

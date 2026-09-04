@@ -487,6 +487,15 @@ class PaperSimulator:
                 self.seen_future = True
             if on_bar is not None:
                 on_bar(i, visible)
+            if i < self.trade_from_index:
+                # A warm-up bar is history the desk has already lived through.
+                # Indicators may see it; the *book* must not. Running position
+                # management here replays old prices against a position carried
+                # over from a previous process, and stops it out on a candle
+                # from before it was ever opened — a loss the market never
+                # dealt. Only bars from trade_from_index onward touch the book.
+                self._note("warmup", bar=i, timestamp=candle.timestamp)
+                continue
             stopped = bool(stop_check and stop_check(i))
             if stopped and self.stopped_at is None:
                 self.stopped_at = i
@@ -512,10 +521,6 @@ class PaperSimulator:
                 }
             )
             if self.kill_switch or stopped:
-                continue
-            if i < self.trade_from_index:
-                # Warm-up bar. Indicators see it; the trading path does not.
-                self._note("warmup", bar=i, timestamp=candle.timestamp)
                 continue
             self._signal(i, visible, source, kill_switch=self.kill_switch)
             if on_processed is not None:
