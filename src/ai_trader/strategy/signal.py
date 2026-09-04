@@ -96,6 +96,11 @@ REJECTIONS: dict[str, str] = {
     "poor_reward": "Reward-to-risk after costs is not worth the trade.",
     "already_long": "Already holding this symbol. Not adding to a position.",
     "no_signal": "No trade signal.",
+    # Downstream gates. The detector never emits these, but they are stored in
+    # the same column, so their meanings belong in the same vocabulary — a key
+    # in the audit trail with no published meaning is a dead end.
+    "policy_downgraded": "The survival policy made the proposal more conservative.",
+    "risk_rejected": "The risk engine refused to size the trade.",
 }
 
 EXIT_REASON = "Trend regime has broken. Closing the long."

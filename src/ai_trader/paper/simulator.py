@@ -270,6 +270,7 @@ class PaperSimulator:
                     stage="policy",
                     approved=False,
                     reason=outcome.reason,
+                    rejection="policy_downgraded",
                 )
                 proposed = outcome.action
                 action = PaperAction(proposed)
@@ -394,6 +395,7 @@ class PaperSimulator:
                 approved=False,
                 reason=reject_reason,
                 assessment=assessment.to_dict(),
+                rejection="risk_rejected",
             )
             return
         order = PaperOrder(
@@ -423,6 +425,7 @@ class PaperSimulator:
             reason=assessment.reason,
             assessment=assessment.to_dict(),
             order_id=order.order_id,
+            rejection=None,
         )
 
     def _record_decision(
