@@ -7,6 +7,7 @@ was asked to keep running. Live trading is impossible here.
 
 from __future__ import annotations
 
+import json
 import threading
 from typing import Any, Optional
 
@@ -45,10 +46,38 @@ class DeskWorker:
             conn.execute("ALTER TABLE agent_life ADD COLUMN paper_equity REAL")
         if "last_processed_candle_ts" not in cols:
             conn.execute("ALTER TABLE agent_life ADD COLUMN last_processed_candle_ts TEXT")
+        if "desired_session_json" not in cols:
+            conn.execute("ALTER TABLE agent_life ADD COLUMN desired_session_json TEXT")
         conn.commit()
 
     def _set_desired(self, running: bool) -> None:
         self._store().update_agent_life(desired_running=1 if running else 0)
+
+    #: The session shape Start asked for. Persisted so a restart resumes *that*
+    #: session. recover() used to hard-code the public BTC feed, which quietly
+    #: promoted a simulated session to a live one across a restart — the two
+    #: read from different worlds and share one ledger.
+    def _remember_session(self, payload: dict[str, Any]) -> None:
+        keep = {
+            key: payload[key]
+            for key in ("symbol", "source", "timeframe", "bars", "warmup", "grok_frequency")
+            if key in payload and payload[key] is not None
+        }
+        try:
+            self._store().update_agent_life(desired_session_json=json.dumps(keep))
+        except Exception:  # noqa: BLE001 — never let bookkeeping stop a Start
+            pass
+
+    def _remembered_session(self) -> dict[str, Any]:
+        life = self._store().agent_life() or {}
+        raw = life.get("desired_session_json")
+        if not raw:
+            return {}
+        try:
+            loaded = json.loads(str(raw))
+        except (TypeError, ValueError):
+            return {}
+        return loaded if isinstance(loaded, dict) else {}
 
     def desired_running(self) -> bool:
         life = self._store().agent_life() or {}
@@ -117,6 +146,7 @@ class DeskWorker:
                 "data_error": str(exc),
             }
         self._set_desired(True)
+        self._remember_session(dict(payload))
         # Start is idempotent. A second Start against a live session used to
         # replace it, which reset the bar cursor and discarded the open
         # position — the account survived, but the session's history did not.
@@ -179,8 +209,17 @@ class DeskWorker:
         if session.running and not session.stopped:
             self._ensure_cycle_loop()
             return
+        # Resume the session that was actually running, not a default one.
+        wanted = self._remembered_session()
         try:
-            self.start(symbol="BTC-USD", source="public", timeframe="5m", continuous=True)
+            self.start(
+                symbol=wanted.get("symbol") or "BTC-USD",
+                source=wanted.get("source") or "public",
+                timeframe=wanted.get("timeframe") or "5m",
+                bars=wanted.get("bars") or 24,
+                warmup=wanted.get("warmup") or 8,
+                continuous=True,
+            )
         except Exception:
             self._set_desired(False)
 
@@ -259,7 +298,7 @@ class DeskWorker:
             ),
             "last_call_at": snap.get("last_call_at"),
             "allowed": bool(snap.get("allowed")) if snap else False,
-            "filter": "SMA 10/20 cross",
+            "filter": "trend pullback (SMA 10/20 regime)",
             "operates_without_grok": True,
         }
 
@@ -334,6 +373,10 @@ class DeskWorker:
             "bars": paper.get("bars", 0),
             "data_error": paper.get("data_error"),
             "hold_reason": hold_reason,
+            # The detector's own account of itself: bars looked at, candidates
+            # found, and every hold counted by named reason. This is what makes
+            # "it isn't trading" a question with an answer.
+            "signal": paper.get("signal") or {},
             "account": account,
             "survival": survival,
             "paper": {

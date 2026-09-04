@@ -787,3 +787,33 @@ a.desk-chip {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* Why the desk did not trade. Legible at a glance, not a wall of numbers. */
+.desk-signal {
+  margin-bottom: 0.75rem;
+}
+.desk-rejections {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.desk-rejections li {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: 0.8125rem;
+  color: var(--muted, #6b7280);
+}
+.desk-rejection-count {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.desk-rejection-share {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  opacity: 0.6;
+}

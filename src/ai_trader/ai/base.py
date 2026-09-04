@@ -34,8 +34,14 @@ class Analyst(ABC):
         *,
         account: Optional[dict[str, Any]] = None,
         positions: Optional[list] = None,
+        candidate: Optional[dict[str, Any]] = None,
     ) -> ProposedDecision:
-        """Return a BUY / SELL / HOLD proposal. Must not execute anything."""
+        """Return a BUY / SELL / HOLD proposal. Must not execute anything.
+
+        ``candidate`` is the deterministic proposal being challenged: its
+        direction, the indicators behind it and what it costs. An analyst that
+        ignores it is answering a vaguer question than the desk is asking.
+        """
 
     def health(self) -> dict:
         return {"name": self.name, "ready": False, "configured": False}

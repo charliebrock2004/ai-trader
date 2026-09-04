@@ -216,13 +216,13 @@ export function AgentHome() {
           <Reason label="API cost" value={money(grokCost, currency)} />
           <Reason
             label="Filter"
-            value={grokUsage?.filter ?? "SMA 10/20"}
+            value={grokUsage?.filter ?? "trend pullback"}
           />
         </dl>
         <p className="mt-3 mb-0 text-sm leading-normal text-muted">
           {grokConnected
-            ? `Grok is only called when the SMA 10/20 filter fires, at most ${grokBudget} times per day, at least ${Math.round((grokUsage?.min_interval_seconds ?? 1800) / 60)} minutes apart. Exhausting the budget does not stop paper trading.`
-            : "No xAI key on the worker. The paper desk still runs on the SMA 10/20 filter and risk engine. Grok is not inventing decisions."}
+            ? `Grok is only called when the deterministic detector finds a candidate, at most ${grokBudget} times per day, at least ${Math.round((grokUsage?.min_interval_seconds ?? 1800) / 60)} minutes apart. Exhausting the budget does not stop paper trading.`
+            : "No xAI key on the worker. The paper desk still runs on the deterministic detector and risk engine. Grok is not inventing decisions."}
         </p>
       </section>
 
@@ -236,6 +236,7 @@ export function AgentHome() {
         {status.hold_reason ? (
           <p className="m-0 mb-3 text-sm leading-normal text-muted">{status.hold_reason}</p>
         ) : null}
+        <SignalEvidence signal={status.signal} />
         {cycle ? (
           <p className="m-0 text-sm leading-normal text-muted">
             Last cycle examined <strong>{cycle.contracts_considered}</strong>{" "}
@@ -375,6 +376,50 @@ function Reason({ label, value }: { label: string; value: string }) {
     <div>
       <p className="m-0 font-mono text-[10px] tracking-[0.12em] text-faint uppercase">{label}</p>
       <p className="mt-1 mb-0 font-mono text-base tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+/**
+ * Why the desk did not trade, counted by reason.
+ *
+ * The desk once sat at zero trades for days and the only way to find out why
+ * was to read the strategy code. Every hold now names itself, so silence is
+ * something you can read off the screen: a spread of reasons means the market
+ * offered nothing, and one reason accounting for everything means a gate is
+ * mis-set.
+ */
+function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
+  if (!signal || !signal.bars_evaluated) return null;
+  const rejections = Object.entries(signal.rejections ?? {}).sort((a, b) => b[1] - a[1]);
+  const meanings = signal.rejection_meanings ?? {};
+  const total = rejections.reduce((sum, [, count]) => sum + count, 0);
+
+  return (
+    <div className="desk-signal">
+      <p className="m-0 text-sm leading-normal text-muted">
+        Looked at <strong>{signal.bars_evaluated}</strong>{" "}
+        {signal.bars_evaluated === 1 ? "candle" : "candles"} and found{" "}
+        <strong>{signal.candidates ?? 0}</strong>{" "}
+        {(signal.candidates ?? 0) === 1 ? "candidate" : "candidates"}
+        {typeof signal.grok_calls === "number"
+          ? `, asking the analyst ${signal.grok_calls} ${signal.grok_calls === 1 ? "time" : "times"}`
+          : ""}
+        .
+      </p>
+      {rejections.length ? (
+        <ul className="desk-rejections">
+          {rejections.map(([key, count]) => (
+            <li key={key}>
+              <span className="desk-rejection-count">{count}</span>
+              <span title={meanings[key] ?? key}>{meanings[key] ?? key}</span>
+              <span className="desk-rejection-share">
+                {total ? `${Math.round((count / total) * 100)}%` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

@@ -559,6 +559,7 @@ class RecordStore:
             "desired_running",
             "paper_equity",
             "last_processed_candle_ts",
+            "desired_session_json",
         }
         sets = [f"{k} = ?" for k in fields if k in allowed]
         params = [fields[k] for k in fields if k in allowed]

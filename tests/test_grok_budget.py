@@ -106,7 +106,13 @@ def test_operates_without_grok_using_the_filter() -> None:
     action = source.decide(8, visible, None)
     assert action == PaperAction.BUY
     assert source.consults == 0
-    assert source.decisions[0]["model"] == "sma-10-20"
+    # The label is the detector's own name, whatever it is. What matters is
+    # that a decision Grok never saw is not filed under Grok — the model name
+    # is how the audit trail attributes it.
+    record = source.decisions[0]
+    assert record["source"] == "deterministic"
+    assert "grok" not in str(record["model"]).lower()
+    assert record["network"] is False
     assert source.decisions[0]["source"] == "deterministic"
 
 

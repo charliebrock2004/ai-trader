@@ -100,6 +100,7 @@ class GrokAnalyst(Analyst):
         *,
         account: Optional[dict[str, Any]] = None,
         positions: Optional[list] = None,
+        candidate: Optional[dict[str, Any]] = None,
     ) -> ProposedDecision:
         if not self.paper_requested:
             return self._hold(
@@ -119,7 +120,9 @@ class GrokAnalyst(Analyst):
             ok, reason = self.budget.consume()
             if not ok:
                 return self._hold(snapshot, analysis, reason, failure="budget")
-        payload = build_grok_payload(analysis, account=account, positions=positions)
+        payload = build_grok_payload(
+            analysis, account=account, positions=positions, candidate=candidate
+        )
         body = {
             "model": self.settings.xai_model or DEFAULT_MODEL,
             "temperature": 0,

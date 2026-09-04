@@ -38,6 +38,7 @@ class FixtureAnalyst(Analyst):
         *,
         account: Optional[dict] = None,
         positions: Optional[list] = None,
+        candidate: Optional[dict] = None,
     ) -> ProposedDecision:
         symbol = analysis.symbol if analysis else (
             snapshot.bars[0].symbol if snapshot.bars else "SYSTEM"

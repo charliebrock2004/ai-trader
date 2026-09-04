@@ -95,6 +95,23 @@ export type AgentStatus = {
   data_error?: string | null;
   engine?: string;
   currency?: string;
+  /**
+   * The detector's account of itself: bars looked at, candidates found, and
+   * every hold counted by named reason. This is what separates "the market
+   * offered nothing" from "a gate is rejecting everything", which is not
+   * answerable from a trade count alone.
+   */
+  signal?: {
+    strategy?: string;
+    bars_evaluated?: number;
+    candidates?: number;
+    grok_calls?: number;
+    filter_holds?: number;
+    budget_skips?: number;
+    warmup_holds?: number;
+    rejections?: Record<string, number>;
+    rejection_meanings?: Record<string, string>;
+  };
   persistence?: {
     kind?: string;
     durable?: boolean;

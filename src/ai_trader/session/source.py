@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any, Callable, Optional
 
 from ai_trader.ai.base import Analyst
-from ai_trader.benchmark.strategies import SimpleTechnicalSource
 from ai_trader.paper.models import PaperAction
+from ai_trader.strategy.signal import TrendPullbackStrategy
 from ai_trader.types import CandleSeries, MarketAnalysis, MarketSnapshot
 
 
@@ -102,11 +102,16 @@ class RepeatingGrokSource:
 
 
 class DeterministicFirstSource:
-    """Cheap SMA filter first. Grok only on a surviving candidate, under budget.
+    """Cheap deterministic filter first. Grok only on a surviving candidate.
 
     The paper desk must keep running if Grok is missing, disconnected, or over
     budget. Those paths use the deterministic action and never label it as Grok.
     A failed Grok HTTP call is HOLD — we do not invent an analyst decision.
+
+    The detector is :class:`~ai_trader.strategy.signal.TrendPullbackStrategy`,
+    not the frozen benchmark crossover. Those two must stay different: the
+    benchmark is the yardstick the live desk is measured against, and a
+    yardstick that gets adjusted whenever the desk is quiet measures nothing.
     """
 
     name = "deterministic-first"
@@ -118,12 +123,13 @@ class DeterministicFirstSource:
         *,
         technical: Any = None,
         warmup: int = 8,
+        timeframe: str = "5m",
         account_fn: Optional[Callable[[], dict[str, Any]]] = None,
         stop_fn: Optional[Callable[[], bool]] = None,
     ) -> None:
         self.analyst = analyst
         self.budget = budget
-        self.technical = technical or SimpleTechnicalSource()
+        self.technical = technical or TrendPullbackStrategy(timeframe=timeframe)
         self.warmup = max(0, int(warmup))
         self.account_fn = account_fn or (lambda: {})
         self.stop_fn = stop_fn or (lambda: False)
@@ -132,6 +138,39 @@ class DeterministicFirstSource:
         self.filter_holds = 0
         self.budget_skips = 0
         self.http_skipped_hold = 0
+        self.latest_signal: Any = None
+
+    def _signal_for(self, index: int, series: CandleSeries, *, has_position: bool):
+        """Ask the detector for a full signal, not just an action.
+
+        Falls back to the plain ``decide`` protocol so a custom ``technical``
+        (the frozen benchmark strategies, in tests) still works here.
+        """
+        rich = getattr(self.technical, "last_signal", None)
+        if callable(rich):
+            return rich(index, series, has_position=has_position)
+        from ai_trader.strategy.signal import Signal
+
+        action = self.technical.decide(index, series, None)
+        return Signal(
+            action=action if isinstance(action, PaperAction) else PaperAction(str(action)),
+            rejection=None if _action_name(action) != "HOLD" else "no_signal",
+            reason="No trade signal.",
+        )
+
+    def signal_summary(self) -> dict[str, Any]:
+        """What the detector saw, so the desk can explain its own silence."""
+        summary = getattr(self.technical, "summary", None)
+        base: dict[str, Any] = summary() if callable(summary) else {}
+        base.update(
+            {
+                "grok_calls": self.consults,
+                "filter_holds": self.filter_holds,
+                "budget_skips": self.budget_skips,
+                "warmup_holds": self.http_skipped_hold,
+            }
+        )
+        return base
 
     def _grok_usable(self) -> bool:
         analyst = self.analyst
@@ -159,12 +198,36 @@ class DeterministicFirstSource:
             self.http_skipped_hold += 1
             return PaperAction.HOLD
 
-        det = self.technical.decide(index, series, analysis)
+        account = self.account_fn() or {}
+        has_position = any(
+            str(pos.get("symbol")) == series.symbol
+            for pos in (account.get("positions") or [])
+            if isinstance(pos, dict)
+        )
+
+        signal = self._signal_for(index, series, has_position=has_position)
+        self.latest_signal = signal
+        det = signal.action
         det_name = _action_name(det)
         if det == PaperAction.HOLD or det_name == "HOLD":
             self.filter_holds += 1
             if self.budget is not None:
                 self.budget.filter_holds += 1
+            # Record *why*. A silent counter cannot distinguish "the market
+            # offered nothing" from "the detector is broken", which is the
+            # ambiguity that let a desk sit idle for days without anyone being
+            # able to tell which had happened.
+            self._record(
+                index,
+                series,
+                analysis,
+                action="HOLD",
+                reasoning=signal.reason,
+                model=getattr(self.technical, "name", "deterministic"),
+                source="filter",
+                rejection=signal.rejection,
+                features=signal.features,
+            )
             return PaperAction.HOLD
 
         if not self._grok_usable():
@@ -173,8 +236,12 @@ class DeterministicFirstSource:
                 series,
                 analysis,
                 action=det_name,
-                reasoning="Deterministic SMA 10/20 opportunity. Grok not connected; using the filter only.",
-                model="sma-10-20",
+                reasoning=(
+                    f"Deterministic candidate: {signal.reason} "
+                    "Grok not connected; using the detector only."
+                ),
+                model=getattr(self.technical, "name", "deterministic"),
+                features=signal.features,
                 source="deterministic",
             )
             return det
@@ -189,13 +256,13 @@ class DeterministicFirstSource:
                     analysis,
                     action=det_name,
                     reasoning=reason,
-                    model="sma-10-20",
+                    model=getattr(self.technical, "name", "deterministic"),
                     source="deterministic-budget",
+                    features=signal.features,
                     failure="budget",
                 )
                 return det
 
-        account = self.account_fn() or {}
         snapshot = MarketSnapshot(
             as_of=analysis.as_of if analysis else series.candles[-1].timestamp,
             bars=tuple(),
@@ -203,11 +270,22 @@ class DeterministicFirstSource:
             timeframe=series.timeframe,
             series=(series,),
         )
+        # Grok is being asked to challenge a specific, already-priced candidate,
+        # so it gets the candidate: the direction, the indicators that produced
+        # it, and what the trade costs. Asking "what do you think of BTC" and
+        # acting on the answer would be a different and much worse system.
+        candidate = {
+            "direction": det_name,
+            "detector": getattr(self.technical, "name", "deterministic"),
+            "reason": signal.reason,
+            "features": dict(signal.features),
+        }
         proposed = self.analyst.propose(  # type: ignore[union-attr]
             snapshot,
             analysis,
             account=account,
             positions=list(account.get("positions") or []),
+            candidate=candidate,
         )
         self.consults += 1
         grok_name = _action_name(proposed.decision.action)
@@ -283,6 +361,8 @@ class DeterministicFirstSource:
         validated: bool = False,
         network: bool = False,
         confidence: Any = None,
+        rejection: Optional[str] = None,
+        features: Optional[dict[str, Any]] = None,
     ) -> None:
         analysis_bars = getattr(analysis, "bar_count", None) if analysis is not None else None
         self.decisions.append(
@@ -299,6 +379,9 @@ class DeterministicFirstSource:
                 "fixture": False,
                 "network": network,
                 "failure": failure,
+                #: The named reason the desk declined, when it declined.
+                "rejection": rejection,
+                "features": dict(features or {}),
                 "timestamp": series.candles[index].timestamp,
             }
         )

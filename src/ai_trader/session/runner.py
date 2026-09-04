@@ -504,6 +504,23 @@ class PaperSession:
         }
         return payload
 
+    def _signal_summary(self) -> dict[str, Any]:
+        """What the detector saw this session, by named reason.
+
+        Answers the question that took days to answer by hand: is the desk
+        quiet because the market offered nothing, or because a gate is
+        rejecting everything? A single reason accounting for every bar is the
+        signature of the second.
+        """
+        source = self.source
+        summary = getattr(source, "signal_summary", None)
+        if callable(summary):
+            try:
+                return summary()
+            except Exception:  # noqa: BLE001 — reporting must never break a run
+                return {}
+        return {}
+
     def _public(self, report: dict[str, Any], series: CandleSeries) -> dict[str, Any]:
         account = report.get("account") or {}
         positions = report.get("positions") or []
@@ -535,6 +552,9 @@ class PaperSession:
             "ai_decisions": decisions,
             "failures": failures,
             "timeouts": timeouts,
+            # Why the desk did nothing, counted by reason. Without this, an
+            # idle desk and a broken detector look identical from outside.
+            "signal": self._signal_summary(),
             "data_error": None,
             "data_failure": None,
             "config": self.config.public(),

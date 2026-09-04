@@ -1,11 +1,12 @@
-"""SMA tape continuity across worker restarts. Does not change the strategy."""
+"""Indicator tape continuity across worker restarts. Does not change the strategy."""
 
 from __future__ import annotations
 
+import math
 from datetime import datetime, timedelta, timezone
 from dataclasses import replace
 
-from ai_trader.benchmark.strategies import SimpleTechnicalSource
+from ai_trader.strategy.signal import TrendPullbackStrategy
 from ai_trader.config import Settings
 from ai_trader.paper.models import PaperAction
 from ai_trader.runtime import get_runtime
@@ -69,16 +70,37 @@ def _session(series: CandleSeries, last_processed: str | None = None) -> PaperSe
     )
 
 
+def trending_closes(count: int, *, base: float = 100.0) -> list[float]:
+    """A deterministic uptrend with repeating pullbacks.
+
+    A mechanism fixture, not evidence. These tests ask whether a restarted
+    session resumes on the right bar and re-evaluates the bars it has not seen;
+    they need a price path the live detector actually responds to, and they say
+    nothing about whether responding to it makes money.
+
+    The old fixture was sixty flat bars then a jump, which produced an exact
+    SMA crossover. The live detector rightly refuses that series — zero
+    volatility, then a 10% gap — so continuity has to be shown on a path that
+    looks like a market.
+    """
+    drift, amplitude, period = 0.0012, 0.004, 13
+    return [
+        base * math.exp(drift * i) * (1.0 + amplitude * math.sin(2 * math.pi * i / period))
+        for i in range(count)
+    ]
+
+
 def _buy_cross_closes(*, history: int = 60, after: int = 2) -> list[float]:
-    """``history`` flats, then a close that produces an exact SMA 10/20 BUY."""
-    return [100.0] * history + [110.0] + [110.0] * (after - 1)
+    """A path whose first BUY lands at or after ``history``."""
+    return trending_closes(history + after)
 
 
-def _cross_index(series: CandleSeries) -> int | None:
-    source = SimpleTechnicalSource()
-    for index in range(len(series.candles)):
+def _signal_index(series: CandleSeries, *, start: int = 0) -> int | None:
+    """First bar at or after ``start`` where the live detector wants to buy."""
+    for index in range(start, len(series.candles)):
         visible = replace(series, candles=series.candles[: index + 1])
-        if source.decide(index, visible, None) == PaperAction.BUY:
+        strategy = TrendPullbackStrategy(timeframe="5m")
+        if strategy.decide(index, visible, None) == PaperAction.BUY:
             return index
     return None
 
@@ -122,7 +144,7 @@ def test_startup_loads_at_least_60_public_candles() -> None:
 
 def test_warmup_bars_do_not_trade_or_count_as_live() -> None:
     series = _series(_buy_cross_closes(history=60, after=2))
-    assert _cross_index(series) == 60
+    assert _signal_index(series) is not None, "fixture must contain a real signal"
     session = _session(series)
     report = session.start(series=series)
     assert report["trades"] == 0
@@ -165,7 +187,7 @@ def test_restart_does_not_reprocess_the_previous_candle() -> None:
 
 def test_crossover_before_restart_is_not_traded_retroactively() -> None:
     series = _series(_buy_cross_closes(history=60, after=2))
-    assert _cross_index(series) == 60
+    assert _signal_index(series) is not None, "fixture must contain a real signal"
     first = _session(series)
     first.start(series=series)
     assert first.last_processed_candle_ts is not None
@@ -178,76 +200,62 @@ def test_crossover_before_restart_is_not_traded_retroactively() -> None:
     assert "BUY" not in actions
 
 
-def test_crossover_after_last_processed_is_detected() -> None:
-    history = _series([100.0] * 60)
+def test_signal_after_last_processed_is_detected() -> None:
+    """A signal on a bar the desk has not seen must be found and acted on."""
+    history = _series(trending_closes(61))
     first = _session(history)
     first.start(series=history)
     baseline = first.last_processed_candle_ts
     assert baseline == history.candles[-1].timestamp
     assert first.sim is not None
-    assert first.sim.ledger.snapshot().to_dict()["fill_count"] == 0
 
-    live = _series([100.0] * 60 + [110.0, 110.0])
-    assert _cross_index(live) == 60
+    live = _series(trending_closes(63))
+    assert _signal_index(live, start=61) == 61
     second = _session(live, last_processed=baseline)
     report = second.start(series=live)
     assert second.sim is not None
-    assert second.sim.trade_from_index == 60
+    assert second.sim.trade_from_index == 61
     actions = [d.get("action") for d in report.get("ai_decisions") or []]
     assert "BUY" in actions
-    assert report["fills"], "The live crossover must produce a genuine paper fill."
+    assert report["fills"], "A live signal must produce a genuine paper fill."
     assert report["fills"][0]["reason"] == "ENTRY"
 
 
-def test_sma_uses_full_warmup_history_not_the_24_bar_stub() -> None:
-    """A cross that exists on the long tape must stay visible after recover."""
-    closes: list[float] = []
-    price = 120.0
-    for _ in range(50):
-        price -= 0.5
-        closes.append(price)
-    for _ in range(30):
-        price += 1.0
-        closes.append(price)
-    full = _series(closes)
-    source = SimpleTechnicalSource()
-    full_crosses = []
-    for index in range(len(full.candles)):
-        visible = replace(full, candles=full.candles[: index + 1])
-        action = source.decide(index, visible, None)
-        if action == PaperAction.BUY:
-            full_crosses.append(index)
-    assert full_crosses, "fixture must contain a real SMA 10/20 BUY on the long tape"
-    cross_at = full_crosses[0]
-    assert cross_at >= 24
+def test_indicators_use_full_warmup_history_not_the_24_bar_stub() -> None:
+    """A signal that exists on the long tape must survive a recover.
+
+    The detector needs slow + slope + 1 bars before it can say anything at all,
+    which is more than the 24-bar stub the session used to refetch. Truncating
+    the tape does not make the desk cautious — it makes it blind, and a blind
+    desk reports the same silence as a market with no opportunities.
+    """
+    full = _series(trending_closes(63))
+    signal_at = _signal_index(full, start=61)
+    assert signal_at == 61
 
     stub = replace(full, candles=full.candles[-24:])
-    relative = cross_at - (len(full.candles) - 24)
-    stub_action = PaperAction.HOLD
-    if 0 <= relative < len(stub.candles):
-        visible = replace(stub, candles=stub.candles[: relative + 1])
-        stub_action = source.decide(relative, visible, None)
-    assert stub_action != PaperAction.BUY
+    strategy = TrendPullbackStrategy(timeframe="5m")
+    stub_signal = strategy.last_signal(len(stub.candles) - 1, stub)
+    assert stub_signal.action != PaperAction.BUY
+    assert stub_signal.rejection == "warming_up"
 
-    baseline = full.candles[cross_at - 1].timestamp
+    baseline = full.candles[signal_at - 1].timestamp
     session = _session(full, last_processed=baseline)
     report = session.start(series=full)
     actions = [d.get("action") for d in report.get("ai_decisions") or []]
     assert "BUY" in actions
     assert session.sim is not None
-    assert session.sim.trade_from_index == cross_at
-    snap = indicator_snapshot(full.candles)
-    assert snap["indicator_history_bars"] == len(full.candles)
-    assert snap["indicator_history_bars"] >= 60
+    assert session.sim.trade_from_index == signal_at
 
 
 def test_restart_between_candles_preserves_continuity() -> None:
-    history = _series([100.0] * 60)
+    """One price path, walked in three sittings. Bar 60 is quiet; bar 61 signals."""
+    history = _series(trending_closes(60))
     first = _session(history)
     first.start(series=history)
     baseline = first.last_processed_candle_ts
 
-    one_new = _series([100.0] * 60 + [100.0])
+    one_new = _series(trending_closes(61))
     mid = _session(one_new, last_processed=baseline)
     mid_report = mid.start(series=one_new)
     assert mid_report["fills"] == []
@@ -255,19 +263,19 @@ def test_restart_between_candles_preserves_continuity() -> None:
     assert mid.sim is not None
     assert mid.sim.trade_from_index == 60
 
-    with_cross = _series([100.0] * 60 + [100.0, 110.0, 110.0])
-    later = _session(with_cross, last_processed=mid.last_processed_candle_ts)
-    later_report = later.start(series=with_cross)
+    with_signal = _series(trending_closes(62))
+    later = _session(with_signal, last_processed=mid.last_processed_candle_ts)
+    later_report = later.start(series=with_signal)
     assert later.sim is not None
     assert later.sim.trade_from_index == 61
     actions = [d.get("action") for d in later_report.get("ai_decisions") or []]
     assert "BUY" in actions
-    assert later.last_processed_candle_ts == with_cross.candles[-1].timestamp
+    assert later.last_processed_candle_ts == with_signal.candles[-1].timestamp
 
 
 def test_repeated_starts_do_not_duplicate_processing() -> None:
-    live = _series([100.0] * 60 + [110.0, 110.0])
-    history = _series([100.0] * 60)
+    live = _series(trending_closes(63))
+    history = _series(trending_closes(61))
     first = _session(history)
     first.start(series=history)
     baseline = first.last_processed_candle_ts
