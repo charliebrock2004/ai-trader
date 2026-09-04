@@ -283,8 +283,8 @@ class RecordStore:
                 proposed_action, policy_action, policy_reason, survival_state, risk_multiplier,
                 risk_approved, risk_reason, risk_json,
                 final_action, executed, order_ref, stage, equity_before, cash_before,
-                base_currency, notes
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                base_currency, notes, rejection
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 payload.get("created_at") or self._now(),
@@ -326,6 +326,7 @@ class RecordStore:
                 payload.get("cash_before"),
                 payload.get("base_currency", "GBP"),
                 payload.get("notes"),
+                payload.get("rejection"),
             ),
         )
         for item in inputs or []:

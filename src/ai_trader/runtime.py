@@ -164,6 +164,9 @@ class Runtime:
                     "base_currency": self.settings.base_currency,
                     "cycle_id": f"spot:{payload.get('symbol')}:{payload.get('bar')}",
                     "risk_approved": bool(payload.get("approved")),
+                    #: Named rejection key, so "why no trade" is a GROUP BY
+                    #: rather than a text search over free-form reasons.
+                    "rejection": payload.get("rejection"),
                 }
             )
             if equity is not None:

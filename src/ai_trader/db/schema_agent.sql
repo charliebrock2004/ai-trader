@@ -192,6 +192,9 @@ CREATE TABLE IF NOT EXISTS decisions (
     cash_before REAL,
     base_currency TEXT,
     notes TEXT,
+    -- Named reason the desk declined, from the detector's published
+    -- vocabulary. Countable, unlike the free text in notes.
+    rejection TEXT,
     FOREIGN KEY (market_id) REFERENCES markets(id),
     FOREIGN KEY (opportunity_id) REFERENCES opportunities(id)
 );

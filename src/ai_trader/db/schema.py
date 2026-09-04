@@ -215,10 +215,37 @@ def agent_schema_sql() -> str:
     return AGENT_SCHEMA_PATH.read_text(encoding="utf-8")
 
 
+#: Columns added after a database may already exist in the wild. ``CREATE TABLE
+#: IF NOT EXISTS`` will not add a column to a table that is already there, so
+#: every one of these has to be applied by hand on boot. Adding a column is
+#: safe and idempotent; nothing here ever drops or rewrites data.
+MIGRATIONS: tuple[tuple[str, str, str], ...] = (
+    ("decisions", "rejection", "ALTER TABLE decisions ADD COLUMN rejection TEXT"),
+)
+
+
+def apply_migrations(conn: sqlite3.Connection) -> list[str]:
+    """Bring an existing database up to the current schema. Returns what ran."""
+    applied: list[str] = []
+    for table, column, statement in MIGRATIONS:
+        try:
+            columns = {row[1] for row in conn.execute(f'PRAGMA table_info("{table}")')}
+        except sqlite3.DatabaseError:
+            continue
+        if not columns or column in columns:
+            continue
+        conn.execute(statement)
+        applied.append(f"{table}.{column}")
+    if applied:
+        conn.commit()
+    return applied
+
+
 def initialise_database(path: Path) -> sqlite3.Connection:
     conn = connect(path)
     conn.executescript(SCHEMA_SQL)
     conn.executescript(agent_schema_sql())
+    apply_migrations(conn)
     conn.commit()
     return conn
 

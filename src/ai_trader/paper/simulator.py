@@ -32,6 +32,19 @@ from ai_trader.risk.engine import RiskEngine
 from ai_trader.types import Candle, CandleSeries
 
 
+def _source_reason(source: Any) -> str:
+    """The detector's stated reason for the bar just evaluated."""
+    signal = getattr(source, "latest_signal", None)
+    reason = getattr(signal, "reason", None)
+    return str(reason) if reason else "No trade signal."
+
+
+def _source_rejection(source: Any) -> Optional[str]:
+    signal = getattr(source, "latest_signal", None)
+    key = getattr(signal, "rejection", None)
+    return str(key) if key else None
+
+
 class PaperSimulator:
     def __init__(
         self,
@@ -206,6 +219,9 @@ class PaperSimulator:
                 action = PaperAction(proposed)
 
         if action in {PaperAction.HOLD, "HOLD"}:
+            # Record the detector's own reason, not a generic placeholder. The
+            # audit trail is where "why did it not trade" gets answered months
+            # later, and "No trade signal." answers nothing.
             self._record_decision(
                 index,
                 candle,
@@ -213,7 +229,8 @@ class PaperSimulator:
                 final="HOLD",
                 stage="signal",
                 approved=False,
-                reason=policy_note or "No trade signal.",
+                reason=policy_note or _source_reason(source),
+                rejection=_source_rejection(source),
             )
             return
         open_pos = self.ledger.open_positions()
@@ -363,6 +380,7 @@ class PaperSimulator:
         reason: str,
         assessment: Optional[dict[str, Any]] = None,
         order_id: Optional[str] = None,
+        rejection: Optional[str] = None,
     ) -> None:
         """Emit one decision record. HOLDs and rejections are recorded too."""
         if self.on_decision is None:
@@ -380,6 +398,9 @@ class PaperSimulator:
                 "stage": stage,
                 "approved": approved,
                 "reason": reason,
+                #: Named rejection key, when the detector declined. Countable,
+                #: unlike free text.
+                "rejection": rejection,
                 "assessment": assessment,
                 "order_id": order_id,
                 "equity": self.ledger.equity(),

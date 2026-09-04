@@ -623,6 +623,9 @@ class PaperSession:
             "ai_decisions": list(self.source.decisions) if self.source else [],
             "failures": [],
             "timeouts": [],
+            # Present on the live path too, not only in the finished report:
+            # the question "why isn't it trading" is asked of a *running* desk.
+            "signal": self._signal_summary(),
             "data_error": None,
             "data_failure": None,
             "config": self.config.public(),
