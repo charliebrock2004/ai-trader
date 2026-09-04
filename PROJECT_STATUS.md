@@ -11,9 +11,9 @@
 | Live trading | `LIVE_TRADING_ALLOWED = False`. No live path exists. |
 | Engine | One Python `DeskWorker`. The browser is control/monitoring only. |
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
-| Hosting | Frontend on Vercel, persistent worker on Render with a disk at `/var/data` |
-| Current strategy | BTC-USD public 5m trend-pullback (operational fills) + BLS CPI event family (HOLDs until a venue book exists) |
-| Tests | 482 Python tests passing |
+| Hosting | Frontend on Vercel, worker on Render free (sleeps; ledger checkpointed to GitHub) |
+| Current strategy | BTC-USD public 5m multi-setup scored detector (long only) + BLS CPI event family (HOLDs until a venue book exists) |
+| Tests | 528 Python tests passing |
 
 If this file disagrees with the code, the code wins. Update it after every
 significant change, and never mark something complete that is not tested.
@@ -140,55 +140,109 @@ market.
 
 ## The strategy the desk actually runs
 
-`ai_trader/strategy/signal.py`. Long-only, close-only, on 5-minute BTC-USD.
+`ai_trader/strategy/signal.py`. Long-only, on 5-minute BTC-USD.
 
-A trade needs a **regime** and a **trigger**, and they are different kinds of
-thing:
+**Regime** is classified first and named on the dashboard: TREND_UP,
+TREND_DOWN or RANGE, from the separation between EMA20 and EMA50 measured in
+ATR, plus the slope of the slow average.
 
-| | Condition | Why |
+**Setups** are the ways a long entry can legitimately arise. Several are
+checked on every bar; the best-scoring one is the one considered.
+
+| Setup | Regime | Trigger |
 |---|---|---|
-| Regime | SMA10 above SMA20 | There is an uptrend to continue |
-| Regime | Gap between them ≥ 0.10% | Entangled averages are noise, not a trend |
-| Regime | SMA20 rising over 5 bars | The trend is confirmed, not a crossing artefact |
-| Quality | Volatility inside 0.25x–4x normal for the timeframe | Too quiet and costs dominate; too wild and a 2% stop is inside the noise |
-| Edge | Plausible move over the horizon ≥ 5x round-trip cost | Below this only the exchange is reliably paid |
-| Trigger | Price within 1.5% of SMA10 | Do not chase an extended leg |
-| Trigger | Pulled back to within 0.4% of SMA10 in the last 5 bars | Buy the pullback, not the top |
-| Trigger | Latest close up and above SMA10 | The pullback has turned |
-| Exit | SMA10 below SMA20 | The regime is over |
+| `PULLBACK_CONTINUATION` | TREND_UP | Price came back within 0.6 ATR of EMA20 and turned up |
+| `MOMENTUM_CONTINUATION` | TREND_UP | Two consecutive higher closes, holding above EMA20 |
+| `BREAKOUT` | TREND_UP, RANGE | New 20-bar high on a bar that expanded ≥ 1.2 ATR |
+| `RANGE_BOUNCE` | RANGE | Bottom 30% of the range, turning up, RSI ≥ 25 |
 
-The predecessor required an exact SMA 10/20 **crossover**, which is a point
-event: true on one bar per trend and false on every other. Miss that bar —
-because the host slept, restarted, or refetched its tape — and the whole trend
-that followed was invisible. That is why the desk sat at zero trades with a
-healthy feed and a live Grok key.
+**Opportunity score** blends five independent components — trend, momentum,
+entry location, volatility fitness and structure — weighted per setup. A setup
+that merely matches is not enough; it has to be a good instance of itself.
+Selectivity lives in one threshold (`STRATEGY_SCORE_THRESHOLD`, default 0.68),
+so it can be measured and tuned rather than hidden in a conjunction of filters.
 
-This is not a looser filter. A crossover asks nothing about separation, slope,
-extension, volatility or costs, and this asks all five; on real BTC history it
-produces slightly *fewer* candidates. It just asks a question that can be true
-more than once.
+**Risk geometry** is ATR-based: stop 2.0 ATR, target 5.0 ATR, and an unresolved
+position is closed after 4 hours so it stops occupying the desk's only position
+slot. The strategy *proposes* a stop; the risk engine clamps it into a band and
+remains the only thing that sets it. Position size is still capped by the same
+£2 risk budget and 25% concentration limit as before.
 
-Volatility bounds and the holding horizon are derived from the bar duration by
-square-root-of-time scaling, not hard-coded. Hard-coding them makes the strategy
-silently different per timeframe — bounds sized for daily bars reject nearly
-every 5-minute bar, which reproduces the silent desk exactly.
+### Why the geometry is what it is
 
-**No edge is claimed.** This is a textbook trend-continuation strategy on a
-liquid instrument. Its job is to produce genuine, explainable candidates so the
-recorded paper trades can settle the question either way.
+One ATR on 5-minute BTC is about 0.22% and a round trip costs about 0.20%
+(spread and slippage, both ways), so costs eat roughly a whole ATR per trade.
+This is the arithmetic that decides whether a strategy can work at all:
 
-### Why it did not trade
+| stop / target | reward | risk | net R:R | break-even win rate |
+|---|---|---|---|---|
+| 1.5 / 2.5 ATR (previous) | 0.55% | 0.33% | 0.66 | **60.2%** |
+| 2.0 / 5.0 ATR (current) | 1.10% | 0.44% | 1.41 | **41.6%** |
 
-Every hold names itself from a published vocabulary and is stored in
-`decisions.rejection`, so silence is a query rather than a code review:
+The previous geometry needed a 60% win rate merely to break even. That is not a
+strategy, and no amount of signal quality rescues it.
+
+### Why the old detector found nothing
+
+It required an exact SMA 10/20 crossover: a point event, true on one bar per
+trend. Every hold the live worker recorded was the regime gate, so it never
+reached the entry logic. A regime is a *state* and stays true; a trigger inside
+it can recur. That is the whole change.
+
+### Measured behaviour
+
+Trade frequency, on a seeded 5-minute path with BTC-like volatility, through
+the real pipeline (detector → guardian → risk engine → simulator → ledger):
+**4.6 trades/day**, range 3.9–5.2 across eight seeds.
+
+Adverse conditions, 10 days each, four seeds:
+
+| Market | Trades | P&L | Max DD | Buy-and-hold |
+|---|---|---|---|---|
+| Strong downtrend | 15 | −£1.80 | 2.4% | −£59 |
+| Crash then chop | 1 | −£0.21 | 0.7% | −£90 |
+| Very quiet | 0.2 | −£0.04 | 0.2% | −£1 |
+| Choppy flat | 42 | −£2.36 | 3.9% | −£5 |
+| High volatility | 49 | −£2.75 | 6.7% | −£13 |
+| Steady uptrend | 56 | +£7.94 | 1.6% | +£120 |
+
+It stands aside in falling markets and preserves capital; it churns in chop; it
+badly underperforms simply holding in a trend, which is normal for a
+stop-and-target system.
+
+### No edge is claimed
+
+On the only real market data available here — 1200 daily BTC closes, split
+60/40 — the strategy **loses money**:
+
+| Window | Trades | P&L | Win rate |
+|---|---|---|---|
+| In-sample (first 60%) | 18 | −£4.85 | 27.8% |
+| Out-of-sample (last 40%) | 9 | −£0.26 | 33.3% |
+| Full period | 29 | −£6.16 | 27.6% |
+
+A 27.6% win rate against a 41.6% break-even is negative expectancy. Two caveats
+cut in opposite directions and neither rescues it: the fixture is daily rather
+than 5-minute, and it is close-only, so the simulator can only resolve a level
+on a close through it — which penalises the far target more than the near stop.
+The test cannot settle the question. The live paper record is what will.
+
+The strategy is shipped because it produces genuine, explainable candidates at a
+workable rate, not because it is known to work.
+
+### Why the desk did not trade
+
+Every hold names itself and is stored in `decisions.rejection`:
 
 ```sql
 SELECT rejection, COUNT(*) FROM decisions WHERE kind='spot' GROUP BY 1;
 ```
 
-A spread of reasons means the market offered nothing. One reason accounting for
-almost everything means a gate is mis-set — which is how the timeframe-scaling
-bug above was caught before it shipped.
+Detector reasons (`downtrend`, `no_setup`, `score_too_low`, `overbought`,
+`too_quiet`, `too_wild`, `poor_reward`, `already_long`) and downstream ones
+(`policy_downgraded`, `risk_rejected`) share the column, so the whole pipeline
+is visible in one query. A spread of reasons means the market offered nothing;
+one reason accounting for almost everything means a gate is mis-set.
 
 ---
 
@@ -261,7 +315,15 @@ splits by time, but there is no historical corpus loaded.
    GitHub `worker-endpoint/snapshot.json` on boot, copied there by the Actions
    job. Until the first checkpoint after a deploy, a restart would start a
    fresh £100 book and the UI says so.
-8. **Page access is the frontend's only gate by default.** Anyone who can load
+8. **The desk cannot go short.** The risk engine refuses shorts outright, and
+   that is a safety property: a short has unbounded loss and needs borrow and
+   margin accounting this ledger does not have. In a downtrend the desk reports
+   TREND_DOWN and stands aside, which is roughly a third of the time. Fixing
+   this means building short accounting, not relaxing the risk engine.
+9. **It churns in sideways markets.** Trend-following pays costs in chop. The
+   RANGE_BOUNCE setup and the breakout-expansion test reduce it; they do not
+   remove it.
+10. **Page access is the frontend's only gate by default.** Anyone who can load
    the Vercel URL can press Start. The System page states this. Live trading
    is still impossible.
 
