@@ -87,6 +87,11 @@ SETUP_RANGE_BOUNCE = "RANGE_BOUNCE"
 #: and counted on the dashboard, so silence is a query rather than a code read.
 REJECTIONS: dict[str, str] = {
     "warming_up": "Not enough candles yet to compute the indicators.",
+    #: Distinct from ``warming_up``: the indicators may be ready, but the
+    #: session has not finished the warm-up window it was started with. Without
+    #: its own key these bars land in the funnel with no reason at all, which is
+    #: the generic bucket this work exists to remove.
+    "session_warmup": "Inside the session's warm-up window. Not trading yet.",
     "downtrend": "Market is in a downtrend and this desk cannot go short.",
     "no_setup": "No recognised setup is present on this candle.",
     "score_too_low": "A setup is present but its quality score is below the threshold.",
@@ -134,17 +139,33 @@ class SignalConfig:
     #: Maximum distance above the fast average at entry, in ATR. Beyond this the
     #: move has already happened and the stop sits an unreasonable way off.
     max_extension_atr: float = 1.5
-    #: A pullback is price coming back within this many ATR of the fast average.
-    pullback_atr: float = 0.6
+    #: A pullback is price coming back within this many ATR of the fast
+    #: average. 0.6 ATR was tighter than the word "pullback" means — inside a
+    #: trend price commonly holds a full ATR above the mean without the pullback
+    #: having failed.
+    pullback_atr: float = 1.0
+    #: How far back to look for the pullback low.
+    pullback_lookback: int = 5
+    #: Consecutive higher closes that count as momentum. Three in a row is a
+    #: 1-in-8 coincidence before any other condition is applied; two is a real
+    #: sequence, and the score still has to rate the instance.
+    momentum_bars: int = 2
     #: RSI above this is stretched. Not a short signal — a reason not to buy.
     overbought_rsi: float = 78.0
-    #: A range bounce needs price in the bottom of the range and RSI recovering.
-    bounce_range_position: float = 0.30
+    #: A range bounce needs price in the lower part of the range and RSI
+    #: recovering. The bottom third, not the bottom 30%.
+    bounce_range_position: float = 0.35
     bounce_rsi_floor: float = 25.0
-    #: A breakout must arrive with a bar bigger than normal. Without this test
-    #: the desk buys every drift across a prior high, which in a sideways market
-    #: is the definition of a false breakout — and chop was where it churned.
-    breakout_expansion_atr: float = 1.2
+    #: A breakout must arrive on a bar bigger than a typical recent bar.
+    #:
+    #: Measured against the median recent bar range, not against ATR. ATR is the
+    #: mean *true* range and includes the gaps between bars, so it is
+    #: systematically larger than any single candle's high-to-low; requiring one
+    #: candle to be 1.2x that asked for the top ~9% of bars, and ANDed with a new
+    #: high and a confirmation it made BREAKOUT fire essentially never. The
+    #: comparison now measures what the word means: is this bar bigger than
+    #: normal?
+    breakout_expansion: float = 1.1
 
     # -- volatility band ---------------------------------------------------
     #: Multiples of the timeframe's reference volatility.
@@ -192,7 +213,7 @@ class SignalConfig:
     #: Score at or above which a setup becomes a candidate and reaches Grok.
     #: This is where selectivity lives. It is one number, it is measurable, and
     #: it can be tuned against recorded outcomes instead of by adding filters.
-    strong_score: float = 0.68
+    strong_score: float = 0.78
 
     @classmethod
     def for_timeframe(cls, timeframe: str, **overrides: Any) -> "SignalConfig":
@@ -317,6 +338,11 @@ class TrendPullbackStrategy:
         if None in (fast, slow, slow_then, band, strength) or not band:
             return None
         price = closes[-1]
+        bar_range = (highs[-1] - lows[-1]) if highs and lows else 0.0
+        recent_ranges = sorted(
+            h - l for h, l in zip(highs[-cfg.structure_window :], lows[-cfg.structure_window :])
+        )
+        typical = recent_ranges[len(recent_ranges) // 2] if recent_ranges else 0.0
         # Volatility as ATR relative to price, not the standard deviation of
         # returns. Return-stdev calls a market that rises a steady 2% a bar
         # "perfectly quiet" because the variance of a constant is zero, which
@@ -342,7 +368,20 @@ class TrendPullbackStrategy:
             ),
             "sma_fast": sma(closes, 10),
             "sma_slow": sma(closes, 20),
-            "last_bar_range": (highs[-1] - lows[-1]) if highs and lows else 0.0,
+            "bar_range": bar_range,
+            #: This bar's size against a typical recent bar. Compared to the
+            #: median rather than to ATR, because ATR includes between-bar gaps
+            #: and is not the same quantity as one candle's high-to-low.
+            "bar_range_ratio": (bar_range / typical) if typical > 0 else 0.0,
+            #: The latest bar confirms upward intent: it closed higher than the
+            #: previous bar, or it closed in the top third of its own range. A
+            #: strong close after a dip is a rejection candle and is exactly the
+            #: confirmation a pullback entry looks for; demanding a higher close
+            #: as well threw away half of every setup for no stated reason.
+            "confirmed_up": (
+                (len(closes) >= 2 and price > closes[-2])
+                or (bar_range > 0 and (price - lows[-1]) / bar_range >= 0.66)
+            ),
         }
 
     # -- regime ------------------------------------------------------------
@@ -358,43 +397,52 @@ class TrendPullbackStrategy:
 
     # -- setups ------------------------------------------------------------
     def _setups(self, m: dict[str, Any], regime: str, closes: list[float]) -> list[str]:
-        """Every named pattern present on this bar. May be empty, may be several."""
+        """Every named pattern present on this bar. May be empty, may be several.
+
+        These describe *patterns*, and the score decides whether an instance of
+        one is good enough to trade. Over-specifying the pattern here does not
+        make the desk selective, it makes it blind: the live worker recorded
+        ``no_setup`` on 76% of its tradeable bars while ``score_too_low`` never
+        fired once, which means the quality filter never got anything to judge.
+        Each condition below is the loosest statement that is still genuinely
+        the pattern it names.
+        """
         cfg = self.config
         found: list[str] = []
         price = m["price"]
         band = m["atr"]
-        turning_up = len(closes) >= 2 and price > closes[-2]
+        confirmed_up = m["confirmed_up"]
 
         if regime == REGIME_UP:
-            # Pullback: price came back toward the fast average and turned up.
-            trough = min(closes[-5:])
-            if (trough - m["ema_fast"]) / band <= cfg.pullback_atr and turning_up:
+            # Pullback: price came back toward the fast average, and the latest
+            # bar confirms the move is resuming.
+            trough = min(closes[-cfg.pullback_lookback :])
+            if (trough - m["ema_fast"]) / band <= cfg.pullback_atr and confirmed_up:
                 found.append(SETUP_PULLBACK)
-            # Momentum: two consecutive higher closes, holding above the mean.
-            if (
-                len(closes) >= 3
-                and closes[-1] > closes[-2] > closes[-3]
-                and price > m["ema_fast"]
-            ):
+            # Momentum: consecutive higher closes, holding above the mean.
+            rising = len(closes) >= cfg.momentum_bars + 1 and all(
+                closes[-i] > closes[-i - 1] for i in range(1, cfg.momentum_bars + 1)
+            )
+            if rising and price > m["ema_fast"]:
                 found.append(SETUP_MOMENTUM)
 
         if regime in (REGIME_UP, REGIME_RANGE):
-            # Breakout: a new high for the structure window, on a rising close,
-            # and on a bar that actually expanded. Drifting a tick over an old
-            # high in a quiet market is not a breakout.
+            # Breakout: a new high for the structure window, confirmed, on a bar
+            # bigger than a typical recent bar. Drifting a tick over an old high
+            # on a tiny candle is not a breakout.
             high = m["recent_high"]
-            expanded = m["last_bar_range"] >= cfg.breakout_expansion_atr * band
-            if high is not None and price > high and turning_up and expanded:
+            expanded = m["bar_range_ratio"] >= cfg.breakout_expansion
+            if high is not None and price >= high and confirmed_up and expanded:
                 found.append(SETUP_BREAKOUT)
 
         if regime == REGIME_RANGE:
-            # Bounce: near the floor of an established range, turning up, and
-            # not in freefall.
+            # Bounce: near the floor of an established range, confirmed, and not
+            # in freefall.
             position = m["range_position"]
             if (
                 position is not None
                 and position <= cfg.bounce_range_position
-                and turning_up
+                and confirmed_up
                 and m["rsi"] >= cfg.bounce_rsi_floor
             ):
                 found.append(SETUP_RANGE_BOUNCE)

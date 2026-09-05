@@ -30,6 +30,17 @@ def _safe_div(numerator: float, denominator: float) -> Optional[float]:
     return numerator / denominator
 
 
+def _funnel(store: Any) -> dict[str, Any]:
+    """Per-pipeline conversion. Reporting must never break a performance read."""
+    fn = getattr(store, "pipeline_funnel", None)
+    if not callable(fn):
+        return {}
+    try:
+        return fn()
+    except Exception:  # noqa: BLE001
+        return {}
+
+
 def compute_performance(
     store: Any,
     *,
@@ -110,6 +121,11 @@ def compute_performance(
         "opportunities_executed": executed,
         "opportunities_rejected": considered - executed,
         "conversion_rate": round(conversion, 6) if conversion is not None else None,
+        # The same numbers split by pipeline and by the stage that stopped each
+        # decision. Without this the spot desk's conversion is buried under the
+        # CPI pipeline's thousands of structural HOLDs, and the headline reads
+        # 0.0% for reasons that have nothing to do with the spot strategy.
+        "pipelines": _funnel(store),
         "average_predicted_edge": (
             round(sum(predicted_edges) / len(predicted_edges), 6) if predicted_edges else None
         ),

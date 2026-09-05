@@ -401,6 +401,62 @@ class RecordStore:
         counts["NOT_EXECUTED"] = int(rejected["n"]) if rejected else 0
         return counts
 
+    def pipeline_funnel(self) -> dict[str, Any]:
+        """Decision counts split by pipeline, and by the stage that stopped them.
+
+        The headline "opportunities considered" counted every decision in the
+        database, which meant the CPI prediction-market pipeline — thousands of
+        contracts that HOLD because no venue book is attached — buried the spot
+        desk's real numbers and reported a 0.0% conversion that had nothing to
+        do with the spot strategy. The two pipelines answer different questions
+        and have to be counted apart.
+        """
+        out: dict[str, Any] = {}
+        kinds = [
+            str(r["kind"])
+            for r in self._query("SELECT DISTINCT kind FROM decisions WHERE kind IS NOT NULL")
+        ]
+        for kind in kinds:
+            considered = self._one(
+                "SELECT COUNT(*) AS n FROM decisions WHERE kind=?", (kind,)
+            )
+            executed = self._one(
+                "SELECT COUNT(*) AS n FROM decisions WHERE kind=? AND executed=1", (kind,)
+            )
+            total = int(considered["n"]) if considered else 0
+            done = int(executed["n"]) if executed else 0
+            # A NULL rejection is not "accepted": the spot desk leaves it NULL
+            # only when a candidate got through, while the event pipeline never
+            # populates the column at all. Labelling both the same way would
+            # report 4,380 CPI holds as accepted opportunities.
+            rejections: dict[str, int] = {}
+            for r in self._query(
+                "SELECT rejection, executed, COUNT(*) AS n FROM decisions WHERE kind=? "
+                "GROUP BY rejection, executed ORDER BY n DESC",
+                (kind,),
+            ):
+                key = str(r["rejection"] or "")
+                if not key:
+                    key = "executed" if int(r["executed"] or 0) else "no_reason_recorded"
+                rejections[key] = rejections.get(key, 0) + int(r["n"])
+            actions = {
+                str(r["final_action"]): int(r["n"])
+                for r in self._query(
+                    "SELECT final_action, COUNT(*) AS n FROM decisions WHERE kind=? "
+                    "GROUP BY final_action",
+                    (kind,),
+                )
+            }
+            out[kind] = {
+                "considered": total,
+                "executed": done,
+                "rejected": total - done,
+                "conversion_rate": round(done / total, 6) if total else None,
+                "by_rejection": rejections,
+                "by_action": actions,
+            }
+        return out
+
     # -- outcomes ---------------------------------------------------------
     def record_outcome(
         self,

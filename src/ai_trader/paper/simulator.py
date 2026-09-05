@@ -45,6 +45,30 @@ def _source_rejection(source: Any) -> Optional[str]:
     return str(key) if key else None
 
 
+def _source_context(source: Any) -> dict[str, Any]:
+    """Regime, setup, score and the indicators behind the latest decision.
+
+    Stored with the decision so a rejection can be diagnosed from the database
+    months later. Without it the audit trail says "no_setup" and nothing about
+    the market that produced it, which makes tuning guesswork.
+    """
+    signal = getattr(source, "latest_signal", None)
+    if signal is None:
+        return {}
+    features = getattr(signal, "features", None) or {}
+    keep = (
+        "price", "ema_fast", "ema_slow", "atr", "rsi", "volatility_per_bar",
+        "separation_atr", "extension_atr", "range_position", "bar_range_ratio",
+    )
+    return {
+        "regime": getattr(signal, "regime", None),
+        "setup": getattr(signal, "setup", None),
+        "score": getattr(signal, "score", None),
+        "components": dict(getattr(signal, "components", None) or {}),
+        "indicators": {k: features[k] for k in keep if k in features},
+    }
+
+
 def _source_stop_hint(source: Any) -> Optional[float]:
     """The stop distance the strategy derived from current volatility.
 
@@ -288,6 +312,7 @@ class PaperSimulator:
                 approved=False,
                 reason=policy_note or _source_reason(source),
                 rejection=_source_rejection(source),
+                context=_source_context(source),
             )
             return
         open_pos = self.ledger.open_positions()
@@ -396,6 +421,7 @@ class PaperSimulator:
                 reason=reject_reason,
                 assessment=assessment.to_dict(),
                 rejection="risk_rejected",
+                context=_source_context(source),
             )
             return
         order = PaperOrder(
@@ -426,6 +452,7 @@ class PaperSimulator:
             assessment=assessment.to_dict(),
             order_id=order.order_id,
             rejection=None,
+            context=_source_context(source),
         )
 
     def _record_decision(
@@ -441,6 +468,7 @@ class PaperSimulator:
         assessment: Optional[dict[str, Any]] = None,
         order_id: Optional[str] = None,
         rejection: Optional[str] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> None:
         """Emit one decision record. HOLDs and rejections are recorded too."""
         if self.on_decision is None:
@@ -461,6 +489,9 @@ class PaperSimulator:
                 #: Named rejection key, when the detector declined. Countable,
                 #: unlike free text.
                 "rejection": rejection,
+                #: Regime, setup, score and indicators at the moment of the
+                #: decision, so a rejection is diagnosable from the record.
+                "context": dict(context or {}),
                 "assessment": assessment,
                 "order_id": order_id,
                 "equity": self.ledger.equity(),

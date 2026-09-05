@@ -208,6 +208,17 @@ class DeterministicFirstSource:
             return PaperAction.HOLD
         if index < self.warmup:
             self.http_skipped_hold += 1
+            # Name the warm-up window in the audit trail. These bars are a HOLD
+            # with a real reason, and leaving latest_signal untouched filed them
+            # under no reason at all — a generic bucket in the very funnel that
+            # exists to explain where opportunities go.
+            from ai_trader.strategy.signal import REJECTIONS, Signal
+
+            self.latest_signal = Signal(
+                action=PaperAction.HOLD,
+                rejection="session_warmup",
+                reason=REJECTIONS["session_warmup"],
+            )
             return PaperAction.HOLD
 
         account = self.account_fn() or {}

@@ -856,3 +856,9 @@ a.desk-chip {
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
+
+/* Per-pipeline funnel. Two pipelines share one database and answer different
+   questions; showing them merged is how a 0.0% conversion got attributed to
+   the wrong strategy. */
+.desk-funnel { margin-bottom: 1.25rem; }
+.desk-funnel:last-child { margin-bottom: 0; }

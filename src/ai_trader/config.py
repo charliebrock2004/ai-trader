@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     #: as one number that can be tuned against recorded outcomes instead of by
     #: bolting on another filter. Raising it trades less; lowering it trades
     #: more. It can never bypass the guardian or the risk engine.
-    strategy_score_threshold: float = 0.68
+    strategy_score_threshold: float = 0.78
 
     # -- agent economics ---------------------------------------------------
     #: The experiment's opening stake, in the base accounting currency.

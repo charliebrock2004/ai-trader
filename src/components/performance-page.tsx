@@ -103,6 +103,8 @@ export function PerformancePage() {
         )}
       </section>
 
+      <PipelineFunnel pipelines={data.pipelines} />
+
       <section className="desk-panel">
         <h3 className="desk-panel-title">Detail</h3>
         <div className="desk-scroll">
@@ -136,7 +138,11 @@ export function PerformancePage() {
                 }
                 note="Versus always predicting the base rate. Zero or below means no skill."
               />
-              <Row label="Opportunities considered" value={String(data.opportunities_considered)} />
+              <Row
+                label="Opportunities considered"
+                value={String(data.opportunities_considered)}
+                note="Every pipeline combined. See the funnel above for the split."
+              />
               <Row label="Executed" value={String(data.opportunities_executed)} />
               <Row label="Rejected" value={String(data.opportunities_rejected)} />
               <Row label="Conversion" value={probability(data.conversion_rate)} />
@@ -275,5 +281,57 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
       </th>
       <td className="num">{value}</td>
     </tr>
+  );
+}
+
+
+/**
+ * Conversion, split by pipeline and by the stage that stopped each decision.
+ *
+ * The combined "opportunities considered" number is close to useless on its
+ * own: the CPI prediction-market pipeline records thousands of holds because no
+ * venue order book is attached, which swamps the spot desk and reports a
+ * conversion rate that has nothing to do with the spot strategy. Reading
+ * "4,666 rejected" and concluding the strategy is broken is the mistake this
+ * panel exists to prevent.
+ */
+function PipelineFunnel({ pipelines }: { pipelines?: Performance["pipelines"] }) {
+  const rows = Object.entries(pipelines ?? {}).sort(
+    (a, b) => b[1].considered - a[1].considered,
+  );
+  if (!rows.length) return null;
+
+  return (
+    <section className="desk-panel">
+      <h3 className="desk-panel-title">Where decisions stop</h3>
+      {rows.map(([kind, funnel]) => {
+        const reasons = Object.entries(funnel.by_rejection).sort((a, b) => b[1] - a[1]);
+        const total = reasons.reduce((sum, [, n]) => sum + n, 0);
+        return (
+          <div key={kind} className="desk-funnel">
+            <header className="desk-panel-head">
+              <h4 className="m-0 font-mono text-xs tracking-[0.12em] uppercase">{kind}</h4>
+              <span className="font-mono text-[11px] text-faint">
+                {funnel.considered} considered · {funnel.executed} executed ·{" "}
+                {funnel.conversion_rate === null
+                  ? "—"
+                  : `${(funnel.conversion_rate * 100).toFixed(2)}%`}
+              </span>
+            </header>
+            <ul className="desk-rejections">
+              {reasons.map(([reason, n]) => (
+                <li key={reason}>
+                  <span className="desk-rejection-count">{n}</span>
+                  <span>{reason.replace(/_/g, " ")}</span>
+                  <span className="desk-rejection-share">
+                    {total ? `${Math.round((n / total) * 100)}%` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </section>
   );
 }

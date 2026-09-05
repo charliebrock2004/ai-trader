@@ -264,6 +264,25 @@ export type Performance = {
   opportunities_executed: number;
   opportunities_rejected: number;
   conversion_rate: number | null;
+  /**
+   * Conversion split by pipeline and by the stage that stopped each decision.
+   *
+   * The headline `opportunities_considered` counts every decision in the
+   * database, so the CPI prediction-market pipeline — thousands of contracts
+   * that hold because no venue book is attached — buries the spot desk and
+   * reports a conversion that has nothing to do with the spot strategy.
+   */
+  pipelines?: Record<
+    string,
+    {
+      considered: number;
+      executed: number;
+      rejected: number;
+      conversion_rate: number | null;
+      by_rejection: Record<string, number>;
+      by_action: Record<string, number>;
+    }
+  >;
   average_predicted_edge: number | null;
   average_realised_edge: number | null;
   brier: number | null;

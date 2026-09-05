@@ -147,7 +147,7 @@ class Runtime:
         try:
             reason = str(payload.get("reason") or payload.get("notes") or "HOLD")
             equity = payload.get("equity")
-            self.repository.records.record_decision(
+            decision_id = self.repository.records.record_decision(
                 {
                     "kind": "spot",
                     "ticker": payload.get("symbol"),
@@ -169,6 +169,22 @@ class Runtime:
                     "rejection": payload.get("rejection"),
                 }
             )
+            context = payload.get("context") or {}
+            if context and decision_id:
+                # The market as the detector saw it. Answers "why did it
+                # reject this" from the database alone.
+                try:
+                    self.repository.records.record_decision_input(
+                        decision_id,
+                        {
+                            "name": "signal_context",
+                            "kind": "strategy",
+                            "value_json": context,
+                            "source": context.get("setup") or context.get("regime"),
+                        },
+                    )
+                except Exception:  # noqa: BLE001 — never break a cycle to log
+                    pass
             if equity is not None:
                 self.repository.records.update_agent_life(paper_equity=float(equity))
                 try:

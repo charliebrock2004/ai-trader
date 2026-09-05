@@ -259,14 +259,19 @@ def test_a_breakout_needs_a_bar_that_actually_expanded() -> None:
     Without this the desk bought every crossing of a prior high, which in a
     sideways market is the definition of a false breakout — and chop was
     exactly where it churned.
+
+    Measured against the median recent bar range, not ATR: ATR is the mean
+    *true* range and includes between-bar gaps, so it is systematically larger
+    than any one candle's high-to-low. Requiring a candle to be 1.2x that asked
+    for the top ~9% of bars and made BREAKOUT fire essentially never.
     """
     config = SignalConfig.for_timeframe("5m")
-    assert config.breakout_expansion_atr >= 1.0
+    assert config.breakout_expansion >= 1.0
 
     closes = realistic(600, seed=31)
     highs, lows = bars(closes)
     loose = TrendPullbackStrategy(
-        SignalConfig.for_timeframe("5m", breakout_expansion_atr=0.0)
+        SignalConfig.for_timeframe("5m", breakout_expansion=0.0)
     )
     strict = TrendPullbackStrategy(config)
     for index in range(60, len(closes)):

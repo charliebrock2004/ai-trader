@@ -151,15 +151,20 @@ checked on every bar; the best-scoring one is the one considered.
 
 | Setup | Regime | Trigger |
 |---|---|---|
-| `PULLBACK_CONTINUATION` | TREND_UP | Price came back within 0.6 ATR of EMA20 and turned up |
+| `PULLBACK_CONTINUATION` | TREND_UP | The last 5 bars dipped to within 1.0 ATR of EMA20, and the latest bar confirms |
 | `MOMENTUM_CONTINUATION` | TREND_UP | Two consecutive higher closes, holding above EMA20 |
-| `BREAKOUT` | TREND_UP, RANGE | New 20-bar high on a bar that expanded ≥ 1.2 ATR |
-| `RANGE_BOUNCE` | RANGE | Bottom 30% of the range, turning up, RSI ≥ 25 |
+| `BREAKOUT` | TREND_UP, RANGE | New 20-bar high, confirmed, on a bar ≥ 1.1x the median recent bar range |
+| `RANGE_BOUNCE` | RANGE | Bottom 35% of the range, confirmed, RSI ≥ 25 |
+
+"Confirmed" means the bar closed above the previous close **or** closed in the
+top third of its own range. A strong close after a dip is a rejection candle and
+is exactly the confirmation a pullback entry looks for; demanding a higher close
+as well threw away half of every setup for no stated reason.
 
 **Opportunity score** blends five independent components — trend, momentum,
 entry location, volatility fitness and structure — weighted per setup. A setup
 that merely matches is not enough; it has to be a good instance of itself.
-Selectivity lives in one threshold (`STRATEGY_SCORE_THRESHOLD`, default 0.68),
+Selectivity lives in one threshold (`STRATEGY_SCORE_THRESHOLD`, default 0.78),
 so it can be measured and tuned rather than hidden in a conjunction of filters.
 
 **Risk geometry** is ATR-based: stop 2.0 ATR, target 5.0 ATR, and an unresolved
@@ -189,11 +194,79 @@ trend. Every hold the live worker recorded was the regime gate, so it never
 reached the entry logic. A regime is a *state* and stays true; a trigger inside
 it can recur. That is the whole change.
 
+### Why the multi-setup detector still found almost nothing
+
+Replacing the crossover was not enough. The live worker's own audit trail, read
+back from the checkpointed database:
+
+```
+binary  4380 considered   0 executed   (95.9% of the headline)
+spot     186 considered   1 executed   ( 4.1% of the headline)
+```
+
+Two findings, both from recorded data rather than inspection:
+
+1. **The headline was the wrong pipeline.** 95.9% of "opportunities considered"
+   were CPI prediction-market contracts, every one of them held for the same
+   reason: *"Official data status is unavailable, not verified. Uncertainty
+   means HOLD."* That is the Policy Guardian working correctly on a pipeline
+   with no venue book attached. It says nothing about the BTC strategy, and
+   averaging the two together is what produced a 0.0% conversion rate.
+
+2. **On the spot desk, the quality score was vestigial.** The stage breakdown:
+
+   | Stage | Count | Share |
+   |---|---|---|
+   | `no_setup` | 83 | 44.6% |
+   | `downtrend` (long-only, correct) | 40 | 21.5% |
+   | `poor_reward` | 23 | 12.4% |
+   | `already_long` | 19 | 10.2% |
+   | `too_quiet` | 7 | 3.8% |
+   | *older-build keys* | 11 | 5.9% |
+   | **`score_too_low`** | **0** | **0.0%** |
+   | executed | 1 | 0.5% |
+
+   `score_too_low` never fired once. Selectivity was supposed to live in the
+   score; in practice the *setup definitions* were doing all the filtering,
+   which is exactly the "accidental conjunction of filters nobody had counted"
+   the scored design existed to remove.
+
+The fix is confined to the setup definitions and the threshold: a pullback may
+form over 5 bars rather than 1 and reach 1.0 ATR rather than 0.6, momentum is
+2 higher closes rather than 3, a breakout is measured against the median recent
+bar range rather than against ATR (ATR is the mean *true* range and includes
+between-bar gaps, so 1.2x ATR asked for the top ~9% of candles and BREAKOUT
+fired essentially never), and confirmation accepts a strong close as well as a
+higher one. The threshold then rises from 0.68 to 0.78 so the desk ends up
+*more* selective, not less — with the selection happening in a number that can
+be measured.
+
+Same 20 days of seeded 5-minute BTC-like bars, deployed detector versus fixed:
+
+| | Candidates/day | `no_setup` | `score_too_low` | BREAKOUT fires |
+|---|---|---|---|---|
+| Before | 22.3 | 53.6% | 17.1% | 78 |
+| After | 15.7 | 49.4% | 23.6% | 337 |
+
+Nothing was lowered to achieve this: no threshold was relaxed, no risk limit
+moved, no gate removed. Grok, the Policy Guardian and the risk engine are
+unchanged and still sit in the same order.
+
 ### Measured behaviour
 
 Trade frequency, on a seeded 5-minute path with BTC-like volatility, through
-the real pipeline (detector → guardian → risk engine → simulator → ledger):
-**4.6 trades/day**, range 3.9–5.2 across eight seeds.
+the real pipeline (detector → guardian → risk engine → simulator → ledger),
+20 days per seed:
+
+| Seed | Candidates/day | Round trips/day | Win rate | Equity after 20 days |
+|---|---|---|---|---|
+| 11 | 5.6 | 4.75 | 31.6% | £97.01 |
+| 23 | 7.0 | 5.45 | 25.7% | £97.41 |
+| 37 | 5.8 | 4.70 | 36.2% | £100.46 |
+
+Round trips, not candidates: an entry occupies the desk's position slot, so
+`already_long` absorbs most bars while a trade is working. The P&L is what
+paying costs on a near-random path looks like and is not evidence either way.
 
 Adverse conditions, 10 days each, four seeds:
 
@@ -238,11 +311,23 @@ Every hold names itself and is stored in `decisions.rejection`:
 SELECT rejection, COUNT(*) FROM decisions WHERE kind='spot' GROUP BY 1;
 ```
 
-Detector reasons (`downtrend`, `no_setup`, `score_too_low`, `overbought`,
-`too_quiet`, `too_wild`, `poor_reward`, `already_long`) and downstream ones
-(`policy_downgraded`, `risk_rejected`) share the column, so the whole pipeline
-is visible in one query. A spread of reasons means the market offered nothing;
-one reason accounting for almost everything means a gate is mis-set.
+Detector reasons (`warming_up`, `session_warmup`, `downtrend`, `no_setup`,
+`score_too_low`, `overbought`, `too_quiet`, `too_wild`, `poor_reward`,
+`already_long`) and downstream ones (`policy_downgraded`, `risk_rejected`)
+share the column, so the whole pipeline is visible in one query. A spread of
+reasons means the market offered nothing; one reason accounting for almost
+everything means a gate is mis-set.
+
+Every reason has a key. There is no "rejected" bucket without a stage behind
+it: the last unlabelled one — bars inside the session's warm-up window — now
+records `session_warmup` rather than nothing.
+
+The Performance page renders the same thing as a **Where decisions stop** panel,
+split per pipeline (`spot`, `binary`) so neither can bury the other, with each
+stage's count and share. `RecordStore.pipeline_funnel()` is the query behind it,
+and each decision also stores the regime, setup, score, score components and
+indicators the detector saw, so a rejection can be diagnosed months later from
+the database alone rather than by re-running anything.
 
 ---
 
