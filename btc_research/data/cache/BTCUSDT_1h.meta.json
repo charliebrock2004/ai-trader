@@ -1,0 +1,24 @@
+{
+  "cache_hit": false,
+  "end_ms": 1793178000000,
+  "host": "https://data-api.binance.vision",
+  "interval": "1h",
+  "n": 68518,
+  "note": "Public market data only. Incomplete final candle dropped. No rows were interpolated.",
+  "source": "rest",
+  "start_ms": 1546300800000,
+  "symbol": "BTCUSDT",
+  "validation": {
+    "end_ms": 1793178000000,
+    "issues": [],
+    "issues_truncated": 0,
+    "missing_bars": 60,
+    "n_duplicate_identical": 0,
+    "n_gaps": 20,
+    "n_input": 68518,
+    "n_malformed": 0,
+    "n_valid": 68518,
+    "start_ms": 1546300800000
+  },
+  "venue": "binance-spot"
+}

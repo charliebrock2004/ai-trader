@@ -1,0 +1,11 @@
+name,n,n_eff,rho_lag1,sample_mean,posterior_mean_annual,p_mean_positive,note
+buy_and_hold,62640,62640.0,-0.0182259806,5.24086e-05,0.0724566265,0.785088238,single update from the raw sample; not a sequential posterior
+momentum_24,62640,61290.6607060189,0.0108878569,-8.84885e-05,-0.2294910228,0.0031203891,single update from the raw sample; not a sequential posterior
+momentum_72,62640,61345.5722569935,0.0104401482,-1.04401e-05,-0.0276864864,0.370127645,single update from the raw sample; not a sequential posterior
+momentum_168,62640,62599.9529039916,0.0003197629,-7.108e-06,-0.0197530009,0.4055461407,single update from the raw sample; not a sequential posterior
+mean_reversion_48_z1.5,62640,62640.0,-0.0305903875,-3.06103e-05,-0.0805590099,0.1677691081,single update from the raw sample; not a sequential posterior
+vol_filtered_momentum,62640,57700.2465562721,0.0410482244,-1.77492e-05,-0.0774760394,0.1371003505,single update from the raw sample; not a sequential posterior
+session_asia,62640,62640.0,-0.0128683912,-0.0001043799,-0.3913211564,1.154e-07,single update from the raw sample; not a sequential posterior
+session_europe,62640,62640.0,-0.0136293745,-7.65428e-05,-0.3026604298,2.20317e-05,single update from the raw sample; not a sequential posterior
+session_us,62640,62387.5574500399,0.0020190953,-7.49095e-05,-0.2095394309,0.0055527783,single update from the raw sample; not a sequential posterior
+adaptive_best_hour,62640,61161.6014335239,0.0119416756,-8.07849e-05,-0.5280025336,0.0,single update from the raw sample; not a sequential posterior
