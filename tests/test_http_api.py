@@ -311,7 +311,15 @@ def test_the_worker_does_not_hand_the_browser_a_cross_origin_key(
 
 def test_snapshot_is_paper_only_and_not_a_trade(isolated_env, monkeypatch) -> None:
     client = _client(monkeypatch)
-    body = client.get("/api/snapshot").json()
+    from ai_trader.runtime import get_runtime
+
+    # The snapshot is only served once the ledger exists and boot has settled
+    # what it is; until then it is a 503, never an empty dump.
+    get_runtime()
+    response = client.get("/api/snapshot")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["publishable"] is True
     assert body["live"] is False
     assert body["live_trading_allowed"] is False
     assert body["engine"] == "python-worker"

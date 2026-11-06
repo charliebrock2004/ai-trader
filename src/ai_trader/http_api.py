@@ -251,9 +251,19 @@ def create_app() -> FastAPI:
     @app.get("/api/snapshot")
     def snapshot() -> JSONResponse:
         """Paper ledger dump for the free-host checkpoint job. Not a trade."""
-        from ai_trader.persist import build_snapshot
+        from ai_trader.persist import build_snapshot, snapshot_problem
 
-        return _json(build_snapshot())
+        body = build_snapshot()
+        problem = snapshot_problem(body)
+        if problem:
+            # 503, not an empty ledger. The checkpoint job treats any non-200
+            # as "try later", which is exactly right while the worker boots.
+            return _json(
+                {"ok": False, "publishable": False, "reason": problem, "live": False},
+                503,
+            )
+        body["publishable"] = True
+        return _json(body)
 
     # ------------------------------------------------------------------
     # Mutations

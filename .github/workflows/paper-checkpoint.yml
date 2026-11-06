@@ -1,10 +1,36 @@
-# Wake the free Render worker and copy its paper ledger onto worker-endpoint.
-# Render free has no disk; this is the durable copy. Live trading cannot be
-# enabled from here.
+# Wake the free Render worker, keep it processing, and copy its paper ledger
+# onto worker-endpoint. Render free has no disk; this is the durable copy.
+# Live trading cannot be enabled from here.
+#
+# Why it stays for hours rather than taking one snapshot at boot
+# ----------------------------------------------------------------
+# GitHub throttles this schedule to roughly one run every 2-8 hours, and Render
+# free stops an idle worker 15 minutes after its last request. One snapshot at
+# boot therefore (a) left the worker running ~15 minutes per wake and (b) never
+# captured anything that happened during those minutes, including a Start
+# pressed in the app. Each run now pings /health every few minutes, which keeps
+# the worker genuinely awake and processing candles, and checkpoints every ten
+# minutes. Uptime is still not guaranteed: when GitHub delays a run the worker
+# sleeps, the dashboard says so, and the next wake catches up on up to 40 hours
+# of candles. A paid always-on instance is the only real 24/7 option.
+#
+# Why every snapshot is validated
+# -------------------------------
+# On 2026-09-20 a snapshot taken while the worker was still booting carried an
+# empty ledger (`"sql": ""`). This job published it, every later boot restored
+# it, and the desk sat STOPPED on a blank book for seven weeks. A snapshot is
+# now refused unless the worker marks it publishable, it contains an agent_life
+# row, and it has at least as many decisions and fills as the stored copy. An
+# intentional reset needs a manual run with allow_reset=true.
 name: paper-checkpoint
 
 on:
   workflow_dispatch:
+    inputs:
+      allow_reset:
+        description: "Allow a checkpoint with fewer ledger rows than the stored one (intentional reset only)"
+        type: boolean
+        default: false
   schedule:
     - cron: "*/10 * * * *"
 
@@ -18,63 +44,136 @@ permissions:
 jobs:
   checkpoint:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Just under GitHub's 6-hour job limit.
+    timeout-minutes: 345
     env:
       WORKER: https://ai-trader-elxv.onrender.com
+      ALLOW_RESET: ${{ github.event.inputs.allow_reset == 'true' }}
+      # How long one run keeps the worker awake, and how often it checkpoints.
+      HOLD_MINUTES: "330"
+      CHECKPOINT_EVERY_MINUTES: "10"
+      PING_EVERY_SECONDS: "240"
     steps:
       - name: Checkout noticeboard
         uses: actions/checkout@v4
         with:
           ref: worker-endpoint
 
-      - name: Wake worker and snapshot ledger
+      - name: Write the validator
         run: |
-          set -euo pipefail
-          ok=0
-          for i in $(seq 1 18); do
-            if curl -fsS --max-time 20 "$WORKER/health" >/tmp/health.json; then
-              ok=1
-              break
-            fi
-            sleep 5
-          done
-          if [ "$ok" != 1 ]; then
-            echo "Worker did not wake; skipping checkpoint."
-            exit 0
-          fi
-          curl -fsS --max-time 30 "$WORKER/api/snapshot" -o snapshot.json
-          python3 - <<'PY'
-          import json, pathlib, sys
-          raw = pathlib.Path("snapshot.json").read_text(encoding="utf-8")
-          body = json.loads(raw)
-          if body.get("live") is True:
-              sys.exit("refusing to store a snapshot that claims live trading")
-          if not isinstance(body.get("sql"), str):
-              sys.exit("snapshot missing sql")
+          cat > /tmp/validate.py <<'PY'
+          import json, os, pathlib, sys
+
+          def counts(sql):
+              out = {"agent_life": 0, "decisions": 0, "paper_fills": 0}
+              for line in (sql or "").splitlines():
+                  for t in out:
+                      if line.startswith(f'INSERT INTO "{t}"') or line.startswith(f"INSERT INTO {t} "):
+                          out[t] += 1
+              return out
+
+          new = json.loads(pathlib.Path("/tmp/snapshot.json").read_text(encoding="utf-8"))
+          if new.get("live") is True:
+              sys.exit("refusing: snapshot claims live trading")
+          if new.get("publishable") is not True:
+              sys.exit(f"refusing: worker says not publishable: {new.get('reason')}")
+          sql = new.get("sql")
+          if not isinstance(sql, str) or not sql.strip():
+              sys.exit("refusing: snapshot has an empty ledger")
+          n = counts(sql)
+          if n["agent_life"] < 1:
+              sys.exit("refusing: snapshot has no agent_life row")
+          old_path = pathlib.Path("snapshot.json")
+          if old_path.exists() and os.environ.get("ALLOW_RESET") != "true":
+              try:
+                  old = counts(json.loads(old_path.read_text(encoding="utf-8")).get("sql") or "")
+              except Exception:
+                  old = {"decisions": 0, "paper_fills": 0}
+              for table in ("decisions", "paper_fills"):
+                  if n[table] < old.get(table, 0):
+                      sys.exit(
+                          f"refusing: {table} would shrink from {old[table]} to {n[table]}. "
+                          "Run manually with allow_reset=true if this reset is intended."
+                      )
+          pathlib.Path("snapshot.json").write_text(json.dumps(new, indent=2) + "\n", encoding="utf-8")
           pathlib.Path("url.json").write_text(
               json.dumps(
                   {
-                      "url": "https://ai-trader-elxv.onrender.com",
+                      "url": os.environ["WORKER"],
                       "engine": "python-worker",
                       "live": False,
                       "live_trading_allowed": False,
-                      "updated_at": body.get("updated_at"),
+                      "updated_at": new.get("updated_at"),
+                      "ledger_rows": n,
                   },
                   indent=2,
               )
               + "\n",
               encoding="utf-8",
           )
+          print(f"ok: {n}")
           PY
 
-      - name: Publish checkpoint
+      - name: Wake, hold and checkpoint
         run: |
+          set -uo pipefail
           git config user.name "ai-trader-worker"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add snapshot.json url.json
-          if git diff --cached --quiet; then
-            echo "No ledger change."
+
+          wake() {
+            for i in $(seq 1 18); do
+              if curl -fsS --max-time 20 "$WORKER/health" >/dev/null; then return 0; fi
+              sleep 5
+            done
+            return 1
+          }
+
+          checkpoint() {
+            # The worker answers 503 until boot has settled what its ledger is.
+            code=000
+            for i in $(seq 1 12); do
+              code=$(curl -sS --max-time 60 -o /tmp/snapshot.json -w '%{http_code}' "$WORKER/api/snapshot" || echo 000)
+              if [ "$code" = "200" ]; then break; fi
+              echo "snapshot not ready (HTTP $code); retrying"
+              sleep 10
+            done
+            if [ "$code" != "200" ]; then
+              echo "No publishable snapshot this round."
+              return 0
+            fi
+            if ! python3 /tmp/validate.py; then
+              echo "Snapshot refused; nothing published."
+              return 0
+            fi
+            git add snapshot.json url.json
+            if git diff --cached --quiet; then
+              echo "No ledger change."
+              return 0
+            fi
+            git commit -q -m "paper ledger checkpoint [skip ci]"
+            for attempt in 1 2 3; do
+              if git push -q origin HEAD:worker-endpoint; then return 0; fi
+              git pull -q --rebase origin worker-endpoint || true
+            done
+            echo "Push failed; will retry next round."
+          }
+
+          if ! wake; then
+            echo "Worker did not wake; skipping."
             exit 0
           fi
-          git commit -m "paper ledger checkpoint [skip ci]"
-          git push origin HEAD:worker-endpoint
+          start=$(date +%s)
+          last_checkpoint=0
+          while :; do
+            now=$(date +%s)
+            if [ $((now - last_checkpoint)) -ge $((CHECKPOINT_EVERY_MINUTES * 60)) ]; then
+              checkpoint
+              last_checkpoint=$(date +%s)
+            fi
+            if [ $((now - start)) -ge $((HOLD_MINUTES * 60)) ]; then
+              break
+            fi
+            sleep "$PING_EVERY_SECONDS"
+            curl -fsS --max-time 30 "$WORKER/health" >/dev/null || wake || true
+          done
+          checkpoint

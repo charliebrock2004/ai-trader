@@ -32,6 +32,12 @@ SNAPSHOT_BRANCH = "worker-endpoint"
 SNAPSHOT_PATH = "snapshot.json"
 
 _state: dict[str, Any] = {
+    #: True once boot has decided what this process's ledger is (restored,
+    #: deliberately fresh, or local). Until then nothing may be published: on
+    #: 20 Sep 2026 a snapshot served mid-boot, before the database existed,
+    #: published an empty ledger that every later boot restored, and the desk
+    #: sat STOPPED on a blank book for seven weeks.
+    "settled": False,
     "kind": "ephemeral",
     "durable": False,
     "restored": False,
@@ -174,6 +180,9 @@ def build_snapshot(db_path: Optional[Path] = None) -> dict[str, Any]:
         "latch": latch,
         "sha": (os.environ.get("RENDER_GIT_COMMIT") or os.environ.get("GITHUB_SHA") or "")
         or None,
+        #: Row counts the checkpoint job compares against the stored copy, so
+        #: a ledger can only grow unless an operator explicitly resets it.
+        "ledger_rows": ledger_row_counts(sql),
     }
     try:
         conn = sqlite3.connect(str(path))
@@ -212,36 +221,100 @@ def build_snapshot(db_path: Optional[Path] = None) -> dict[str, Any]:
     return meta
 
 
-def fetch_checkpoint() -> Optional[dict[str, Any]]:
-    try:
-        import httpx
+#: The checkpoint is a dump of the whole audit trail and is several MB; the old
+#: 8-second budget was tight enough that a slow read could fail a restore.
+FETCH_TIMEOUT_SECONDS = 45.0
+FETCH_ATTEMPTS = 3
 
-        response = httpx.get(
-            _raw_url(),
-            headers={"user-agent": "ai-trader-persist", "accept": "application/json"},
-            timeout=8.0,
-            follow_redirects=True,
+
+def _fetch_checkpoint_detailed() -> tuple[str, Optional[dict[str, Any]]]:
+    """Return ``("ok", body)``, ``("absent", None)`` or ``("failed", None)``.
+
+    "absent" means GitHub answered that there is no checkpoint. "failed" means
+    we could not find out, and the two must never be confused: treating a
+    failed read as "no checkpoint" is how a real ledger gets replaced by a
+    fresh one.
+    """
+    import time
+
+    for attempt in range(FETCH_ATTEMPTS):
+        try:
+            import httpx
+
+            response = httpx.get(
+                _raw_url(),
+                headers={"user-agent": "ai-trader-persist", "accept": "application/json"},
+                timeout=FETCH_TIMEOUT_SECONDS,
+                follow_redirects=True,
+            )
+            if response.status_code == 404:
+                return "absent", None
+            if response.status_code != 200:
+                log.warning("checkpoint fetch returned %s", response.status_code)
+            else:
+                body = response.json()
+                if not isinstance(body, dict) or not isinstance(body.get("sql"), str):
+                    return "invalid", None
+                if body.get("live") is True:
+                    return "invalid", None
+                return "ok", body
+        except Exception:  # noqa: BLE001 — a failed restore must not crash boot
+            log.exception("checkpoint fetch failed (attempt %s)", attempt + 1)
+        if attempt + 1 < FETCH_ATTEMPTS:
+            time.sleep(2.0 * (attempt + 1))
+    return "failed", None
+
+
+class CheckpointReadError(RuntimeError):
+    """The checkpoint exists or might exist, but could not be read."""
+
+
+def fetch_checkpoint() -> Optional[dict[str, Any]]:
+    """The stored checkpoint, ``None`` if there genuinely is none.
+
+    Raises :class:`CheckpointReadError` when GitHub could not be asked, so a
+    network failure can never be mistaken for "there is no ledger".
+    """
+    status, body = _fetch_checkpoint_detailed()
+    if status == "failed":
+        raise CheckpointReadError("checkpoint could not be read")
+    return body if status == "ok" else None
+
+
+def ledger_row_counts(sql: str) -> dict[str, int]:
+    """Rows per ledger table in a dump. Used to refuse a checkpoint that shrinks."""
+    counts = {"agent_life": 0, "decisions": 0, "paper_fills": 0}
+    for line in (sql or "").splitlines():
+        for table in counts:
+            if line.startswith(f'INSERT INTO "{table}"') or line.startswith(f"INSERT INTO {table} "):
+                counts[table] += 1
+    return counts
+
+
+def snapshot_problem(snapshot: dict[str, Any]) -> Optional[str]:
+    """Why this snapshot must not be published, or None if it may be."""
+    if not persistence_status().get("settled"):
+        return "The worker has not finished deciding its ledger yet (boot or restore in progress)."
+    if persistence_status().get("kind") == "restore_failed":
+        return (
+            "The checkpoint could not be read at boot. Publishing this process's "
+            "book would overwrite the real ledger."
         )
-        if response.status_code == 404:
-            return None
-        if response.status_code != 200:
-            log.warning("checkpoint fetch returned %s", response.status_code)
-            return None
-        body = response.json()
-        if not isinstance(body, dict) or not isinstance(body.get("sql"), str):
-            return None
-        if body.get("live") is True:
-            return None
-        return body
-    except Exception:  # noqa: BLE001 — a failed restore must not crash boot
-        log.exception("checkpoint fetch failed")
-        return None
+    if snapshot.get("live") is True:
+        return "Snapshot claims live trading."
+    sql = snapshot.get("sql")
+    if not isinstance(sql, str) or not sql.strip():
+        return "Snapshot has no ledger (empty database dump)."
+    if ledger_row_counts(sql)["agent_life"] < 1:
+        return "Snapshot has no agent_life row; it is not a ledger."
+    return None
 
 
 def restore_if_needed(db_path: Path) -> dict[str, Any]:
     """Overlay GitHub state onto an empty local database. Never clobbers a live db."""
     if not should_restore():
         _set_state(
+            settled=True,
             kind="local",
             durable=False,
             restored=False,
@@ -250,21 +323,43 @@ def restore_if_needed(db_path: Path) -> dict[str, Any]:
         return persistence_status()
     if not _db_is_empty(db_path):
         _set_state(
+            settled=True,
             kind="github-checkpoint",
             durable=True,
             restored=False,
             warning=None,
         )
         return persistence_status()
-    snapshot = fetch_checkpoint()
-    if not snapshot or not snapshot.get("sql"):
+    try:
+        snapshot = fetch_checkpoint()
+        status = "ok" if snapshot else "absent"
+    except CheckpointReadError:
+        snapshot, status = None, "failed"
+    if status == "failed":
+        # We do not know what the ledger is. Run, but publish nothing: a fresh
+        # £100 book written over the real checkpoint is unrecoverable from
+        # here, while a missed checkpoint costs one wake's worth of history.
         _set_state(
+            settled=True,
+            kind="restore_failed",
+            durable=False,
+            restored=False,
+            warning=(
+                "The GitHub checkpoint could not be read. This process is running "
+                "a temporary book and will not publish it, so the real ledger is "
+                "not overwritten. The next wake retries the restore."
+            ),
+        )
+        return persistence_status()
+    if status != "ok" or not snapshot or not str(snapshot.get("sql") or "").strip():
+        _set_state(
+            settled=True,
             kind="ephemeral",
             durable=False,
             restored=False,
             warning=(
-                "No GitHub checkpoint yet. This free host has no disk — a restart "
-                "before the first checkpoint would start a fresh £100 book."
+                "No usable GitHub checkpoint. This free host has no disk; the "
+                "book starts at £100 and is published from the first checkpoint."
             ),
         )
         return persistence_status()
@@ -276,6 +371,7 @@ def restore_if_needed(db_path: Path) -> dict[str, Any]:
                 json.dumps(latch, indent=2) + "\n", encoding="utf-8"
             )
         _set_state(
+            settled=True,
             kind="github-checkpoint",
             durable=True,
             restored=True,
@@ -286,10 +382,14 @@ def restore_if_needed(db_path: Path) -> dict[str, Any]:
     except Exception:  # noqa: BLE001
         log.exception("checkpoint restore failed; continuing with a local book")
         _set_state(
-            kind="ephemeral",
+            settled=True,
+            kind="restore_failed",
             durable=False,
             restored=False,
-            warning="Checkpoint restore failed. This process is using a local £100 book.",
+            warning=(
+                "Checkpoint restore failed. This process is using a temporary book "
+                "and will not publish it."
+            ),
         )
     return persistence_status()
 
@@ -343,6 +443,10 @@ def checkpoint(db_path: Optional[Path] = None) -> dict[str, Any]:
     settings = get_settings()
     path = Path(db_path) if db_path is not None else settings.resolve_database_path()
     snapshot = build_snapshot(path)
+    problem = snapshot_problem(snapshot)
+    if problem:
+        log.warning("checkpoint not published: %s", problem)
+        return snapshot
     local = path.parent / "checkpoint.json"
     try:
         tmp = tempfile.NamedTemporaryFile(
@@ -373,6 +477,8 @@ def checkpoint(db_path: Optional[Path] = None) -> dict[str, Any]:
 
 
 __all__ = [
+    "ledger_row_counts",
+    "snapshot_problem",
     "build_snapshot",
     "checkpoint",
     "persistence_status",
