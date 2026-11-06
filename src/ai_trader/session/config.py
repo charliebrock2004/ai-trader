@@ -61,6 +61,13 @@ class PaperSessionConfig:
             raise InvalidMarketDataError("Warmup cannot be negative.")
         if self.starting_balance <= 0:
             raise InvalidMarketDataError("Starting balance must be positive.")
+        if self.score_threshold is not None:
+            from ai_trader.strategy.signal import validate_score_threshold
+
+            try:
+                validate_score_threshold(self.score_threshold)
+            except ValueError as exc:
+                raise InvalidMarketDataError(str(exc)) from exc
         return self
 
     def public(self) -> dict:

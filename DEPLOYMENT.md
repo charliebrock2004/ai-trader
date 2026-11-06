@@ -57,7 +57,10 @@ not the engine.
 
 - The process sleeps after idle HTTP. The UI then shows the worker as asleep, not RUNNING.
 - There is no persistent disk. On wake the worker restores SQLite + the TERMINAL latch from `worker-endpoint/snapshot.json`.
-- A GitHub Actions job copies `GET /api/snapshot` every 10 minutes and on demand. Until the first checkpoint exists, a restart *would* start a fresh £100 book — the UI warns rather than hiding that.
+- The `paper-checkpoint` GitHub Actions job wakes the worker, keeps it awake for up to 5.5 hours (a ping every 4 minutes) and copies `GET /api/snapshot` to `worker-endpoint` every 10 minutes. GitHub throttles the schedule, so the worker still sleeps between runs.
+- The worker answers `/api/snapshot` with 503 until boot has settled its ledger. The job refuses empty snapshots and any snapshot with fewer decisions or fills than the stored copy; an intentional reset needs a manual run with `allow_reset=true`. These guards exist because an empty mid-boot snapshot wiped the book on 20 Sep 2026.
+- If the checkpoint cannot be read at boot, the worker runs a temporary book and does not publish it. It never overwrites the real ledger with a fresh one.
+- For a genuinely continuous desk, move the worker to a paid always-on instance. Free hosting cannot promise 24/7.
 - Pressing Start wakes the worker. That can take up to a minute.
 
 ### Environment variables
@@ -75,6 +78,8 @@ KILL_SWITCH_ENGAGED=false
 LOG_LEVEL=INFO
 PERSIST_RESTORE=true
 ```
+
+`STRATEGY_SCORE_THRESHOLD` is optional (default 0.70, accepted 0.60–0.95; anything else stops the worker from starting rather than being clamped). It changes only which setups become candidates, never the amount at risk, and cannot enable live trading.
 
 `AI_TRADER_API_TOKEN` is optional. If set on the worker, Start/Stop require it. If unset, this paper desk accepts Start from the Vercel UI. Live trading cannot be turned on with any of these.
 

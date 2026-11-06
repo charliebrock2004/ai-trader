@@ -367,7 +367,14 @@ class DeskWorker:
             ),
             "last_call_at": snap.get("last_call_at"),
             "allowed": bool(snap.get("allowed")) if snap else False,
-            "filter": "trend pullback (SMA 10/20 regime)",
+            "filter": (
+                "multi-setup detector (pullback, momentum, breakout, range bounce), "
+                f"score threshold {settings.strategy_score_threshold:.2f}"
+            ),
+            #: Whether Grok is actually consulted on BTC candidates. A key alone
+            #: is not enough: GROK_PAPER_ANALYSIS must be on. When it is off the
+            #: deterministic detector, policy guardian and risk engine decide.
+            "reviews_btc_candidates": bool(connected and settings.grok_paper_analysis),
             "operates_without_grok": True,
         }
 
@@ -467,6 +474,24 @@ class DeskWorker:
             "trade_from_index": paper.get("trade_from_index"),
             "currency": "GBP",
             "engine": "python-worker",
+            "strategy_threshold": self.runtime.settings.strategy_score_threshold,
+            # The two pipelines are separate and are reported separately. The
+            # CPI pipeline's HOLDs must never be averaged into BTC statistics.
+            "pipelines": {
+                "btc_spot": {
+                    "name": "BTC-USD 5m paper desk",
+                    "tradeable": True,
+                    "running": running,
+                },
+                "cpi_event": {
+                    "name": "BLS CPI prediction-market pipeline",
+                    "tradeable": False,
+                    "reason": (
+                        "No prediction-market venue order book is connected, so "
+                        "every CPI contract holds. No fills are simulated without a book."
+                    ),
+                },
+            },
             "persistence": self._persistence_view(),
             "grok_usage": self._grok_usage(),
         }

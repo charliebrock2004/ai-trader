@@ -52,6 +52,11 @@ class Runtime:
         self.orchestrator.paper_session.budget = self.budget
         self.orchestrator.paper_session.gate_with_deterministic = True
         self.agent = self._build_agent()
+        # The BTC spot desk answers to the same survival state as the event
+        # pipeline. Without this the spot session ran with policy=None: the
+        # documented downgrade-only guardian was never consulted on a BTC
+        # candidate, and CRITICAL equity would not have stopped a new entry.
+        self.orchestrator.paper_session.policy = self.agent.guardian
         self.orchestrator.grok.budget = self.budget
         self.orchestrator.grok.on_usage = self._record_llm
         self.worker = DeskWorker(self)

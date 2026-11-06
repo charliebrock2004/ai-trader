@@ -370,7 +370,7 @@ class DeterministicFirstSource:
                 analysis,
                 action="HOLD",
                 reasoning=(
-                    f"Systems disagree: SMA wanted {det_name}, Grok wanted {grok_name}. HOLD."
+                    f"Systems disagree: the detector wanted {det_name}, Grok wanted {grok_name}. HOLD."
                 ),
                 model=proposed.decision.model,
                 source="disagree",

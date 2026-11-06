@@ -216,13 +216,15 @@ export function AgentHome() {
           <Reason label="API cost" value={money(grokCost, currency)} />
           <Reason
             label="Filter"
-            value={grokUsage?.filter ?? "trend pullback"}
+            value={grokUsage?.filter ?? "multi-setup detector"}
           />
         </dl>
         <p className="mt-3 mb-0 text-sm leading-normal text-muted">
-          {grokConnected
-            ? `Grok is only called when the deterministic detector finds a candidate, at most ${grokBudget} times per day, at least ${Math.round((grokUsage?.min_interval_seconds ?? 1800) / 60)} minutes apart. Exhausting the budget does not stop paper trading.`
-            : "No xAI key on the worker. The paper desk still runs on the deterministic detector and risk engine. Grok is not inventing decisions."}
+          {grokConnected && grokUsage?.reviews_btc_candidates
+            ? `Grok reviews BTC candidates only after the deterministic detector finds one, at most ${grokBudget} times per day, at least ${Math.round((grokUsage?.min_interval_seconds ?? 1800) / 60)} minutes apart. It can hold a candidate, never size or widen it. Exhausting the budget does not stop paper trading.`
+            : grokConnected
+              ? "An xAI key is set, but Grok paper review is off (GROK_PAPER_ANALYSIS). BTC candidates are decided by the deterministic detector, policy guardian and risk engine."
+              : "No xAI key on the worker. The paper desk still runs on the deterministic detector and risk engine. Grok is not inventing decisions."}
         </p>
       </section>
 
@@ -237,6 +239,15 @@ export function AgentHome() {
           <p className="m-0 mb-3 text-sm leading-normal text-muted">{status.hold_reason}</p>
         ) : null}
         <SignalEvidence signal={status.signal} />
+        {status.pipelines?.cpi_event ? (
+          <p className="mt-3 mb-0 text-sm leading-normal text-muted">
+            <strong>{status.pipelines.cpi_event.name ?? "CPI event pipeline"}:</strong>{" "}
+            {status.pipelines.cpi_event.tradeable
+              ? "tradeable."
+              : status.pipelines.cpi_event.reason ?? "not tradeable."}{" "}
+            Its holds are not counted in the BTC figures above.
+          </p>
+        ) : null}
         {cycle ? (
           <p className="m-0 text-sm leading-normal text-muted">
             Last cycle examined <strong>{cycle.contracts_considered}</strong>{" "}
@@ -449,6 +460,16 @@ function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
         .
       </p>
 
+      {signal.score_median != null || signal.score_best != null ? (
+        <p className="mt-1.5 mb-0 font-mono text-[11px] text-faint">
+          scores: median {signal.score_median != null ? signal.score_median.toFixed(2) : "—"} · best{" "}
+          {signal.score_best != null ? signal.score_best.toFixed(2) : "—"} · threshold{" "}
+          {threshold.toFixed(2)}
+        </p>
+      ) : null}
+
+      <PipelineFunnel signal={signal} />
+
       {regimes.length ? (
         <p className="mt-1.5 mb-0 font-mono text-[11px] text-faint">
           regimes: {regimes.map(([name, n]) => `${name} ${n}`).join(" · ")}
@@ -472,6 +493,55 @@ function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
             </li>
           ))}
         </ul>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Where each candle ended up, stage by stage. Separates "the market offered
+ * nothing" from "the strategy, the analyst, the survival policy or the risk
+ * engine said no", and shows whether an order is waiting or has filled.
+ */
+function PipelineFunnel({ signal }: { signal: NonNullable<AgentStatus["signal"]> }) {
+  const p = signal.pipeline;
+  if (!p) return null;
+  const fresh = signal.freshness;
+  const rows: Array<[string, number | undefined]> = [
+    ["No opportunity (no setup, downtrend, too quiet/wild, overbought, already long)", p.no_opportunity],
+    ["Setup found, score below threshold", p.strategy_rejected],
+    ["Candidates", p.candidates],
+    ["Held by the analyst (Grok)", p.analyst_rejected],
+    ["Held by the survival policy", p.policy_rejected],
+    ["Refused by the risk engine", p.risk_rejected],
+    ["Paper orders placed", p.orders_placed],
+    ["Paper fill pending (next candle)", p.fill_pending],
+    ["Paper entries filled", p.entries_filled],
+    ["Paper exits filled", p.exits_filled],
+  ];
+  const age = fresh?.age_seconds;
+  return (
+    <div className="mt-3">
+      <ul className="desk-rejections">
+        {rows.map(([label, value]) => (
+          <li key={label}>
+            <span className="desk-rejection-count">{value ?? 0}</span>
+            <span>{label}</span>
+            <span className="desk-rejection-share" />
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1.5 mb-0 font-mono text-[11px] text-faint">
+        candidate → order {p.candidate_to_order_pct != null ? `${p.candidate_to_order_pct}%` : "—"} · analyst{" "}
+        {p.analyst ?? "—"}
+      </p>
+      {fresh?.latest_candle_ts ? (
+        <p className={`mt-1 mb-0 font-mono text-[11px] ${fresh.stale ? "text-halt" : "text-faint"}`}>
+          latest candle {fresh.latest_candle_ts}
+          {typeof age === "number" ? ` (${Math.round(age / 60)} min old)` : ""} · last processed{" "}
+          {fresh.last_processed_candle_ts ?? "—"}
+          {fresh.stale ? " · STALE: new candles are not arriving" : ""}
+        </p>
       ) : null}
     </div>
   );

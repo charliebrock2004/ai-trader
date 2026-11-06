@@ -95,9 +95,14 @@ REJECTIONS: dict[str, str] = {
     "downtrend": "Market is in a downtrend and this desk cannot go short.",
     "no_setup": "No recognised setup is present on this candle.",
     "score_too_low": "A setup is present but its quality score is below the threshold.",
-    "too_quiet": "Realised volatility is too low for a move to clear costs.",
+    "too_quiet": (
+        "Volatility is too low: a 5 ATR target would not clear four round trips "
+        "of spread and slippage."
+    ),
     "too_wild": "Realised volatility is too high for a stop to be meaningful.",
     "overbought": "Momentum is stretched; entering here is buying the top.",
+    #: Historical key. Merged into ``too_quiet`` (see SignalConfig.volatility_floor);
+    #: kept so older audit rows still have a published meaning.
     "poor_reward": "Reward-to-risk after costs is not worth the trade.",
     "already_long": "Already holding this symbol. Not adding to a position.",
     "no_signal": "No trade signal.",
@@ -109,6 +114,41 @@ REJECTIONS: dict[str, str] = {
 }
 
 EXIT_REASON = "Trend regime has broken. Closing the long."
+
+#: The one authoritative default for the opportunity-score threshold.
+#:
+#: ``Settings.strategy_score_threshold`` (env ``STRATEGY_SCORE_THRESHOLD``)
+#: defaults to this, the worker passes that setting into every session, and the
+#: detector reports the value it actually used, so the dashboard cannot show one
+#: number while the engine applies another.
+#:
+#: 0.70, down from 0.78, chosen by the chronological replay in
+#: ``scripts/replay_sweep.py`` over real Coinbase BTC-USD 5m candles (25 Aug -
+#: 6 Nov 2026, first two thirds for tuning, last third held out). On the tuning
+#: window 0.70 produced 19% more completed trades than 0.78 at an unchanged
+#: per-trade expectancy; below 0.70 expectancy fell with every step. Every
+#: setting lost money after costs in both windows: this is a paper experiment
+#: in finding opportunities, not evidence of an edge. See PROJECT_STATUS.md.
+DEFAULT_SCORE_THRESHOLD = 0.70
+#: Bounds an operator may set. Below 0.60 the replay shows only more losing
+#: trades; above 0.95 the desk is silent. Anything outside is refused rather
+#: than clamped, so a typo cannot quietly change the strategy.
+MIN_SCORE_THRESHOLD = 0.60
+MAX_SCORE_THRESHOLD = 0.95
+
+
+def validate_score_threshold(value: Any) -> float:
+    """Return ``value`` as a float, or raise ``ValueError`` if out of bounds."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Strategy score threshold must be a number, got {value!r}.") from exc
+    if number != number or not (MIN_SCORE_THRESHOLD <= number <= MAX_SCORE_THRESHOLD):
+        raise ValueError(
+            f"Strategy score threshold {number} is outside "
+            f"{MIN_SCORE_THRESHOLD:.2f}-{MAX_SCORE_THRESHOLD:.2f}."
+        )
+    return number
 
 
 @dataclass(frozen=True)
@@ -151,7 +191,13 @@ class SignalConfig:
     #: sequence, and the score still has to rate the instance.
     momentum_bars: int = 2
     #: RSI above this is stretched. Not a short signal — a reason not to buy.
-    overbought_rsi: float = 78.0
+    #:
+    #: 82, not 78. The momentum score component already falls to zero as RSI
+    #: approaches this value, so a hard gate at the same level was the score's
+    #: own judgement applied a second time. The replay found 82 gave more
+    #: trades at equal or better expectancy in both the tuning and held-out
+    #: windows; above 82 the bar is a genuine blow-off and is still refused.
+    overbought_rsi: float = 82.0
     #: A range bounce needs price in the lower part of the range and RSI
     #: recovering. The bottom third, not the bottom 30%.
     bounce_range_position: float = 0.35
@@ -213,7 +259,22 @@ class SignalConfig:
     #: Score at or above which a setup becomes a candidate and reaches Grok.
     #: This is where selectivity lives. It is one number, it is measurable, and
     #: it can be tuned against recorded outcomes instead of by adding filters.
-    strong_score: float = 0.78
+    strong_score: float = DEFAULT_SCORE_THRESHOLD
+
+    @property
+    def volatility_floor(self) -> float:
+        """The one minimum volatility, as ATR relative to price.
+
+        There used to be two: ``min_volatility`` (0.04%) refused dead-quiet
+        bars as ``too_quiet``, and a separate reward-to-cost check refused any
+        bar whose target did not clear four round trips of cost — which is just
+        a second, much higher volatility floor (0.16%) applied after the setups
+        had been scored. Two gates measuring the same quantity with different
+        numbers is how a funnel stops being readable. This is the stricter of
+        the two, applied once, before any setup is considered.
+        """
+        cost_floor = (self.round_trip_cost_pct * self.min_reward_to_cost) / self.target_atr
+        return max(self.min_volatility, cost_floor)
 
     @classmethod
     def for_timeframe(cls, timeframe: str, **overrides: Any) -> "SignalConfig":
@@ -580,7 +641,7 @@ class TrendPullbackStrategy:
 
         # Volatility has to be in a band where a stop means something. This is a
         # quality gate, not a throttle.
-        if m["volatility"] < cfg.min_volatility:
+        if m["volatility"] < cfg.volatility_floor:
             return hold("too_quiet")
         if m["volatility"] > cfg.max_volatility:
             return hold("too_wild")
@@ -616,14 +677,10 @@ class TrendPullbackStrategy:
         features["reward_pct"] = reward_pct
         features["stop_pct"] = (price - stop) / price if price else 0.0
 
-        if reward_pct < cfg.round_trip_cost_pct * cfg.min_reward_to_cost:
-            self.setup_counts[best_setup] = self.setup_counts.get(best_setup, 0) + 1
-            return self._finish(
-                Signal(action=PaperAction.HOLD, regime=regime, setup=best_setup,
-                       score=best_score, components=best_components,
-                       rejection="poor_reward", reason=REJECTIONS["poor_reward"],
-                       features=features)
-            )
+        # Reward-to-cost is guaranteed by the volatility floor above: with the
+        # target fixed at target_atr, reward clears min_reward_to_cost round
+        # trips exactly when ATR/price clears the floor, so it is not re-gated
+        # here (tests/test_strategy_revival.py pins the equivalence).
 
         if best_score < cfg.strong_score:
             self.setup_counts[best_setup] = self.setup_counts.get(best_setup, 0) + 1

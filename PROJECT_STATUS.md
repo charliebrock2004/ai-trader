@@ -11,14 +11,132 @@
 | Live trading | `LIVE_TRADING_ALLOWED = False`. No live path exists. |
 | Engine | One Python `DeskWorker`. The browser is control/monitoring only. |
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
-| Hosting | Frontend on Vercel, worker on Render free (sleeps; ledger checkpointed to GitHub) |
-| Current strategy | BTC-USD public 5m multi-setup scored detector (long only) + BLS CPI event family (HOLDs until a venue book exists) |
-| Tests | 528 Python tests passing |
+| Hosting | Frontend on Vercel, worker on Render free (sleeps when idle; the checkpoint job keeps it awake in multi-hour runs and checkpoints every 10 min) |
+| Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70** + BLS CPI event family (HOLDs until a venue book exists; reported separately) |
+| Tests | 563 Python tests passing |
 
 If this file disagrees with the code, the code wins. Update it after every
 significant change, and never mark something complete that is not tested.
 
 ---
+
+## November 2026: why the desk made zero trades, and what changed
+
+**The desk was not running at all.** The live worker's checkpoint history
+(`worker-endpoint`) shows the BTC session last ran on 20 September 2026. At
+07:01 UTC that day the checkpoint job fetched `GET /api/snapshot` while the
+worker was still booting. The database did not exist yet, so the dump was
+`"sql": ""`. The job's only check was that `sql` was a string, so it published
+it. Every later boot restored that empty ledger: a fresh £100 book with
+`desired_running = 0`. For seven weeks the worker woke, restored nothing,
+reported STOPPED with zero decisions (which was true), and went back to sleep.
+
+**Fixed:**
+
+- `/api/snapshot` answers 503 until boot has settled what the ledger is, and
+  never serves an empty dump or one without an `agent_life` row.
+- A checkpoint that cannot be *read* at boot (timeout, network) is no longer
+  treated as "no checkpoint". The worker runs a temporary book and refuses to
+  publish it, so it cannot overwrite the real ledger. Reads get 3 attempts of
+  45 s (it was one attempt of 8 s, against a multi-MB file).
+- The checkpoint job refuses any snapshot the worker does not mark
+  publishable, any empty ledger, and any snapshot with fewer decisions or fills
+  than the stored copy. An intentional reset needs a manual run with
+  `allow_reset=true`.
+- The job used to snapshot once, ~3 s after boot, then leave. The worker then
+  ran for Render's 15 idle minutes and nothing it did in them (including a
+  Start pressed in the app) was ever saved. Each run now keeps the worker awake
+  for up to 5.5 hours, pinging every 4 minutes, and checkpoints every 10.
+  GitHub still throttles the schedule, so gaps remain. The dashboard shows
+  them and the next wake catches up.
+- The last good ledger (20 Sep 01:37 UTC: 8,150 decisions, equity £99.79,
+  no open position) was re-published to `worker-endpoint` so history resumes
+  instead of starting again.
+
+**When it did run, most live bars were wasted on warm-up.** From 5 to 20 Sep
+the BTC desk evaluated 3,244 bars and executed 2. The 4,720 CPI holds are
+counted separately:
+
+| Stage | Bars | Share |
+|---|---|---|
+| `warming_up` | 1,498 | 46.2% |
+| `downtrend` | 510 | 15.7% |
+| `no_setup` | 481 | 14.8% |
+| `session_warmup` | 359 | 11.1% |
+| `poor_reward` | 238 | 7.3% |
+| `too_quiet` | 90 | 2.8% |
+| `score_too_low` | 26 | 0.8% |
+| `already_long` | 26 | 0.8% |
+| `overbought` / `too_wild` | 10 | 0.3% |
+| reached execution | 2 | 0.1% |
+
+After a sleep longer than ~18.7 h the 280-bar fetch started within 55 bars of
+the first unprocessed candle, so EMA50 could not be computed for those live
+bars. The fetch is now 480 bars (two pages, 40 h), and
+`continuity.live_trade_from_index` never hands the detector a live bar with
+less than 60 bars of history.
+
+**Restrictions relaxed, each measured by replay.** `scripts/replay_sweep.py`
+runs the production path (detector → Policy Guardian → risk engine → next-bar
+paper fill with spread and slippage) over real Coinbase BTC-USD 5m candles,
+25 Aug – 6 Nov 2026. It tunes on the first two thirds (to 13 Oct) and reports
+the last third separately. Threshold sweep, tuning window:
+
+| Threshold | Candidates/day | Trades/day | Win rate | Net (£100) | Max DD | Expectancy/trade |
+|---|---|---|---|---|---|---|
+| 0.78 | 1.95 | 1.40 | 29.4% | −£1.67 | 1.9% | −£0.025 |
+| 0.74 | 2.06 | 1.50 | 30.1% | −£1.66 | 1.8% | −£0.023 |
+| **0.70** | 2.22 | 1.67 | 30.9% | −£2.02 | 2.1% | −£0.025 |
+| 0.68 | 2.37 | 1.83 | 29.2% | −£2.90 | 3.0% | −£0.033 |
+| 0.65 | 2.67 | 2.14 | 27.9% | −£3.74 | 3.8% | −£0.036 |
+| 0.62 | 2.84 | 2.30 | 27.7% | −£4.11 | 4.2% | −£0.037 |
+
+- **Threshold 0.78 → 0.70.** It gives 19% more trades at the same per-trade
+  expectancy. Below 0.70, expectancy worsens with every step, so 0.68 was not
+  chosen and nothing below 0.60 is accepted (`validate_score_threshold`).
+- **Overbought RSI 78 → 82.** The momentum score component already falls to
+  zero as RSI approaches the gate, so a hard stop at the same level judged
+  the same thing twice. 82 gave more trades at equal or better expectancy in
+  both windows.
+- **One volatility floor instead of two.** `too_quiet` (ATR 0.04% of price) and
+  the reward-to-cost check (target ≥ 4 round trips ⇔ ATR ≥ 0.16%) measured the
+  same quantity with different numbers. They are now one rule,
+  `SignalConfig.volatility_floor`, applied once. This changes no trades.
+- **Kept:** `min_reward_to_cost = 4`. At 3, trades nearly doubled but
+  expectancy fell in both windows.
+
+Final configuration against the old one:
+
+| Window | Config | Candidates/day | Trades/day | Win rate | Net | Max DD |
+|---|---|---|---|---|---|---|
+| Tuning (48.6 d) | 0.78 / RSI 78 | 1.95 | 1.40 | 29.4% | −£1.67 | 1.9% |
+| Tuning (48.6 d) | **0.70 / RSI 82** | 2.43 | 1.87 | 31.9% | −£2.29 | 2.4% |
+| Held out (24.3 d) | 0.78 / RSI 78 | 2.26 | 1.56 | 21.1% | −£1.88 | 1.9% |
+| Held out (24.3 d) | **0.70 / RSI 82** | 2.67 | 1.97 | 25.0% | −£2.09 | 2.5% |
+
+**Every configuration loses money after costs, in both windows.** More
+opportunities is not an edge. This is a paper experiment and the numbers say
+so. The amount at risk per trade (£2, 25% concentration) did not change, and
+neither did any daily-loss, position, trade-count, stop or FX rule.
+
+**Also found and fixed:**
+
+- The BTC session ran with `policy=None`. The survival Policy Guardian was
+  documented as reviewing spot trades but was never attached. It is now the
+  agent's own guardian.
+- `STRATEGY_SCORE_THRESHOLD` was wired, but `SignalConfig.strong_score` had its
+  own hard-coded 0.78. Both now read `strategy.signal.DEFAULT_SCORE_THRESHOLD`,
+  out-of-range values are refused at `Settings` and at session start, and a
+  test proves the value the dashboard shows is the value the detector uses.
+- Grok made **zero** BTC decisions. With `GROK_PAPER_ANALYSIS=false` it is not
+  consulted on spot candidates, so it was never the bottleneck. The dashboard
+  now says whether it reviews BTC candidates; a failure or budget skip is
+  recorded and never invents a fill.
+- Dashboard labels that still said "trend pullback (SMA 10/20)" now describe the
+  multi-setup detector. The BTC panel shows a per-stage funnel (no opportunity
+  / score / analyst / policy / risk / pending / filled), score median and best,
+  and candle freshness. The CPI pipeline is shown separately as not tradeable
+  (no venue order book).
 
 ## What the agent is
 
@@ -164,7 +282,7 @@ as well threw away half of every setup for no stated reason.
 **Opportunity score** blends five independent components — trend, momentum,
 entry location, volatility fitness and structure — weighted per setup. A setup
 that merely matches is not enough; it has to be a good instance of itself.
-Selectivity lives in one threshold (`STRATEGY_SCORE_THRESHOLD`, default 0.78),
+Selectivity lives in one threshold (`STRATEGY_SCORE_THRESHOLD`, default **0.70** since Nov 2026; was 0.78),
 so it can be measured and tuned rather than hidden in a conjunction of filters.
 
 **Risk geometry** is ATR-based: stop 2.0 ATR, target 5.0 ATR, and an unresolved
@@ -384,13 +502,14 @@ splits by time, but there is no historical corpus loaded.
    It sleeps when idle and only wakes when something pings it. The GitHub
    Actions job that does the pinging is scheduled every ten minutes but GitHub
    throttles scheduled runs hard — the observed rate is roughly every two to
-   five hours. On each wake the desk catches up on every candle since the last
-   one it processed, so no decision is skipped inside that window, but the
-   agent is awake for a minute or two at a time rather than all day.
+   five hours. Each run now holds the worker awake for up to 5.5 hours and
+   checkpoints every 10 minutes; between runs it sleeps. On each wake the desk
+   catches up on every candle since the last one it processed, so no decision
+   is skipped inside that window.
 
-   The window is 280 five-minute bars, just over 23 hours. A sleep longer than
-   that loses candles permanently: the desk never sees them, never decides on
-   them, and never records why.
+   The window is 480 five-minute bars (40 hours, two pages from the feed). A
+   sleep longer than that loses candles permanently: the desk never sees them,
+   never decides on them, and never records why.
 
    Evidence therefore accumulates slowly. **A Render Starter instance with a
    1 GB disk removes all of this** — no sleeping, no snapshot round-trip, and a

@@ -94,6 +94,13 @@ export type AgentStatus = {
   hold_reason?: string | null;
   data_error?: string | null;
   engine?: string;
+  /** The score threshold the worker's strategy uses (STRATEGY_SCORE_THRESHOLD). */
+  strategy_threshold?: number;
+  /** BTC spot and CPI event pipelines, reported separately. */
+  pipelines?: {
+    btc_spot?: { name?: string; tradeable?: boolean; running?: boolean };
+    cpi_event?: { name?: string; tradeable?: boolean; reason?: string };
+  };
   currency?: string;
   /**
    * The detector's account of itself: bars looked at, candidates found, and
@@ -120,6 +127,29 @@ export type AgentStatus = {
     rejection_meanings?: Record<string, string>;
     score_median?: number | null;
     score_best?: number | null;
+    /** Where every evaluated candle ended up, one bucket per pipeline stage. */
+    pipeline?: {
+      candles_evaluated?: number;
+      no_opportunity?: number;
+      strategy_rejected?: number;
+      candidates?: number;
+      analyst_rejected?: number;
+      policy_rejected?: number;
+      risk_rejected?: number;
+      orders_placed?: number;
+      fill_pending?: number;
+      entries_filled?: number;
+      exits_filled?: number;
+      candidate_to_order_pct?: number | null;
+      analyst?: string;
+    };
+    /** Age of the newest candle, so stale data is visible rather than inferred. */
+    freshness?: {
+      latest_candle_ts?: string | null;
+      last_processed_candle_ts?: string | null;
+      age_seconds?: number | null;
+      stale?: boolean | null;
+    };
     /** The most recent bar in full: regime, setup, score and its components. */
     latest?: {
       action?: string;
@@ -152,6 +182,8 @@ export type AgentStatus = {
     min_interval_seconds?: number;
     last_call_at?: string | null;
     filter?: string;
+    /** True only when Grok is actually consulted on BTC candidates. */
+    reviews_btc_candidates?: boolean;
     operates_without_grok?: boolean;
   };
 };

@@ -67,6 +67,12 @@ def public_granularity(timeframe: str) -> int:
     return PUBLIC_GRANULARITY[key]
 
 
+#: Most rows the public candles endpoint returns in one request.
+PAGE_SIZE = 300
+#: Older pages fetched at most, beyond the newest one.
+MAX_EXTRA_PAGES = 3
+
+
 class PublicCryptoFeed(MarketDataProvider):
     """GET-only Coinbase candles. Paper pipeline input. Not an order path."""
 
@@ -148,6 +154,8 @@ class PublicCryptoFeed(MarketDataProvider):
             )
         url = COINBASE_REST + COINBASE_CANDLES_PATH.format(product=product)
         payload = self._get(url, {"granularity": granularity})
+        if limit > PAGE_SIZE and isinstance(payload, list) and payload:
+            payload = self._older_pages(url, payload, granularity=granularity, limit=limit)
         series = self._parse(
             payload,
             product=product,
@@ -156,6 +164,54 @@ class PublicCryptoFeed(MarketDataProvider):
             limit=limit,
         )
         return validate_series(series)
+
+    def _older_pages(
+        self, url: str, payload: list, *, granularity: int, limit: int
+    ) -> list:
+        """Page backwards until ``limit`` rows are held. Rows are deduplicated by time.
+
+        The newest page is fetched without a window so the feed decides what is
+        current; older pages ask for an explicit ``[start, end)`` before the
+        oldest row held. A failed older page is not fatal: the newest page alone
+        is still a valid, fresh tape, just a shorter one.
+        """
+        rows: dict[int, Any] = {}
+
+        def absorb(items: Any) -> None:
+            if not isinstance(items, list):
+                return
+            for row in items:
+                if isinstance(row, (list, tuple)) and row:
+                    try:
+                        rows[int(float(row[0]))] = row
+                    except (TypeError, ValueError):
+                        continue
+
+        absorb(payload)
+        for _ in range(MAX_EXTRA_PAGES):
+            if len(rows) >= limit or not rows:
+                break
+            oldest = min(rows)
+            end = datetime.fromtimestamp(oldest, tz=timezone.utc)
+            want = min(PAGE_SIZE, limit - len(rows))
+            start = end - timedelta(seconds=granularity * want)
+            before = len(rows)
+            try:
+                absorb(
+                    self._get(
+                        url,
+                        {
+                            "granularity": granularity,
+                            "start": iso_utc(start),
+                            "end": iso_utc(end - timedelta(seconds=1)),
+                        },
+                    )
+                )
+            except (MarketDataUnavailableError, StaleMarketDataError, InvalidMarketDataError):
+                break
+            if len(rows) == before:
+                break
+        return [rows[key] for key in sorted(rows, reverse=True)]
 
     def _parse(
         self,
