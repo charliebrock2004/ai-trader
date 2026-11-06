@@ -128,10 +128,14 @@ neither did any daily-loss, position, trade-count, stop or FX rule.
   own hard-coded 0.78. Both now read `strategy.signal.DEFAULT_SCORE_THRESHOLD`,
   out-of-range values are refused at `Settings` and at session start, and a
   test proves the value the dashboard shows is the value the detector uses.
-- Grok made **zero** BTC decisions. With `GROK_PAPER_ANALYSIS=false` it is not
-  consulted on spot candidates, so it was never the bottleneck. The dashboard
-  now says whether it reviews BTC candidates; a failure or budget skip is
-  recorded and never invents a fill.
+- Grok was not the bottleneck: in the 5-20 Sep ledger it made **zero** BTC
+  decisions. `GrokClient` turns paper review on by itself whenever an xAI key is
+  set (whatever `GROK_PAPER_ANALYSIS` says), and the production worker has a key,
+  so Grok does review BTC candidates now: it challenges a candidate the
+  detector already found, can only hold it, never sizes it, and is capped at 8
+  calls a day, 30 minutes apart. On 6 Nov it held 1 of the first 3 candidates.
+  A failure, budget skip or hold is recorded with its reason and never invents
+  a fill. The dashboard reports whether Grok is reviewing.
 - Dashboard labels that still said "trend pullback (SMA 10/20)" now describe the
   multi-setup detector. The BTC panel shows a per-stage funnel (no opportunity
   / score / analyst / policy / risk / pending / filled), score median and best,
