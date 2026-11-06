@@ -31,6 +31,7 @@ from ai_trader.session.continuity import (
     baseline_timestamp,
     fetch_limit,
     indicator_snapshot,
+    live_trade_from_index,
     resolve_trade_from_index,
 )
 from ai_trader.session.source import DeterministicFirstSource, RepeatingGrokSource
@@ -288,9 +289,14 @@ class PaperSession:
         # last_processed_candle_ts says some of them arrived after the last
         # live bar this worker actually handled. Warm-up never opens a position.
         if self.config.continuous and not self.config.trade_historical_bars:
-            self.sim.trade_from_index = resolve_trade_from_index(
-                used.candles, self.last_processed_candle_ts
-            )
+            if self.config.source == "public":
+                self.sim.trade_from_index = live_trade_from_index(
+                    used.candles, self.last_processed_candle_ts
+                )
+            else:
+                self.sim.trade_from_index = resolve_trade_from_index(
+                    used.candles, self.last_processed_candle_ts
+                )
         if self.gate_with_deterministic:
             self.source = DeterministicFirstSource(
                 self.analyst,
@@ -536,12 +542,97 @@ class PaperSession:
         """
         source = self.source
         summary = getattr(source, "signal_summary", None)
+        base: dict[str, Any] = {}
         if callable(summary):
             try:
-                return summary()
+                base = dict(summary())
             except Exception:  # noqa: BLE001 — reporting must never break a run
-                return {}
-        return {}
+                base = {}
+        try:
+            base["pipeline"] = self._pipeline_funnel(source)
+            base["freshness"] = self._freshness()
+        except Exception:  # noqa: BLE001
+            pass
+        return base
+
+    def _pipeline_funnel(self, source: Any) -> dict[str, Any]:
+        """Where every evaluated candle ended up, one bucket per stage.
+
+        The buckets are the distinctions the dashboard has to make: the market
+        offered nothing, the strategy found a setup but held, the analyst held,
+        the survival policy held, the risk engine refused, an order is waiting
+        for the next candle, or a paper fill happened.
+        """
+        sim = self.sim
+        stages = dict(getattr(sim, "stage_counts", {}) or {}) if sim is not None else {}
+        no_opportunity = sum(
+            n for k, n in stages.items()
+            if k.startswith("signal:") and k.split(":", 1)[1] in {"no_setup", "downtrend", "too_quiet", "too_wild", "overbought", "warming_up", "session_warmup", "already_long", "poor_reward"}
+        )
+        strategy_hold = stages.get("signal:score_too_low", 0)
+        analyst_hold = 0
+        decisions = list(getattr(source, "decisions", []) or [])
+        for row in decisions:
+            if row.get("source") in {"grok-challenge", "disagree", "grok-failure"}:
+                analyst_hold += 1
+        fills = entries = exits = 0
+        if sim is not None:
+            for fill in sim.ledger.fills:
+                if getattr(fill, "side", "") == "BUY":
+                    entries += 1
+                else:
+                    exits += 1
+            fills = entries + exits
+        candidates = int(getattr(getattr(source, "technical", None), "candidates", 0) or 0)
+        executed = stages.get("execution", 0)
+        return {
+            "candles_evaluated": int(getattr(getattr(source, "technical", None), "evaluated", 0) or 0),
+            "no_opportunity": no_opportunity,
+            "strategy_rejected": strategy_hold,
+            "candidates": candidates,
+            "analyst_rejected": analyst_hold,
+            "policy_rejected": stages.get("policy", 0),
+            "risk_rejected": stages.get("risk", 0),
+            "orders_placed": executed,
+            "fill_pending": 1 if (sim is not None and sim.pending is not None) else 0,
+            "entries_filled": entries,
+            "exits_filled": exits,
+            "fills": fills,
+            "candidate_to_order_pct": round(100.0 * executed / candidates, 1) if candidates else None,
+            "analyst": (
+                "connected"
+                if getattr(source, "_grok_usable", lambda: False)()
+                else "not used (deterministic detector only)"
+            ),
+        }
+
+    def _freshness(self) -> dict[str, Any]:
+        """How old the newest candle is, so stale data is visible, not inferred."""
+        from datetime import datetime, timezone
+
+        tape = self._series
+        if tape is None or not tape.candles:
+            return {"latest_candle_ts": None, "age_seconds": None, "stale": None}
+        latest = tape.candles[-1].timestamp
+        try:
+            age = (datetime.now(timezone.utc) - parse_utc(latest)).total_seconds()
+        except (TypeError, ValueError):
+            return {"latest_candle_ts": latest, "age_seconds": None, "stale": None}
+        # A 5m candle opens 5 minutes before it closes; anything older than
+        # three bars past close means new candles are not arriving.
+        bar = 300
+        try:
+            from ai_trader.market_data.timeframes import timeframe_seconds
+
+            bar = timeframe_seconds(self.config.timeframe)
+        except Exception:  # noqa: BLE001
+            pass
+        return {
+            "latest_candle_ts": latest,
+            "last_processed_candle_ts": self.last_processed_candle_ts,
+            "age_seconds": round(age),
+            "stale": age > bar * 4,
+        }
 
     def _public(self, report: dict[str, Any], series: CandleSeries) -> dict[str, Any]:
         account = report.get("account") or {}

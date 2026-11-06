@@ -10,6 +10,7 @@ from pydantic import AliasChoices, Field, SecretStr, field_validator, model_vali
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ai_trader.safety import ALPACA_PAPER_BASE_URL, assert_safe_to_run
+from ai_trader.strategy.signal import DEFAULT_SCORE_THRESHOLD, validate_score_threshold
 
 
 def project_root() -> Path:
@@ -53,7 +54,7 @@ class Settings(BaseSettings):
     #: as one number that can be tuned against recorded outcomes instead of by
     #: bolting on another filter. Raising it trades less; lowering it trades
     #: more. It can never bypass the guardian or the risk engine.
-    strategy_score_threshold: float = 0.78
+    strategy_score_threshold: float = DEFAULT_SCORE_THRESHOLD
 
     # -- agent economics ---------------------------------------------------
     #: The experiment's opening stake, in the base accounting currency.
@@ -88,6 +89,13 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return value.strip().lower()
         return value
+
+    @field_validator("strategy_score_threshold", mode="before")
+    @classmethod
+    def _bounded_threshold(cls, value: object) -> float:
+        # Refused, not clamped: a mistyped threshold must not quietly become a
+        # different strategy. Bounds and default live in strategy/signal.py.
+        return validate_score_threshold(value)
 
     @model_validator(mode="after")
     def _enforce_safety(self) -> "Settings":

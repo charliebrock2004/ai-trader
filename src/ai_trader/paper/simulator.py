@@ -127,6 +127,10 @@ class PaperSimulator:
         self.max_holding_bars: Optional[int] = None
         self._entry_bar: dict[str, int] = {}
         self.rejections: list[dict[str, Any]] = []
+        #: Every decision this simulator recorded, counted by the stage that
+        #: settled it. Feeds the dashboard funnel: no opportunity, strategy
+        #: hold, policy, risk, pending fill, filled.
+        self.stage_counts: dict[str, int] = {}
 
     def set_fx_rate(self, rate: float) -> None:
         """Update the quote->base rate used for sizing and marking."""
@@ -471,6 +475,8 @@ class PaperSimulator:
         context: Optional[dict[str, Any]] = None,
     ) -> None:
         """Emit one decision record. HOLDs and rejections are recorded too."""
+        key = stage if stage != "signal" else f"signal:{rejection or 'hold'}"
+        self.stage_counts[key] = self.stage_counts.get(key, 0) + 1
         if self.on_decision is None:
             return
         self.on_decision(
