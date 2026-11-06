@@ -371,10 +371,14 @@ class DeskWorker:
                 "multi-setup detector (pullback, momentum, breakout, range bounce), "
                 f"score threshold {settings.strategy_score_threshold:.2f}"
             ),
-            #: Whether Grok is actually consulted on BTC candidates. A key alone
-            #: is not enough: GROK_PAPER_ANALYSIS must be on. When it is off the
-            #: deterministic detector, policy guardian and risk engine decide.
-            "reviews_btc_candidates": bool(connected and settings.grok_paper_analysis),
+            #: Whether Grok is actually consulted on BTC candidates, read from the
+            #: analyst the session uses. GrokClient switches paper review on by
+            #: itself whenever an xAI key is configured (GROK_PAPER_ANALYSIS only
+            #: matters without a key), so the flag alone does not answer this.
+            "reviews_btc_candidates": bool(
+                connected
+                and getattr(getattr(self.runtime.orchestrator, "grok", None), "paper_requested", False)
+            ),
             "operates_without_grok": True,
         }
 
