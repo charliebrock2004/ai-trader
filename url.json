@@ -3,7 +3,7 @@
   "engine": "python-worker",
   "live": false,
   "live_trading_allowed": false,
-  "updated_at": "2026-11-09T00:08:10Z",
+  "updated_at": "2026-11-09T00:21:43Z",
   "ledger_rows": {
     "agent_life": 1,
     "decisions": 24739,
