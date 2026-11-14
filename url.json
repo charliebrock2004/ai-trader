@@ -3,10 +3,10 @@
   "engine": "python-worker",
   "live": false,
   "live_trading_allowed": false,
-  "updated_at": "2026-11-14T09:10:34Z",
+  "updated_at": "2026-11-14T10:55:50Z",
   "ledger_rows": {
     "agent_life": 1,
-    "decisions": 30309,
+    "decisions": 30339,
     "paper_fills": 10
   }
 }
