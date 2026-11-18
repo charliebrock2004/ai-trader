@@ -1,5 +1,5 @@
 /**
- * Single source of truth for platform head chrome (PWA, extensions.js, OG),
+ * Single source of truth for platform head chrome (PWA, OG). No third-party script is injected,
  * shared by the Vite plugin and Nitro middleware. Plain ESM so `node --test`
  * and the Nitro bundler can both consume it.
  */
@@ -200,7 +200,6 @@ export function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
   ];
 }
 
-export const GROK_EXTENSIONS_SCRIPT_SRC = "https://grok.com/grok-app-builder/extensions.js";
 
 export function readGrokProjectId() {
   const fromProcess = typeof process !== "undefined" ? process.env?.VITE_PROJECT_ID : "";
@@ -228,18 +227,14 @@ export function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readX
 }
 
 /** Platform "Created with Grok" banner — injected into every HTML document. */
+/**
+ * Security (18 Nov 2026): this used to add the grok.com "extensions.js" script tag
+ * to every HTML page, including signed-in screens. It now emits only the
+ * project-id meta tag. No third-party script is ever injected.
+ */
 export function grokExtensionsHeadTags(projectId = readGrokProjectId()) {
-  const id = escapeHtml(projectId);
-  const tags = [];
-  if (projectId) {
-    tags.push(`<meta name="grok-project-id" content="${id}">`);
-  }
-  tags.push(
-    `<script src="${GROK_EXTENSIONS_SCRIPT_SRC}"${
-      projectId ? ` data-project-id="${id}"` : ""
-    } defer></script>`,
-  );
-  return tags;
+  if (!projectId) return [];
+  return [`<meta name="grok-project-id" content="${escapeHtml(projectId)}">`];
 }
 
 export function readOgSite(cwd = process.cwd()) {
@@ -375,6 +370,14 @@ export function grokOgHeadTags({
   return tags;
 }
 
+/** Removes the grok.com extensions script if any page or template already contains it. */
+export function stripGrokExtensionsScript(html) {
+  return String(html).replace(
+    /<script\b[^>]*\bsrc\s*=\s*["'][^"']*\/grok-app-builder\/extensions\.js[^"']*["'][^>]*>\s*<\/script>/gi,
+    "",
+  );
+}
+
 export function stripShareMetaTags(html) {
   return String(html).replace(/<meta\b[^>]*>/gi, (tag) => {
     const attrs = [...tag.matchAll(/\b(?:property|name)\s*=\s*["']([^"']+)["']/gi)];
@@ -432,7 +435,7 @@ export function injectGrokPwaHead(html, ctx = {}) {
     host,
     documentTitle,
   );
-  let next = stripShareMetaTags(html);
+  let next = stripGrokExtensionsScript(stripShareMetaTags(html));
 
   const missing = grokPwaHeadTags(appName)
     .filter(([key]) => {
@@ -447,9 +450,7 @@ export function injectGrokPwaHead(html, ctx = {}) {
     grokOgHeadTags({ host, appName, site, documentTitle, cwd }).join(""),
   );
 
-  if (!next.includes("/grok-app-builder/extensions.js")) {
-    missing.push(...grokExtensionsHeadTags(projectId));
-  } else if (projectId && !next.includes('name="grok-project-id"')) {
+  if (projectId && !next.includes('name="grok-project-id"')) {
     missing.push(`<meta name="grok-project-id" content="${escapeHtml(projectId)}">`);
   }
   if (
