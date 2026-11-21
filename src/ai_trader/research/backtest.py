@@ -110,8 +110,7 @@ def run(series: Series, weights: list[float], costs: Costs = BASE_COSTS, *,
         res.turnover += units * c / res.equity[-1]
         res.orders += 1
         cash += gross - fee
-        res.equity[-1] = cash
-        res.exposure[-1] = 0.0
+        res.equity[-1] = cash  # exposure[-1] stays: the position was held through this bar
         res.trades.append(cash / entry_equity - 1)
         res.open_trade = True  # the last trade was closed by the window, not the rule
     return res
