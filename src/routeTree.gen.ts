@@ -14,11 +14,13 @@ import { Route as DecisionsRouteImport } from './routes/decisions'
 import { Route as PaperRouteImport } from './routes/paper'
 import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as SystemRouteImport } from './routes/system'
+import { Route as TournamentRouteImport } from './routes/tournament'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
 import { Route as ApiDecisionsRouteImport } from './routes/api/decisions'
 import { Route as ApiPaperSessionRouteImport } from './routes/api/paper-session'
 import { Route as ApiPerformanceRouteImport } from './routes/api/performance'
 import { Route as ApiSystemRouteImport } from './routes/api/system'
+import { Route as ApiTournamentRouteImport } from './routes/api/tournament'
 import { Route as DecisionsIdRouteImport } from './routes/decisions.$id'
 import { Route as ApiAgentCycleRouteImport } from './routes/api/agent.cycle'
 import { Route as ApiDecisionsIdRouteImport } from './routes/api/decisions.$id'
@@ -51,6 +53,11 @@ const SystemRoute = SystemRouteImport.update({
   path: '/system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TournamentRoute = TournamentRouteImport.update({
+  id: '/tournament',
+  path: '/tournament',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAgentRoute = ApiAgentRouteImport.update({
   id: '/api/agent',
   path: '/api/agent',
@@ -74,6 +81,11 @@ const ApiPerformanceRoute = ApiPerformanceRouteImport.update({
 const ApiSystemRoute = ApiSystemRouteImport.update({
   id: '/api/system',
   path: '/api/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTournamentRoute = ApiTournamentRouteImport.update({
+  id: '/api/tournament',
+  path: '/api/tournament',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DecisionsIdRoute = DecisionsIdRouteImport.update({
@@ -113,11 +125,13 @@ export interface FileRoutesByFullPath {
   '/paper': typeof PaperRoute
   '/performance': typeof PerformanceRoute
   '/system': typeof SystemRoute
+  '/tournament': typeof TournamentRoute
   '/api/agent': typeof ApiAgentRouteWithChildren
   '/api/decisions': typeof ApiDecisionsRouteWithChildren
   '/api/paper-session': typeof ApiPaperSessionRouteWithChildren
   '/api/performance': typeof ApiPerformanceRoute
   '/api/system': typeof ApiSystemRoute
+  '/api/tournament': typeof ApiTournamentRoute
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
@@ -131,11 +145,13 @@ export interface FileRoutesByTo {
   '/paper': typeof PaperRoute
   '/performance': typeof PerformanceRoute
   '/system': typeof SystemRoute
+  '/tournament': typeof TournamentRoute
   '/api/agent': typeof ApiAgentRouteWithChildren
   '/api/decisions': typeof ApiDecisionsRouteWithChildren
   '/api/paper-session': typeof ApiPaperSessionRouteWithChildren
   '/api/performance': typeof ApiPerformanceRoute
   '/api/system': typeof ApiSystemRoute
+  '/api/tournament': typeof ApiTournamentRoute
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
@@ -150,11 +166,13 @@ export interface FileRoutesById {
   '/paper': typeof PaperRoute
   '/performance': typeof PerformanceRoute
   '/system': typeof SystemRoute
+  '/tournament': typeof TournamentRoute
   '/api/agent': typeof ApiAgentRouteWithChildren
   '/api/decisions': typeof ApiDecisionsRouteWithChildren
   '/api/paper-session': typeof ApiPaperSessionRouteWithChildren
   '/api/performance': typeof ApiPerformanceRoute
   '/api/system': typeof ApiSystemRoute
+  '/api/tournament': typeof ApiTournamentRoute
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
@@ -170,11 +188,13 @@ export interface FileRouteTypes {
     | '/paper'
     | '/performance'
     | '/system'
+    | '/tournament'
     | '/api/agent'
     | '/api/decisions'
     | '/api/paper-session'
     | '/api/performance'
     | '/api/system'
+    | '/api/tournament'
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
@@ -188,11 +208,13 @@ export interface FileRouteTypes {
     | '/paper'
     | '/performance'
     | '/system'
+    | '/tournament'
     | '/api/agent'
     | '/api/decisions'
     | '/api/paper-session'
     | '/api/performance'
     | '/api/system'
+    | '/api/tournament'
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
@@ -206,11 +228,13 @@ export interface FileRouteTypes {
     | '/paper'
     | '/performance'
     | '/system'
+    | '/tournament'
     | '/api/agent'
     | '/api/decisions'
     | '/api/paper-session'
     | '/api/performance'
     | '/api/system'
+    | '/api/tournament'
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
@@ -225,11 +249,13 @@ export interface RootRouteChildren {
   PaperRoute: typeof PaperRoute
   PerformanceRoute: typeof PerformanceRoute
   SystemRoute: typeof SystemRoute
+  TournamentRoute: typeof TournamentRoute
   ApiAgentRoute: typeof ApiAgentRouteWithChildren
   ApiDecisionsRoute: typeof ApiDecisionsRouteWithChildren
   ApiPaperSessionRoute: typeof ApiPaperSessionRouteWithChildren
   ApiPerformanceRoute: typeof ApiPerformanceRoute
   ApiSystemRoute: typeof ApiSystemRoute
+  ApiTournamentRoute: typeof ApiTournamentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -269,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tournament': {
+      id: '/tournament'
+      path: '/tournament'
+      fullPath: '/tournament'
+      preLoaderRoute: typeof TournamentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/agent': {
       id: '/api/agent'
       path: '/api/agent'
@@ -302,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/api/system'
       fullPath: '/api/system'
       preLoaderRoute: typeof ApiSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tournament': {
+      id: '/api/tournament'
+      path: '/api/tournament'
+      fullPath: '/api/tournament'
+      preLoaderRoute: typeof ApiTournamentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/decisions/$id': {
@@ -407,11 +447,13 @@ const rootRouteChildren: RootRouteChildren = {
   PaperRoute: PaperRoute,
   PerformanceRoute: PerformanceRoute,
   SystemRoute: SystemRoute,
+  TournamentRoute: TournamentRoute,
   ApiAgentRoute: ApiAgentRouteWithChildren,
   ApiDecisionsRoute: ApiDecisionsRouteWithChildren,
   ApiPaperSessionRoute: ApiPaperSessionRouteWithChildren,
   ApiPerformanceRoute: ApiPerformanceRoute,
   ApiSystemRoute: ApiSystemRoute,
+  ApiTournamentRoute: ApiTournamentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

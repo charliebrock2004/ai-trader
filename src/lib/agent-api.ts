@@ -273,6 +273,39 @@ export type CalibrationBucket = {
   gap: number;
 };
 
+/** One frozen strategy on one asset, scored on candles after registration. */
+export type TournamentRow = {
+  id: string;
+  rank: number;
+  candidate: string;
+  family: string;
+  symbol: string;
+  benchmark: boolean;
+  forward_bars: number;
+  target_weight: number;
+  net_return: number;
+  max_drawdown: number;
+  trades: number;
+  sharpe: number | null;
+  paper_gate: { passed: boolean; failed: string[] };
+};
+
+/** Forward paper tournament. Simulated; `live` is always false. */
+export type Tournament = {
+  ok: boolean;
+  simulated: true;
+  live: false;
+  error?: string;
+  registered_at?: string;
+  as_of?: string;
+  provisional?: boolean;
+  note?: string;
+  costs?: { fee: number; slippage: number };
+  data?: Record<string, { forward_bars: number; last_bar: number }>;
+  heartbeat?: { last_success: number | null; last_attempt: number | null; error: string | null };
+  rows: TournamentRow[];
+};
+
 export type Performance = {
   starting_equity: number;
   equity: number;
@@ -459,6 +492,7 @@ export const api = {
   stop: () => mutate<AgentStatus>("/api/paper-session/stop", undefined, 8000),
   performance: () => get<Performance>("/api/performance"),
   system: () => get<SystemStatus>("/api/system"),
+  tournament: () => get<Tournament>("/api/tournament"),
   decisions: (limit = 50) => get<{ decisions: DecisionRow[] }>(`/api/decisions?limit=${limit}`),
   decision: (id: number) => get<{ ok: boolean; decision: DecisionDetail }>(`/api/decisions/${id}`),
 };
