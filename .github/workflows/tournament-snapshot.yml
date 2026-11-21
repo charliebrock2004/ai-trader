@@ -1,0 +1,61 @@
+# Records the paper tournament leaderboard once a day on the
+# `tournament-snapshots` branch, one file per daily candle, never rewritten.
+# The worker recomputes the board on request and keeps no history; this is the
+# durable, auditable record. Simulated paper results from public candles: no
+# secrets, no deploy, no trading. The job fails loudly if candles are stale,
+# revised or missing, which is also the alert that the board is broken.
+name: tournament-snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily candles close at 00:00 UTC. The later runs are retries; a day
+    # already recorded is left unchanged.
+    - cron: "40 0,6,12 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tournament-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: code
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install -r code/requirements.txt
+      - name: Check out the snapshot branch (create it on first run)
+        run: |
+          set -euo pipefail
+          git clone --quiet "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" record
+          cd record
+          if git ls-remote --exit-code --heads origin tournament-snapshots >/dev/null; then
+            git checkout --quiet tournament-snapshots
+          else
+            git checkout --quiet --orphan tournament-snapshots
+            git rm -rfq .
+            printf '%s\n' "# Tournament snapshots" "" \
+              "One file per daily candle, written by the tournament-snapshot workflow and never rewritten." \
+              "Simulated paper results. Not trading profits." > README.md
+          fi
+      - name: Record today's leaderboard
+        run: PYTHONPATH=code/src python code/scripts/tournament_snapshot.py record/daily
+      - name: Commit
+        run: |
+          set -euo pipefail
+          cd record
+          git config user.name "ai-trader-worker"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit --quiet -m "tournament snapshot $(date -u +%F)"
+          git push --quiet origin tournament-snapshots
