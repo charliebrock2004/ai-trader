@@ -56,7 +56,8 @@ class Result:
 
 
 def run(series: Series, weights: list[float], costs: Costs = BASE_COSTS, *,
-        start: int = 1, end: Optional[int] = None, band: float = 0.10) -> Result:
+        start: int = 1, end: Optional[int] = None, band: float = 0.10,
+        close_at_end: bool = True) -> Result:
     end = len(series) if end is None else end
     if len(weights) != len(series):
         raise ValueError("weights and series differ in length")
@@ -100,7 +101,8 @@ def run(series: Series, weights: list[float], costs: Costs = BASE_COSTS, *,
         res.exposure.append(units * c / equity if equity > 0 else 0.0)
         # The book starts flat and can first buy at this window's opening price.
         res.asset_ret.append(c / (o if t == start else series.close[t - 1]) - 1)
-    if units > 0 and res.equity:
+    res.open_trade = units > 0
+    if units > 0 and res.equity and close_at_end:
         # Close the book at the window's last close, paying costs, so every
         # trade is counted and a window never ends on unrealised P&L.
         c = series.close[end - 1]

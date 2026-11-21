@@ -248,6 +248,11 @@ def create_app() -> FastAPI:
     def opportunities(limit: int = Query(50, ge=1, le=200)) -> JSONResponse:
         return read("opportunities", {"limit": limit})
 
+    @app.get("/api/tournament")
+    def tournament() -> JSONResponse:
+        """Forward paper tournament leaderboard. Simulated; places no orders."""
+        return read("tournament")
+
     @app.get("/api/snapshot")
     def snapshot() -> JSONResponse:
         """Paper ledger dump for the free-host checkpoint job. Not a trade."""

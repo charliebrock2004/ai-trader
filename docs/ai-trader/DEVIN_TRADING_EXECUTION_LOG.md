@@ -78,3 +78,33 @@ nothing to propose for a live pilot. No allocation is proposed.
 1. Forward paper tournament in the worker: every candidate runs on live public data with its own paper book, heartbeat and leaderboard, so forward evidence accumulates without a browser.
 2. Second research round, declared before running: 4h bars for more trades, a portfolio drawdown brake as a risk overlay, cross-asset rotation.
 3. Owner: confirm `TRADING_LIVE_ARM` and the trader key are unset on the PeakSwift worker host.
+
+### Review fixes to the lab (PR #6)
+
+Four accounting defects found in review were fixed: final-bar exposure, the
+benchmark's first-bar return, stitched cost totals, and a holdout loss that
+was not rejected when development evidence was thin. The development report
+was regenerated; no verdict changed.
+
+### Built: forward paper tournament (`ai_trader.research.tournament`)
+
+- `tournament_registration.json` froze one parameter set per strategy and asset on 2026-11-21 11:38 UTC, with the SHA-256 of the history used. The first scored bar is the 2026-11-22 daily candle, the first to open after registration.
+- The leaderboard is recomputed from that file and public candles, so it needs no browser, no always-on process and no database. A restart cannot lose or duplicate a paper trade.
+- It fails closed: stale candles, history that no longer matches its hash, or a missing registration return no leaderboard.
+- Served by the worker at `GET /api/tournament` (read-only, cached 15 minutes, reports last success and last error) and by `python -m ai_trader research tournament`.
+- The paper gate needs 60 days, 20 trades, a net gain and drawdown under 15%. Passing it is not enough on its own: the strategy must also have passed historical qualification, and none has.
+
+Limits: fills are assumed at the next daily open with fixed costs, so this
+measures the rules, not execution quality. The registration is never
+overwritten; a new tournament needs a new file and a logged reason.
+
+State at registration: 30 entries (9 strategies + buy-and-hold on 3 assets), 0 forward bars, all provisional.
+
+### Re-registered the tournament before any bar was scored
+
+The first registration (11:31 UTC) would have scored the 2026-11-21 candle,
+whose open was already 11.5 hours old, so the first paper fill would have been
+at a known price. Scoring now starts at the first candle that opens after
+registration, and a gap in forward candles returns no leaderboard. The file
+was replaced at 11:38 UTC with the same candle history; no forward bar had
+been scored, so no result was discarded.

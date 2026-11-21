@@ -1,0 +1,349 @@
+{
+ "schema": "ai-trader-tournament/v1",
+ "simulated": true,
+ "registered_at": "2026-11-21T11:38:03Z",
+ "costs": {
+  "fee": 0.0025,
+  "slippage": 0.0005
+ },
+ "criteria": {
+  "min_oos_trades": 30,
+  "min_oos_years": 3.0,
+  "min_folds_traded": 0.75,
+  "min_profit_factor": 1.2,
+  "max_drawdown": 0.25,
+  "min_oos_sharpe": 0.8,
+  "min_folds_positive": 0.6,
+  "min_grid_positive": 0.5,
+  "min_deflated_sharpe": 0.9,
+  "min_holdout_trades": 5,
+  "min_holdout_sharpe": 0.5,
+  "alpha": 0.05,
+  "min_paper_days": 60,
+  "min_paper_trades": 20,
+  "max_paper_drawdown": 0.15,
+  "max_paper_execution_error_rate": 0.02
+ },
+ "data": {
+  "BTCUSDT": {
+   "interval": "1d",
+   "history_bars": 3383,
+   "history_sha256": "14435e814d81017ff9c6661474dda86d3528742df4476497a9261aa9fef40f21",
+   "first_forward_ts": 1795305600
+  },
+  "ETHUSDT": {
+   "interval": "1d",
+   "history_bars": 3383,
+   "history_sha256": "d45e7ec68cffbe729bdf7584723eb7a7ba307e75a5a8e09b8078d5d11fec55ba",
+   "first_forward_ts": 1795305600
+  },
+  "SOLUSDT": {
+   "interval": "1d",
+   "history_bars": 2293,
+   "history_sha256": "5cb1702d93b4ac117c8d68e49911b76eeb7450298af5bbac2a0dbd3d78c99d67",
+   "first_forward_ts": 1795305600
+  }
+ },
+ "entries": [
+  {
+   "id": "tsmom:BTCUSDT",
+   "candidate": "tsmom",
+   "family": "momentum",
+   "symbol": "BTCUSDT",
+   "params": {
+    "lookback": 60
+   }
+  },
+  {
+   "id": "ema_cross:BTCUSDT",
+   "candidate": "ema_cross",
+   "family": "momentum",
+   "symbol": "BTCUSDT",
+   "params": {
+    "fast": 10,
+    "slow": 30
+   }
+  },
+  {
+   "id": "donchian:BTCUSDT",
+   "candidate": "donchian",
+   "family": "breakout",
+   "symbol": "BTCUSDT",
+   "params": {
+    "entry": 20,
+    "exit": 10
+   }
+  },
+  {
+   "id": "volume_breakout:BTCUSDT",
+   "candidate": "volume_breakout",
+   "family": "breakout",
+   "symbol": "BTCUSDT",
+   "params": {
+    "entry": 20,
+    "exit": 10,
+    "vol_mult": 1.5
+   }
+  },
+  {
+   "id": "bollinger_reversion:BTCUSDT",
+   "candidate": "bollinger_reversion",
+   "family": "mean_reversion",
+   "symbol": "BTCUSDT",
+   "params": {
+    "n": 20,
+    "k": 1.5,
+    "trend": 100
+   }
+  },
+  {
+   "id": "rsi_reversion:BTCUSDT",
+   "candidate": "rsi_reversion",
+   "family": "mean_reversion",
+   "symbol": "BTCUSDT",
+   "params": {
+    "n": 3,
+    "low": 20.0,
+    "exit_n": 5,
+    "trend": 100
+   }
+  },
+  {
+   "id": "vol_target_trend:BTCUSDT",
+   "candidate": "vol_target_trend",
+   "family": "risk_adjusted",
+   "symbol": "BTCUSDT",
+   "params": {
+    "fast": 20,
+    "slow": 50,
+    "target": 0.5
+   }
+  },
+  {
+   "id": "trend_ensemble:BTCUSDT",
+   "candidate": "trend_ensemble",
+   "family": "ensemble",
+   "symbol": "BTCUSDT",
+   "params": {
+    "target": 0.4
+   }
+  },
+  {
+   "id": "regime_switch:BTCUSDT",
+   "candidate": "regime_switch",
+   "family": "regime_aware",
+   "symbol": "BTCUSDT",
+   "params": {
+    "er_n": 40,
+    "er_trend": 0.2
+   }
+  },
+  {
+   "id": "buy_and_hold:BTCUSDT",
+   "candidate": "buy_and_hold",
+   "family": "benchmark",
+   "symbol": "BTCUSDT",
+   "params": {}
+  },
+  {
+   "id": "tsmom:ETHUSDT",
+   "candidate": "tsmom",
+   "family": "momentum",
+   "symbol": "ETHUSDT",
+   "params": {
+    "lookback": 30
+   }
+  },
+  {
+   "id": "ema_cross:ETHUSDT",
+   "candidate": "ema_cross",
+   "family": "momentum",
+   "symbol": "ETHUSDT",
+   "params": {
+    "fast": 15,
+    "slow": 30
+   }
+  },
+  {
+   "id": "donchian:ETHUSDT",
+   "candidate": "donchian",
+   "family": "breakout",
+   "symbol": "ETHUSDT",
+   "params": {
+    "entry": 40,
+    "exit": 20
+   }
+  },
+  {
+   "id": "volume_breakout:ETHUSDT",
+   "candidate": "volume_breakout",
+   "family": "breakout",
+   "symbol": "ETHUSDT",
+   "params": {
+    "entry": 55,
+    "exit": 20,
+    "vol_mult": 1.5
+   }
+  },
+  {
+   "id": "bollinger_reversion:ETHUSDT",
+   "candidate": "bollinger_reversion",
+   "family": "mean_reversion",
+   "symbol": "ETHUSDT",
+   "params": {
+    "n": 20,
+    "k": 2.0,
+    "trend": 100
+   }
+  },
+  {
+   "id": "rsi_reversion:ETHUSDT",
+   "candidate": "rsi_reversion",
+   "family": "mean_reversion",
+   "symbol": "ETHUSDT",
+   "params": {
+    "n": 3,
+    "low": 10.0,
+    "exit_n": 5,
+    "trend": 200
+   }
+  },
+  {
+   "id": "vol_target_trend:ETHUSDT",
+   "candidate": "vol_target_trend",
+   "family": "risk_adjusted",
+   "symbol": "ETHUSDT",
+   "params": {
+    "fast": 20,
+    "slow": 50,
+    "target": 0.5
+   }
+  },
+  {
+   "id": "trend_ensemble:ETHUSDT",
+   "candidate": "trend_ensemble",
+   "family": "ensemble",
+   "symbol": "ETHUSDT",
+   "params": {
+    "target": 0.4
+   }
+  },
+  {
+   "id": "regime_switch:ETHUSDT",
+   "candidate": "regime_switch",
+   "family": "regime_aware",
+   "symbol": "ETHUSDT",
+   "params": {
+    "er_n": 20,
+    "er_trend": 0.2
+   }
+  },
+  {
+   "id": "buy_and_hold:ETHUSDT",
+   "candidate": "buy_and_hold",
+   "family": "benchmark",
+   "symbol": "ETHUSDT",
+   "params": {}
+  },
+  {
+   "id": "tsmom:SOLUSDT",
+   "candidate": "tsmom",
+   "family": "momentum",
+   "symbol": "SOLUSDT",
+   "params": {
+    "lookback": 30
+   }
+  },
+  {
+   "id": "ema_cross:SOLUSDT",
+   "candidate": "ema_cross",
+   "family": "momentum",
+   "symbol": "SOLUSDT",
+   "params": {
+    "fast": 15,
+    "slow": 30
+   }
+  },
+  {
+   "id": "donchian:SOLUSDT",
+   "candidate": "donchian",
+   "family": "breakout",
+   "symbol": "SOLUSDT",
+   "params": {
+    "entry": 55,
+    "exit": 20
+   }
+  },
+  {
+   "id": "volume_breakout:SOLUSDT",
+   "candidate": "volume_breakout",
+   "family": "breakout",
+   "symbol": "SOLUSDT",
+   "params": {
+    "entry": 55,
+    "exit": 20,
+    "vol_mult": 1.5
+   }
+  },
+  {
+   "id": "bollinger_reversion:SOLUSDT",
+   "candidate": "bollinger_reversion",
+   "family": "mean_reversion",
+   "symbol": "SOLUSDT",
+   "params": {
+    "n": 20,
+    "k": 1.5,
+    "trend": 100
+   }
+  },
+  {
+   "id": "rsi_reversion:SOLUSDT",
+   "candidate": "rsi_reversion",
+   "family": "mean_reversion",
+   "symbol": "SOLUSDT",
+   "params": {
+    "n": 3,
+    "low": 10.0,
+    "exit_n": 5,
+    "trend": 200
+   }
+  },
+  {
+   "id": "vol_target_trend:SOLUSDT",
+   "candidate": "vol_target_trend",
+   "family": "risk_adjusted",
+   "symbol": "SOLUSDT",
+   "params": {
+    "fast": 20,
+    "slow": 100,
+    "target": 0.3
+   }
+  },
+  {
+   "id": "trend_ensemble:SOLUSDT",
+   "candidate": "trend_ensemble",
+   "family": "ensemble",
+   "symbol": "SOLUSDT",
+   "params": {
+    "target": 0.4
+   }
+  },
+  {
+   "id": "regime_switch:SOLUSDT",
+   "candidate": "regime_switch",
+   "family": "regime_aware",
+   "symbol": "SOLUSDT",
+   "params": {
+    "er_n": 20,
+    "er_trend": 0.2
+   }
+  },
+  {
+   "id": "buy_and_hold:SOLUSDT",
+   "candidate": "buy_and_hold",
+   "family": "benchmark",
+   "symbol": "SOLUSDT",
+   "params": {}
+  }
+ ]
+}
