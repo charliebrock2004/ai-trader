@@ -41,12 +41,13 @@ class TournamentError(RuntimeError):
     """The tournament cannot be scored honestly right now."""
 
 
-def register(series_by_symbol: dict, *, costs: bt.Costs = bt.BASE_COSTS) -> dict:
+def register(series_by_symbol: dict, *, costs: bt.Costs = bt.BASE_COSTS, now: Optional[float] = None) -> dict:
     """Freeze one parameter set per (candidate, symbol), chosen on all history so far.
 
-    The first forward bar is the one after the last completed bar, so no
-    registered choice has seen any bar it will be scored on.
+    Scoring starts at the first bar that opens after registration, so the
+    first paper fill is at a price nobody had seen when the choice was frozen.
     """
+    now = time.time() if now is None else now
     entries, data = [], {}
     for sym, s in series_by_symbol.items():
         rd.validate(s)
@@ -54,7 +55,7 @@ def register(series_by_symbol: dict, *, costs: bt.Costs = bt.BASE_COSTS) -> dict
             raise TournamentError(f"{sym}: too little history to choose parameters")
         step = rd.INTERVAL_SECONDS[s.interval]
         data[sym] = {"interval": s.interval, "history_bars": len(s), "history_sha256": s.sha256(),
-                     "first_forward_ts": s.ts[-1] + step}
+                     "first_forward_ts": s.ts[-1] + step * max(1, -int(-(now - s.ts[-1]) // step))}
         for c in CANDIDATES + (BENCHMARK,):
             best, best_s = c.grid[0], float("-inf")
             for p in c.grid:
@@ -64,7 +65,7 @@ def register(series_by_symbol: dict, *, costs: bt.Costs = bt.BASE_COSTS) -> dict
             entries.append({"id": f"{c.name}:{sym}", "candidate": c.name, "family": c.family, "symbol": sym,
                             "params": best})
     return {"schema": "ai-trader-tournament/v1", "simulated": True,
-            "registered_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "registered_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
             "costs": {"fee": costs.fee, "slippage": costs.slippage},
             "criteria": q.criteria_dict(), "data": data, "entries": entries}
 
@@ -102,11 +103,13 @@ def board(reg: dict, series_by_symbol: dict, *, now: Optional[float] = None) -> 
         if now - last_close > MAX_LAG_BARS * step:
             raise TournamentError(f"{sym}: candles are stale (last completed bar closed "
                                   f"{(now - last_close) / 3600:.0f}h ago)")
-        if len(s) > n0 and s.ts[n0] != d["first_forward_ts"]:
-            raise TournamentError(f"{sym}: first forward bar is missing")
-        data[sym] = {"forward_bars": len(s) - n0, "last_bar": s.ts[-1], "sha256": s.sha256()}
+        # A missing candle after registration would silently skip a day's signal and fill.
+        if any(s.ts[i] - s.ts[i - 1] != step for i in range(n0, len(s))):
+            raise TournamentError(f"{sym}: a candle after registration is missing")
+        first = next((i for i in range(n0, len(s)) if s.ts[i] >= d["first_forward_ts"]), len(s))
+        data[sym] = {"forward_bars": len(s) - first, "first": first, "last_bar": s.ts[-1], "sha256": s.sha256()}
     for e in reg["entries"]:
-        s, n0 = series_by_symbol[e["symbol"]], reg["data"][e["symbol"]]["history_bars"]
+        s, n0 = series_by_symbol[e["symbol"]], data[e["symbol"]]["first"]
         fwd = len(s) - n0
         row = {**e, "forward_bars": fwd, "benchmark": e["candidate"] == BENCHMARK.name}
         w = _BY_NAME[e["candidate"]].weights(s, e["params"])
@@ -132,6 +135,8 @@ def board(reg: dict, series_by_symbol: dict, *, now: Optional[float] = None) -> 
     for i, r in enumerate(rows, 1):
         r["rank"] = i
     min_bars = min(d["forward_bars"] for d in data.values())
+    for d in data.values():
+        del d["first"]
     return {"ok": True, "simulated": True, "live": False, "registered_at": reg["registered_at"],
             "as_of": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)), "costs": reg["costs"],
             "provisional": min_bars < crit.min_paper_days,

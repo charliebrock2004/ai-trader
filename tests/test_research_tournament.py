@@ -9,20 +9,21 @@ FULL = rd.synthetic(1400)
 STEP = 86400
 
 
-def _reg(n=1200):
-    return tm.register({"SYN": FULL.prefix(n)})
-
-
 def _now(s):
     return s.ts[-1] + STEP + 60
 
 
+def _reg(n=1200):
+    # Registered a minute after bar n opened: that bar is not scored.
+    return tm.register({"SYN": FULL.prefix(n)}, now=_now(FULL.prefix(n)))
+
+
 def test_registration_cannot_see_forward_bars():
     reg = _reg()
-    assert reg["data"]["SYN"]["first_forward_ts"] == FULL.ts[1200]
+    assert reg["data"]["SYN"]["first_forward_ts"] == FULL.ts[1201]
     rows = list(zip(FULL.ts, FULL.open, FULL.high, FULL.low, FULL.close, FULL.volume))
     other = rd._from_rows("SYN", "1d", rows[:1200] + [(t, o * 3, h * 3, l * 3, c * 3, v) for t, o, h, l, c, v in rows[1200:]])
-    assert tm.register({"SYN": other.prefix(1200)})["entries"] == reg["entries"]
+    assert tm.register({"SYN": other.prefix(1200)}, now=_now(FULL.prefix(1200)))["entries"] == reg["entries"]
     assert len(reg["entries"]) == len(tm.CANDIDATES) + 1
 
 
@@ -34,8 +35,8 @@ def test_board_scores_forward_bars_only_and_is_repeatable():
     b2 = tm.board(reg, {"SYN": FULL}, now=_now(FULL))
     assert b1["rows"] == b2["rows"]  # recomputing never duplicates or loses a paper trade
     hold = next(r for r in b1["rows"] if r["benchmark"])
-    assert hold["forward_bars"] == 200
-    gross = FULL.close[-1] / FULL.open[1200]
+    assert hold["forward_bars"] == 199
+    gross = FULL.close[-1] / FULL.open[1201]  # first fill is the first open after registration
     assert hold["equity"] == pytest.approx(gross * (1 - 0.0025) / 1.0005)
     assert "Not trading profits" in tm.markdown(b1)
 
@@ -60,6 +61,10 @@ def test_fails_closed_on_stale_revised_or_missing_data():
         tm.board(reg, {"SYN": rd._from_rows("SYN", "1d", rows)}, now=_now(FULL))
     with pytest.raises(tm.TournamentError):
         tm.board(reg, {}, now=_now(FULL))
+    rows = list(zip(FULL.ts, FULL.open, FULL.high, FULL.low, FULL.close, FULL.volume))
+    del rows[1300]
+    with pytest.raises(tm.TournamentError, match="missing"):
+        tm.board(reg, {"SYN": rd._from_rows("SYN", "1d", rows)}, now=_now(FULL))
 
 
 def test_registration_is_never_overwritten(tmp_path):
