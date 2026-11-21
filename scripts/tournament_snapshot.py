@@ -19,7 +19,11 @@ def main(out_dir: str) -> int:
     board = tm.board(tm.load_registration(), {sym: rd.fetch(sym, INTERVAL) for sym in SYMBOLS})
     if board.get("live") is not False or board.get("simulated") is not True:
         raise SystemExit("refusing: board is not marked simulated and not live")
-    day = time.strftime("%Y-%m-%d", time.gmtime(max(d["last_bar"] for d in board["data"].values())))
+    bars = {d["last_bar"] for d in board["data"].values()}
+    if len(bars) != 1:
+        # Recording now would freeze a board where one asset is a day behind; a later run retries.
+        raise SystemExit(f"refusing: assets disagree on the last completed candle: {board['data']}")
+    day = time.strftime("%Y-%m-%d", time.gmtime(bars.pop()))
     path = Path(out_dir) / f"{day}.json"
     if path.exists():
         print(f"{path} already recorded; left unchanged")
