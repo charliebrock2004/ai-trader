@@ -52,7 +52,8 @@ export function TournamentPage() {
   }
 
   const bars = Math.max(0, ...Object.values(data.data ?? {}).map((d) => d.forward_bars));
-  const passing = data.rows.filter((r) => r.paper_gate.passed && !r.benchmark).length;
+  const strategies = data.rows.filter((r) => !r.benchmark);
+  const passing = strategies.filter((r) => r.paper_gate.passed).length;
 
   return (
     <Shell active="tournament">
@@ -66,7 +67,7 @@ export function TournamentPage() {
       <dl className="desk-counts">
         <Stat label="Registered" value={day(data.registered_at)} />
         <Stat label="Forward days scored" value={String(bars)} />
-        <Stat label="Passing paper gate" value={`${passing} of ${data.rows.length}`} />
+        <Stat label="Passing paper gate" value={`${passing} of ${strategies.length}`} />
         <Stat label="Last refresh" value={clock(data.heartbeat?.last_success)} />
       </dl>
 
