@@ -6,9 +6,9 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   appNameFromHost,
-  createHeadInjector,
+  createHeadInjector as createInjector,
   grokXCreatorHeadTags,
-  injectGrokPwaHead,
+  injectGrokPwaHead as injectHead,
   isDocumentPath,
   isInstallQuery,
   publicAppHost,
@@ -20,6 +20,16 @@ import {
 import { renderInstallPage } from "./grok-pwa-plugin.mjs";
 
 const TEMPLATE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const EMPTY_ROOT = mkdtempSync(join(tmpdir(), "grok-pwa-empty-"));
+const injectGrokPwaHead = (html, ctx = {}) => injectHead(html, { cwd: EMPTY_ROOT, ...ctx });
+const createHeadInjector = (ctx = {}) => createInjector({ cwd: EMPTY_ROOT, ...ctx });
+
+test("the app's tracked identity overrides template fallbacks", () => {
+  const site = JSON.parse(readFileSync(join(TEMPLATE_ROOT, "src/lib/og/site.json"), "utf8"));
+  assert.equal(snapshotOgIdentity(TEMPLATE_ROOT).site.title, site.title);
+  const out = injectHead("<html><head><title>Fallback</title></head></html>", { cwd: TEMPLATE_ROOT });
+  assert.ok(out.includes(`property="og:title" content="${site.title}"`));
+});
 
 test("injects before </head>", () => {
   const out = injectGrokPwaHead("<html><head><title>x</title></head><body></body></html>");
@@ -489,13 +499,11 @@ test("vite config keeps the nitro serverDir wiring", () => {
   assert.match(viteConfig, /grokPwaPlugin\(\)/);
 });
 
-test("nitro middleware and its bundled assets exist", () => {
+test("nitro middleware uses the tracked install template and baked identity", () => {
   const middleware = readFileSync(join(TEMPLATE_ROOT, "server/middleware/grok-pwa.ts"), "utf8");
   assert.match(middleware, /install-page\.html\?raw/);
   assert.match(middleware, /virtual:grok-og-identity/);
   readFileSync(join(TEMPLATE_ROOT, "scripts/install-page.html"));
-  readFileSync(join(TEMPLATE_ROOT, "public/__grok/icon-180.png"));
-  readFileSync(join(TEMPLATE_ROOT, "public/__grok/install/styles.css"));
 });
 
 test("vite plugin bakes og identity as a virtual module", () => {
@@ -503,4 +511,3 @@ test("vite plugin bakes og identity as a virtual module", () => {
   assert.match(plugin, /virtual:grok-og-identity/);
   assert.match(plugin, /snapshotOgIdentity/);
 });
-
