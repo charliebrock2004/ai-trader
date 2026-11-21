@@ -98,7 +98,8 @@ def run(series: Series, weights: list[float], costs: Costs = BASE_COSTS, *,
         equity = cash + units * c
         res.equity.append(equity)
         res.exposure.append(units * c / equity if equity > 0 else 0.0)
-        res.asset_ret.append(c / (series.close[t - 1]) - 1)
+        # The book starts flat and can first buy at this window's opening price.
+        res.asset_ret.append(c / (o if t == start else series.close[t - 1]) - 1)
     if units > 0 and res.equity:
         # Close the book at the window's last close, paying costs, so every
         # trade is counted and a window never ends on unrealised P&L.
