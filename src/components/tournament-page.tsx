@@ -23,7 +23,10 @@ export function TournamentPage() {
   const load = useCallback(async () => {
     try {
       const next = await api.tournament();
-      if (!next.ok) throw new Error(next.error ?? "The leaderboard could not be computed.");
+      // A reply without rows is not a leaderboard (e.g. no engine is reachable).
+      if (!next.ok || !Array.isArray(next.rows)) {
+        throw new Error(next.error ?? next.hold_reason ?? "The leaderboard could not be computed.");
+      }
       setData(next);
       setError(null);
     } catch (err) {
