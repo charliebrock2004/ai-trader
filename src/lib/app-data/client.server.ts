@@ -211,7 +211,9 @@ function tokenIdentityKey(token: string): string {
             .digest("base64url");
         }
       }
-    } catch {}
+    } catch {
+      // Opaque tokens use the whole-token hash below.
+    }
   }
   return createHash("sha256").update(token).digest("base64url");
 }

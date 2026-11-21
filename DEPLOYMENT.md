@@ -120,6 +120,32 @@ this paper desk accepts Start from the Vercel UI. Live trading is still impossib
 Import the repository. The framework is detected automatically; no build
 overrides are needed.
 
+### Local build troubleshooting
+
+Use Node 22 and `npm run build`. `vite.config.ts` explicitly uses Nitro's
+`vercel` preset; the deployable artifact is `.vercel/output`, not a plain Vite
+`dist` directory. A successful build emits `.vercel/output/config.json` and
+`functions/__server.func/.vc-config.json` with a Node.js runtime and `index.mjs`
+handler. No sandbox `.grok/` files are needed to compile the app.
+
+To reproduce the production build flags without loading credentials or running
+production migrations, use this in a clean checkout with dependencies installed:
+
+```sh
+env -i HOME="$HOME" PATH="$PATH" CI=1 VERCEL=1 VERCEL_ENV=production NODE_ENV=production npm run build
+```
+
+This deliberately leaves `DATABASE_URL` absent: the build's final `db:migrate`
+step must print its skip message. With a real `DATABASE_URL`, that step connects
+and applies migrations; do not supply production credentials for troubleshooting.
+It also omits project-specific auth/environment settings. A successful local
+build does not establish that a failed Vercel deployment has the same inputs.
+Compare the first failing deployment log line, selected commit, root directory,
+Node version, framework/build/output overrides and install step before changing
+repository config. No failed Vercel deployment logs or project settings are
+stored in this repository; the production-flagged local build succeeds without
+them, so the actual hosted failure requires those logs/settings to diagnose.
+
 Set these environment variables (optional — the frontend defaults to the known Render URL):
 
 ```

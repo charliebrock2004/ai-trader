@@ -164,16 +164,9 @@ test("cli: relative paths follow the script's root, not the caller's cwd", () =>
   assert.equal(existsSync(join(root, "public/og.jpg")), false);
 });
 
-test("every hand-over the og skill prints is one this script accepts", () => {
-  // The card and banner recipes live in the skill's references/, not SKILL.md.
-  const skillDir = join(TEMPLATE_ROOT, ".grok/skills/og");
-  const docs = [
-    join(skillDir, "SKILL.md"),
-    ...readdirSync(join(skillDir, "references")).map((f) => join(skillDir, "references", f)),
-  ];
-  const invocations = docs.flatMap(
-    (path) => readFileSync(path, "utf8").match(/node scripts\/write-atomic\.mjs[^\n`]*/g) ?? [],
-  );
+test("documented asset hand-overs use arguments this script accepts", () => {
+  const doc = readFileSync(join(TEMPLATE_ROOT, "scripts/README.md"), "utf8");
+  const invocations = doc.match(/node scripts\/write-atomic\.mjs[^\n`]*/g) ?? [];
   assert.ok(invocations.length >= 3, "og.jpg, x-banner.jpg and site.json each hand over");
   for (const line of invocations) {
     const argv = line.replace("node scripts/write-atomic.mjs", "").trim().split(/\s+/);
