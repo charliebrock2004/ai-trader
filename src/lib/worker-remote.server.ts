@@ -27,6 +27,7 @@ const READ_PATHS: Record<string, (payload: Json) => string> = {
   agent: () => "/api/agent",
   performance: () => "/api/performance",
   system: () => "/api/system",
+  tournament: () => "/api/tournament",
   decisions: (payload) => {
     const params = new URLSearchParams();
     const limit = Number(payload.limit);

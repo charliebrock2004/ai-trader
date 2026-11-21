@@ -12,12 +12,13 @@ export function Shell({
   active,
 }: {
   children: ReactNode;
-  active: "home" | "decisions" | "performance" | "system";
+  active: "home" | "decisions" | "performance" | "tournament" | "system";
 }) {
   const tabs = [
     { key: "home", to: "/", label: "Agent" },
     { key: "decisions", to: "/decisions", label: "Decisions" },
     { key: "performance", to: "/performance", label: "Performance" },
+    { key: "tournament", to: "/tournament", label: "Tournament" },
     { key: "system", to: "/system", label: "System" },
   ] as const;
 
