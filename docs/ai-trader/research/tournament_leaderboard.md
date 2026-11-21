@@ -1,6 +1,6 @@
 # Forward paper tournament
 
-As of 2026-11-21T11:31:46Z; registered 2026-11-21T11:31:37Z. **Simulated. Not trading profits.**
+As of 2026-11-21T11:38:14Z; registered 2026-11-21T11:38:03Z. **Simulated. Not trading profits.**
 
 Simulated paper results on forward public candles. Not trading profits. Passing the paper gate does not qualify a strategy on its own: it must also have passed historical qualification, and any live pilot needs the owner's explicit approval.
 

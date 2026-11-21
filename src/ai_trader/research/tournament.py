@@ -127,7 +127,8 @@ def board(reg: dict, series_by_symbol: dict, *, now: Optional[float] = None) -> 
                                    "execution_error_rate": 0.0}, crit)
         else:
             row.update({"net_return": 0.0, "max_drawdown": 0.0, "trades": 0, "equity": 1.0, "sharpe": None})
-            gate = q.assess_paper({}, crit)
+            gate = q.assess_paper({"days": 0, "trades": 0, "net_return": 0.0, "max_drawdown": 0.0,
+                                   "execution_error_rate": 0.0}, crit)
         row["paper_gate"] = {"passed": not gate["failed"], "failed": gate["failed"]}
         rows.append(row)
     # Risk first: a gate pass outranks everything, then return net of the drawdown taken to earn it.

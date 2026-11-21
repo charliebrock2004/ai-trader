@@ -1,7 +1,7 @@
 {
  "schema": "ai-trader-tournament/v1",
  "simulated": true,
- "registered_at": "2026-11-21T11:31:37Z",
+ "registered_at": "2026-11-21T11:38:03Z",
  "costs": {
   "fee": 0.0025,
   "slippage": 0.0005
@@ -29,19 +29,19 @@
    "interval": "1d",
    "history_bars": 3383,
    "history_sha256": "14435e814d81017ff9c6661474dda86d3528742df4476497a9261aa9fef40f21",
-   "first_forward_ts": 1795219200
+   "first_forward_ts": 1795305600
   },
   "ETHUSDT": {
    "interval": "1d",
    "history_bars": 3383,
    "history_sha256": "d45e7ec68cffbe729bdf7584723eb7a7ba307e75a5a8e09b8078d5d11fec55ba",
-   "first_forward_ts": 1795219200
+   "first_forward_ts": 1795305600
   },
   "SOLUSDT": {
    "interval": "1d",
    "history_bars": 2293,
    "history_sha256": "5cb1702d93b4ac117c8d68e49911b76eeb7450298af5bbac2a0dbd3d78c99d67",
-   "first_forward_ts": 1795219200
+   "first_forward_ts": 1795305600
   }
  },
  "entries": [

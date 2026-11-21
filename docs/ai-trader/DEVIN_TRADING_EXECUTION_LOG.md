@@ -88,7 +88,7 @@ was regenerated; no verdict changed.
 
 ### Built: forward paper tournament (`ai_trader.research.tournament`)
 
-- `tournament_registration.json` froze one parameter set per strategy and asset on 2026-11-21 11:31 UTC, with the SHA-256 of the history used. The first scored bar is the 2026-11-21 daily candle, which had not closed at registration.
+- `tournament_registration.json` froze one parameter set per strategy and asset on 2026-11-21 11:38 UTC, with the SHA-256 of the history used. The first scored bar is the 2026-11-22 daily candle, the first to open after registration.
 - The leaderboard is recomputed from that file and public candles, so it needs no browser, no always-on process and no database. A restart cannot lose or duplicate a paper trade.
 - It fails closed: stale candles, history that no longer matches its hash, or a missing registration return no leaderboard.
 - Served by the worker at `GET /api/tournament` (read-only, cached 15 minutes, reports last success and last error) and by `python -m ai_trader research tournament`.
@@ -99,3 +99,12 @@ measures the rules, not execution quality. The registration is never
 overwritten; a new tournament needs a new file and a logged reason.
 
 State at registration: 30 entries (9 strategies + buy-and-hold on 3 assets), 0 forward bars, all provisional.
+
+### Re-registered the tournament before any bar was scored
+
+The first registration (11:31 UTC) would have scored the 2026-11-21 candle,
+whose open was already 11.5 hours old, so the first paper fill would have been
+at a known price. Scoring now starts at the first candle that opens after
+registration, and a gap in forward candles returns no leaderboard. The file
+was replaced at 11:38 UTC with the same candle history; no forward bar had
+been scored, so no result was discarded.
