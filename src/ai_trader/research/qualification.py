@@ -87,7 +87,8 @@ def assess(ev: dict, *, n_candidates: int, deflated_sharpe: float, c: Criteria =
         ])
 
     # A loss or a breached drawdown limit is already observed; more trades cannot undo it.
-    observed_failure = oos["net_return"] <= 0 or oos["max_drawdown"] > c.max_drawdown
+    observed_failure = oos["net_return"] <= 0 or oos["max_drawdown"] > c.max_drawdown or (
+        hold is not None and (hold["net_return"] <= 0 or hold["max_drawdown"] > c.max_drawdown))
     if not enough:
         verdict = "REJECTED" if observed_failure else "INSUFFICIENT_EVIDENCE"
     elif not hard or holdout_ok is False:
