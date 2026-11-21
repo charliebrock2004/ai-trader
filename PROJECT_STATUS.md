@@ -453,6 +453,22 @@ the database alone rather than by re-running anything.
 
 ---
 
+## Research lab and forward paper tournament
+
+Separate from the desk above; neither can place an order.
+
+- **Research lab** (`python -m ai_trader research run`): nine long-only
+  strategies on BTC, ETH and SOL daily candles with costs, walk-forward
+  selection and a fixed qualification gate. As of 2026-11-21, 0 of 27
+  strategy/asset pairs qualify. Report: `docs/ai-trader/research/development_report.md`.
+- **Forward paper tournament** (`GET /api/tournament` on the worker, or
+  `python -m ai_trader research tournament`): the same strategies with
+  parameters frozen in `src/ai_trader/research/tournament_registration.json`
+  on 2026-11-21, scored only on candles that open after that. Simulated fills
+  at the next daily open. As of 2026-11-21 it has 0 scored days and is
+  provisional; the paper gate needs 60 days and 20 trades.
+- Decisions and results are logged in `docs/ai-trader/DEVIN_TRADING_EXECUTION_LOG.md`.
+
 ## What is NOT done, and why
 
 **There is no prediction-market venue adapter, so the event pipeline cannot
