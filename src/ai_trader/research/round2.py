@@ -42,7 +42,9 @@ def dd_brake(s: Series, base: list, limit: float, cooldown: int) -> list:
     out, eq, peak, halt_until = [], 1.0, 1.0, -1
     for i in range(len(s)):
         if i:
-            eq *= 1 + out[i - 1] * (s.close[i] / s.close[i - 1] - 1)
+            # Bar i opens holding what was decided at i-2 and trades to the i-1 decision at the open.
+            held = out[i - 2] if i > 1 else 0.0
+            eq *= (1 + held * (s.open[i] / s.close[i - 1] - 1)) * (1 + out[i - 1] * (s.close[i] / s.open[i] - 1))
         if i == halt_until:
             peak = eq
         peak = max(peak, eq)
@@ -103,8 +105,10 @@ def run_basket(b: Basket, weights: list, costs: bt.Costs = bt.BASE_COSTS, *, sta
                band: float = 0.10, close_at_end: bool = True) -> bt.Result:
     """Same conventions as ``backtest.run``: decide on the close, trade the next open, pay costs, start flat.
 
-    ``asset_ret`` is the equal-weight basket, so the timing test asks whether
-    choosing among the assets beat simply holding all of them.
+    ``asset_ret`` is the equal-weight basket rebalanced every bar at no cost, so
+    the timing test asks whether choosing among the assets beat simply holding
+    all of them. The ``equal_weight`` benchmark row differs slightly: it pays
+    costs and only rebalances outside the band.
     """
     end = len(b) if end is None else end
     if len(weights) != len(b):
@@ -274,6 +278,7 @@ def study(series: dict) -> dict:
     baskets = [Basket.of([daily[s] for s in syms[:2]])] + ([Basket.of([daily[s] for s in syms])] if len(syms) > 2 else [])
     sections, plan = [], wf.Plan()
     for sym, s in daily.items():
+        rd.validate(s)
         sections.append({"title": f"{sym} daily", "bars": len(s), "first": s.ts[0], "last": s.ts[-1], "sha256": s.sha256(),
                          "results": _evaluate(s, DAILY, st.BENCHMARK, plan, _round1_trials(s, plan))})
     for sym, s in four.items():
@@ -311,7 +316,8 @@ def markdown(report: dict) -> str:
          "The final 20% holdout was **not** touched in this run, so no strategy can be marked as qualified here; "
          "`INSUFFICIENT_EVIDENCE` means it has not failed a development check yet.", "",
          f"The timing test is corrected for all {report['candidates_tried_all_rounds']} candidates tried across both rounds. "
-         "For baskets, the benchmark and the timing test use an equal-weight hold of the same assets.", "",
+         "For baskets, the timing test compares against the same assets held at equal weight, rebalanced every bar at no cost; "
+         "the `equal_weight` benchmark row pays costs and rebalances only outside the 10% band.", "",
          "Verdicts: " + ", ".join(f"{v} {k}" for k, v in sorted(counts.items())) + f" (of {len(rows)})."]
     for s in report["sections"]:
         L += ["", f"## {s['title']}", "",

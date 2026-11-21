@@ -1,6 +1,6 @@
 {
  "schema": "ai-trader-research-round2/v1",
- "generated_at": "2026-11-21T13:35:28Z",
+ "generated_at": "2026-11-21T13:57:23Z",
  "simulated": true,
  "holdout_scored": false,
  "candidates_tried_all_rounds": 18,
@@ -3175,7 +3175,7 @@
      "grid_net_min": 1.696243271849649,
      "grid_net_max": 16.23161802507314,
      "holdout": null,
-     "deflated_sharpe": 0.6721932498232346,
+     "deflated_sharpe": 0.6543261013504909,
      "assessment": {
       "verdict": "REJECTED",
       "label": null,
@@ -3241,7 +3241,7 @@
        {
         "name": "deflated_sharpe",
         "ok": false,
-        "detail": "deflated Sharpe probability 0.67"
+        "detail": "deflated Sharpe probability 0.65"
        },
        {
         "name": "timing_edge",
@@ -3375,7 +3375,7 @@
      "grid_net_min": 4.457758003454609,
      "grid_net_max": 10.781594858376241,
      "holdout": null,
-     "deflated_sharpe": 0.8538020926144725,
+     "deflated_sharpe": 0.8422871954212698,
      "assessment": {
       "verdict": "REJECTED",
       "label": null,
@@ -3438,7 +3438,7 @@
        {
         "name": "deflated_sharpe",
         "ok": false,
-        "detail": "deflated Sharpe probability 0.85"
+        "detail": "deflated Sharpe probability 0.84"
        },
        {
         "name": "timing_edge",
@@ -3572,7 +3572,7 @@
      "grid_net_min": 4.571735976070127,
      "grid_net_max": 21.580227451297294,
      "holdout": null,
-     "deflated_sharpe": 0.9671800946622358,
+     "deflated_sharpe": 0.9634252927797681,
      "assessment": {
       "verdict": "REJECTED",
       "label": null,
@@ -3635,7 +3635,7 @@
        {
         "name": "deflated_sharpe",
         "ok": true,
-        "detail": "deflated Sharpe probability 0.97"
+        "detail": "deflated Sharpe probability 0.96"
        },
        {
         "name": "timing_edge",
@@ -3776,10 +3776,10 @@
      "folds_positive": 0.4,
      "folds_traded": 1.0,
      "grid_positive": 0.75,
-     "grid_net_min": -0.2070516095458943,
+     "grid_net_min": -0.3136806456463652,
      "grid_net_max": 3.806434318742907,
      "holdout": null,
-     "deflated_sharpe": 0.11381640623454359,
+     "deflated_sharpe": 0.10461634615878335,
      "assessment": {
       "verdict": "REJECTED",
       "label": null,
@@ -3847,7 +3847,7 @@
        {
         "name": "deflated_sharpe",
         "ok": false,
-        "detail": "deflated Sharpe probability 0.11"
+        "detail": "deflated Sharpe probability 0.10"
        },
        {
         "name": "timing_edge",

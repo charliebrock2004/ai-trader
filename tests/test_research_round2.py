@@ -44,6 +44,21 @@ def test_brake_goes_flat_after_the_limit_and_waits_out_the_cooldown():
     assert w[9:] == [1.0] * 7  # fresh peak after the cooldown
 
 
+def test_brake_does_not_count_a_gap_it_was_not_holding_through():
+    px = [100, 100, 100, 80, 80, 80, 80]
+    s = rd._from_rows("X", "1d", [(1_500_000_000 + i * 86400, p, p, p, p, 1.0) for i, p in enumerate(px)])
+    base = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # decided on bar 2's close, bought at bar 3's open of 80
+    assert r2.dd_brake(s, base, limit=0.10, cooldown=3) == base
+
+
+def test_study_refuses_corrupt_daily_candles():
+    good = rd.synthetic(2600)
+    bad = rd.Series(good.symbol, good.interval, good.ts, good.open, good.high,
+                    tuple(-1.0 if i == 50 else v for i, v in enumerate(good.low)), good.close, good.volume)
+    with pytest.raises(rd.ResearchDataError):
+        r2.study({("SYN", "1d"): bad})
+
+
 def test_one_asset_basket_matches_the_single_asset_backtester():
     w = st.ema_cross(S, 10, 30)
     one = r2.Basket.of([S])

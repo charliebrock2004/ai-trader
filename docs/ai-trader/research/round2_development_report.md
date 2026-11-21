@@ -1,10 +1,10 @@
 # Strategy research report, round 2
 
-Generated 2026-11-21T13:35:28Z. **Simulated results on historical candles. Not trading profits.**
+Generated 2026-11-21T13:57:23Z. **Simulated results on historical candles. Not trading profits.**
 
 Binance spot candles. Costs per side: fee 0.25% + slippage 0.05%; stress case is double. Orders fill at the next bar's open. Long or flat only, no leverage. The final 20% holdout was **not** touched in this run, so no strategy can be marked as qualified here; `INSUFFICIENT_EVIDENCE` means it has not failed a development check yet.
 
-The timing test is corrected for all 18 candidates tried across both rounds. For baskets, the benchmark and the timing test use an equal-weight hold of the same assets.
+The timing test is corrected for all 18 candidates tried across both rounds. For baskets, the timing test compares against the same assets held at equal weight, rebalanced every bar at no cost; the `equal_weight` benchmark row pays costs and rebalances only outside the 10% band.
 
 Verdicts: 3 INSUFFICIENT_EVIDENCE, 22 REJECTED (of 25).
 
@@ -84,10 +84,10 @@ Failed checks:
 
 | Strategy | Verdict | OOS net | 2x costs | Gross | Max DD | Sharpe | Trades | Win | PF | Exposure | Folds + | Grid + | DSR | Timing p | Holdout net | Holdout DD |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| tsmom_4h | REJECTED | +172.2% | -7.9% | +702.4% | -75.2% | 0.64 | 180 | 27% | 1.94 | 55% | 40% | 100% | 0.67 | 0.68 | not scored | not scored |
-| ema_cross_4h | REJECTED | +506.3% | +391.1% | +648.2% | -66.8% | 0.91 | 35 | 34% | 2.96 | 55% | 60% | 100% | 0.85 | 0.33 | not scored | not scored |
-| donchian_4h | REJECTED | +1212.9% | +1002.6% | +1462.7% | -47.5% | 1.27 | 29 | 55% | 4.55 | 43% | 60% | 100% | 0.97 | 0.06 | not scored | not scored |
-| brake_ema_4h | REJECTED | -40.7% | -50.5% | -29.0% | -61.8% | -0.10 | 30 | 37% | 0.82 | 32% | 40% | 75% | 0.11 | 0.98 | not scored | not scored |
+| tsmom_4h | REJECTED | +172.2% | -7.9% | +702.4% | -75.2% | 0.64 | 180 | 27% | 1.94 | 55% | 40% | 100% | 0.65 | 0.68 | not scored | not scored |
+| ema_cross_4h | REJECTED | +506.3% | +391.1% | +648.2% | -66.8% | 0.91 | 35 | 34% | 2.96 | 55% | 60% | 100% | 0.84 | 0.33 | not scored | not scored |
+| donchian_4h | REJECTED | +1212.9% | +1002.6% | +1462.7% | -47.5% | 1.27 | 29 | 55% | 4.55 | 43% | 60% | 100% | 0.96 | 0.06 | not scored | not scored |
+| brake_ema_4h | REJECTED | -40.7% | -50.5% | -29.0% | -61.8% | -0.10 | 30 | 37% | 0.82 | 32% | 40% | 75% | 0.10 | 0.98 | not scored | not scored |
 | buy_and_hold | benchmark | +1041.9% | +1008.0% | +1076.7% | -81.2% | 1.01 | 5 | 60% | 12.98 | 100% | 60% | 100% | n/a | 1.00 | not scored | not scored |
 
 Failed checks:

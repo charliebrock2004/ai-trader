@@ -131,3 +131,13 @@ and not filled. Three assets is a thin basis for rotation.
 
 Live readiness: unchanged, not ready. No candidate from this round is proposed
 for the tournament.
+
+### Round 2 review fixes (report regenerated, no verdict changed)
+
+- The drawdown brake tracked its own equity close-to-close, so it could count a
+  gap it had not yet bought through. It now uses the same next-open fills as the
+  backtester. Crypto has almost no gaps, so only one deflated-Sharpe figure
+  group moved (ETH 4-hour, by 0.01-0.02).
+- Daily candles are now validated before round 2 scores them.
+- Report wording: the basket timing test compares against a cost-free equal
+  weight rebalanced every bar, not the `equal_weight` benchmark row.
