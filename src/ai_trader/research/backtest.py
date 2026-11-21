@@ -122,13 +122,14 @@ def stitch(parts: list[Result]) -> Result:
     out = Result(parts[0].start, parts[-1].end)
     level = 1.0
     for p in parts:
+        start_level = level
         out.equity.extend(level * e for e in p.equity)
         level = out.equity[-1] if out.equity else level
         out.exposure.extend(p.exposure)
         out.asset_ret.extend(p.asset_ret)
         out.trades.extend(p.trades)
         out.orders += p.orders
-        out.fees += p.fees
-        out.slippage += p.slippage
+        out.fees += start_level * p.fees  # in units of the stitched curve's starting equity
+        out.slippage += start_level * p.slippage
         out.turnover += p.turnover
     return out
