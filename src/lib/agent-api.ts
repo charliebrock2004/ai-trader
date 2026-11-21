@@ -296,8 +296,6 @@ export type Tournament = {
   simulated: true;
   live: false;
   error?: string;
-  /** Set instead of rows when no engine is reachable. */
-  hold_reason?: string;
   registered_at?: string;
   as_of?: string;
   provisional?: boolean;

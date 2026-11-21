@@ -25,7 +25,10 @@ export function TournamentPage() {
       const next = await api.tournament();
       // A reply without rows is not a leaderboard (e.g. no engine is reachable).
       if (!next.ok || !Array.isArray(next.rows)) {
-        throw new Error(next.error ?? next.hold_reason ?? "The leaderboard could not be computed.");
+        throw new Error(
+          next.error ??
+            "No trading worker is reachable, so the leaderboard cannot be computed. A free worker may be asleep; retry in a moment.",
+        );
       }
       setData(next);
       setError(null);
@@ -93,7 +96,7 @@ export function TournamentPage() {
                 <th scope="col">Net return</th>
                 <th scope="col">Max drawdown</th>
                 <th scope="col">Trades</th>
-                <th scope="col">Position</th>
+                <th scope="col">Target position</th>
                 <th scope="col">Paper gate</th>
               </tr>
             </thead>
@@ -107,7 +110,7 @@ export function TournamentPage() {
                   <td>{pct(row.max_drawdown)}</td>
                   <td>{row.trades}</td>
                   <td>{pct(row.target_weight, 0)}</td>
-                  <td>{gate(row)}</td>
+                  <td className="whitespace-nowrap">{gate(row)}</td>
                 </tr>
               ))}
             </tbody>
