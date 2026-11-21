@@ -108,3 +108,26 @@ at a known price. Scoring now starts at the first candle that opens after
 registration, and a gap in forward candles returns no leaderboard. The file
 was replaced at 11:38 UTC with the same candle history; no forward bar had
 been scored, so no result was discarded.
+
+### Research round 2 (4-hour bars, drawdown brake, cross-asset rotation)
+
+Candidates and grids were committed (`8c4ba1d`) before the first run on real
+data. Round 1's candidates and the tournament registration were not changed.
+The qualification gate is unchanged; the timing test is corrected for all 18
+candidates tried across both rounds. The final 20% holdout was not scored.
+
+Result (simulated, historical, not profits): 25 strategy/market evaluations,
+22 rejected, 3 with insufficient evidence, 0 qualified. Full tables:
+`docs/ai-trader/research/round2_development_report.md`.
+
+- 4-hour bars did not help: every 4-hour candidate still had a 44-75% drawdown.
+- The drawdown brake cut the ensemble's drawdown to 25-35%, still over the 25% limit.
+- The low-volatility ensemble met the drawdown limit (9-18%) by being invested
+  only 13% of the time; it has too few trades and no timing edge after correction.
+- Rotation did not beat holding the same assets equally (timing p 0.19-0.48).
+
+Known limits: BTC and ETH 4-hour data has 8 gaps (16 missing bars), reported
+and not filled. Three assets is a thin basis for rotation.
+
+Live readiness: unchanged, not ready. No candidate from this round is proposed
+for the tournament.
