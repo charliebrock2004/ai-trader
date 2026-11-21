@@ -32,9 +32,18 @@ def main(argv: list[str] | None = None) -> int:
             "benchmark",
             "paper-session",
             "rpc",
+            "research",
         ),
     )
-    args = parser.parse_args(argv)
+    args, rest = parser.parse_known_args(argv)
+
+    if args.command == "research":
+        # Historical research only: no runtime, no ledger, no orders.
+        from ai_trader.research.lab import main as research_main
+
+        return research_main(rest)
+    if rest:
+        parser.error(f"unrecognised arguments: {' '.join(rest)}")
 
     from ai_trader.config import get_settings
     from ai_trader.runtime import get_runtime

@@ -1,0 +1,5607 @@
+{
+ "schema": "ai-trader-research/v1",
+ "generated_at": "2026-11-21T11:25:37Z",
+ "simulated": true,
+ "interval": "1d",
+ "costs": {
+  "base_per_side": {
+   "fee": 0.0025,
+   "slippage": 0.0005
+  },
+  "stress_per_side": {
+   "fee": 0.005,
+   "slippage": 0.001
+  }
+ },
+ "criteria": {
+  "min_oos_trades": 30,
+  "min_oos_years": 3.0,
+  "min_folds_traded": 0.75,
+  "min_profit_factor": 1.2,
+  "max_drawdown": 0.25,
+  "min_oos_sharpe": 0.8,
+  "min_folds_positive": 0.6,
+  "min_grid_positive": 0.5,
+  "min_deflated_sharpe": 0.9,
+  "min_holdout_trades": 5,
+  "min_holdout_sharpe": 0.5,
+  "alpha": 0.05,
+  "min_paper_days": 60,
+  "min_paper_trades": 20,
+  "max_paper_drawdown": 0.15,
+  "max_paper_execution_error_rate": 0.02
+ },
+ "plan": {
+  "warmup": 200,
+  "min_train": 730,
+  "fold": 365,
+  "holdout_frac": 0.2
+ },
+ "holdout_scored": false,
+ "data": {
+  "BTCUSDT": {
+   "bars": 3383,
+   "gaps": 0,
+   "missing_bars": 0,
+   "first": 1502928000,
+   "last": 1795132800,
+   "sha256": "14435e814d81017ff9c6661474dda86d3528742df4476497a9261aa9fef40f21"
+  },
+  "ETHUSDT": {
+   "bars": 3383,
+   "gaps": 0,
+   "missing_bars": 0,
+   "first": 1502928000,
+   "last": 1795132800,
+   "sha256": "d45e7ec68cffbe729bdf7584723eb7a7ba307e75a5a8e09b8078d5d11fec55ba"
+  },
+  "SOLUSDT": {
+   "bars": 2293,
+   "gaps": 0,
+   "missing_bars": 0,
+   "first": 1597104000,
+   "last": 1795132800,
+   "sha256": "5cb1702d93b4ac117c8d68e49911b76eeb7450298af5bbac2a0dbd3d78c99d67"
+  }
+ },
+ "results": [
+  {
+   "candidate": "tsmom",
+   "family": "momentum",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 7.802504135001611,
+    "cagr": 0.5483994541347839,
+    "max_drawdown": 0.6193097405703425,
+    "sharpe": 1.1706649862155722,
+    "sortino": 1.8245350379490595,
+    "exposure": 0.5861309851403412,
+    "trades": 49,
+    "open_trade": false,
+    "orders": 98,
+    "win_rate": 0.30612244897959184,
+    "avg_win": 0.3817596935726733,
+    "avg_loss": -0.040216309592900415,
+    "profit_factor": 4.187937578762096,
+    "expectancy": 0.08896001790676494,
+    "max_consecutive_losses": 9,
+    "fees": 0.23571836470559368,
+    "slippage": 0.04708885616723514,
+    "turnover": 98.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 5.554251190850642,
+    "cagr": 0.45927105744030206,
+    "max_drawdown": 0.644768663810873,
+    "sharpe": 1.042473640167899,
+    "sortino": 1.616687789391571,
+    "exposure": 0.5861309851403412,
+    "trades": 49,
+    "open_trade": false,
+    "orders": 98,
+    "win_rate": 0.2857142857142857,
+    "avg_win": 0.40045628747561235,
+    "avg_loss": -0.044786892843878996,
+    "profit_factor": 3.5765489592818898,
+    "expectancy": 0.08242544439026135,
+    "max_consecutive_losses": 9,
+    "fees": 0.4561314878311724,
+    "slippage": 0.0910135977973453,
+    "turnover": 98.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 10.814682140842553,
+   "oos_excess": {
+    "mean": 0.00037324472780284805,
+    "lo": -0.00037492452948611576,
+    "hi": 0.001180601870775529,
+    "p_le_zero": 0.173
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "lookback": 60
+     },
+     "net_return": 3.264469037082028,
+     "asset_return": 4.747599048866052,
+     "trades": 8
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "lookback": 60
+     },
+     "net_return": 0.31680014349421315,
+     "asset_return": -0.15681169396955652,
+     "trades": 6
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "lookback": 60
+     },
+     "net_return": -0.33166888117152304,
+     "asset_return": -0.47344561172092126,
+     "trades": 12
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "lookback": 60
+     },
+     "net_return": 1.229695400301742,
+     "asset_return": 1.77294163012641,
+     "trades": 5
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "lookback": 60
+     },
+     "net_return": 0.05192356917093943,
+     "asset_return": 0.5575939128156635,
+     "trades": 18
+    }
+   ],
+   "folds_positive": 0.8,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 4.239476062410178,
+   "grid_net_max": 14.017917316349786,
+   "holdout": null,
+   "deflated_sharpe": 0.6800623773347475,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "49 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +780.3% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +555.4% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.19"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 61.9% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.17 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "80% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.68"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.173 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "ema_cross",
+   "family": "momentum",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 10.49476616539586,
+    "cagr": 0.6337281375763255,
+    "max_drawdown": 0.5906910667663756,
+    "sharpe": 1.2988344804855598,
+    "sortino": 2.037830896922713,
+    "exposure": 0.5575123830489819,
+    "trades": 28,
+    "open_trade": false,
+    "orders": 56,
+    "win_rate": 0.42857142857142855,
+    "avg_win": 0.515568148783914,
+    "avg_loss": -0.07846574504940765,
+    "profit_factor": 4.927960747004397,
+    "expectancy": 0.17612020945058732,
+    "max_consecutive_losses": 7,
+    "fees": 0.15748176684601017,
+    "slippage": 0.031462358245472166,
+    "turnover": 56.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 8.712024427319001,
+    "cagr": 0.5793093055154295,
+    "max_drawdown": 0.6087570762450263,
+    "sharpe": 1.2242200022245675,
+    "sortino": 1.9155644177153515,
+    "exposure": 0.5575123830489819,
+    "trades": 28,
+    "open_trade": false,
+    "orders": 56,
+    "win_rate": 0.42857142857142855,
+    "avg_win": 0.5064736078231385,
+    "avg_loss": -0.08399563892790496,
+    "profit_factor": 4.522320571826244,
+    "expectancy": 0.16906260967968503,
+    "max_consecutive_losses": 7,
+    "fees": 0.3096836457460617,
+    "slippage": 0.061802671682064964,
+    "turnover": 56.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 12.599963518401015,
+   "oos_excess": {
+    "mean": 0.0005662359753451798,
+    "lo": -0.00020261198283796648,
+    "hi": 0.0013616295594334822,
+    "p_le_zero": 0.0815
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "fast": 10,
+      "slow": 30
+     },
+     "net_return": 4.765028162943921,
+     "asset_return": 4.747599048866052,
+     "trades": 4
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "fast": 10,
+      "slow": 30
+     },
+     "net_return": 0.03240775166932308,
+     "asset_return": -0.15681169396955652,
+     "trades": 6
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "fast": 10,
+      "slow": 30
+     },
+     "net_return": -0.27899482572380196,
+     "asset_return": -0.47344561172092126,
+     "trades": 6
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "fast": 10,
+      "slow": 30
+     },
+     "net_return": 1.3868646046971391,
+     "asset_return": 1.77294163012641,
+     "trades": 5
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "fast": 10,
+      "slow": 30
+     },
+     "net_return": 0.12222847807885628,
+     "asset_return": 0.5575939128156635,
+     "trades": 7
+    }
+   ],
+   "folds_positive": 0.8,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 4.398560040785233,
+   "grid_net_max": 18.154087302266227,
+   "holdout": null,
+   "deflated_sharpe": 0.7753423835329196,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "28 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +1049.5% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +871.2% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.93"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 59.1% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.30 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "80% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.78"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.082 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "donchian",
+   "family": "breakout",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 2.1050060329705245,
+    "cagr": 0.2557797883680526,
+    "max_drawdown": 0.6026199233162668,
+    "sharpe": 0.7616574911175855,
+    "sortino": 1.177713714231513,
+    "exposure": 0.47495872317006055,
+    "trades": 23,
+    "open_trade": false,
+    "orders": 46,
+    "win_rate": 0.391304347826087,
+    "avg_win": 0.4584560405613484,
+    "avg_loss": -0.08693925116423833,
+    "profit_factor": 3.389973302209646,
+    "expectancy": 0.12647629777186079,
+    "max_consecutive_losses": 5,
+    "fees": 0.11221285764894887,
+    "slippage": 0.022416939953889596,
+    "turnover": 46.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 1.7035959252964146,
+    "cagr": 0.22131627167664258,
+    "max_drawdown": 0.6291949895781782,
+    "sharpe": 0.6928641977164471,
+    "sortino": 1.068230485859106,
+    "exposure": 0.47495872317006055,
+    "trades": 23,
+    "open_trade": false,
+    "orders": 46,
+    "win_rate": 0.391304347826087,
+    "avg_win": 0.4497042149103419,
+    "avg_loss": -0.09241829767668056,
+    "profit_factor": 3.128120447959982,
+    "expectancy": 0.11971659855302391,
+    "max_consecutive_losses": 5,
+    "fees": 0.22147203448094202,
+    "slippage": 0.04419298139584753,
+    "turnover": 46.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 2.564984301389824,
+   "oos_excess": {
+    "mean": -5.8266034418405654e-05,
+    "lo": -0.0008743590526073222,
+    "hi": 0.0008457381320148656,
+    "p_le_zero": 0.555
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "entry": 55,
+      "exit": 10
+     },
+     "net_return": 2.747155680386379,
+     "asset_return": 4.747599048866052,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "entry": 40,
+      "exit": 10
+     },
+     "net_return": -0.28772602573991257,
+     "asset_return": -0.15681169396955652,
+     "trades": 5
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "entry": 40,
+      "exit": 20
+     },
+     "net_return": -0.224050425757908,
+     "asset_return": -0.47344561172092126,
+     "trades": 4
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "entry": 40,
+      "exit": 20
+     },
+     "net_return": 0.27891376449296046,
+     "asset_return": 1.77294163012641,
+     "trades": 5
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "entry": 20,
+      "exit": 10
+     },
+     "net_return": 0.17230029658175572,
+     "asset_return": 0.5575939128156635,
+     "trades": 6
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 8.112988506393275,
+   "grid_net_max": 14.238886050961405,
+   "holdout": null,
+   "deflated_sharpe": 0.32474383080612634,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "sharpe",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "23 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +210.5% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +170.4% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 3.39"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 60.3% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.76 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.32"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.555 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "volume_breakout",
+   "family": "breakout",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 11.976743637871868,
+    "cagr": 0.6740426862334479,
+    "max_drawdown": 0.3781793912414082,
+    "sharpe": 1.5089217788910676,
+    "sortino": 2.48010005111286,
+    "exposure": 0.40561364887176665,
+    "trades": 16,
+    "open_trade": false,
+    "orders": 32,
+    "win_rate": 0.6875,
+    "avg_win": 0.4497326833144118,
+    "avg_loss": -0.07851204392440359,
+    "profit_factor": 12.602039812444254,
+    "expectancy": 0.2846562060522819,
+    "max_consecutive_losses": 2,
+    "fees": 0.09498779211707419,
+    "slippage": 0.018978258667679816,
+    "turnover": 32.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 10.785354584752097,
+    "cagr": 0.6419477424224098,
+    "max_drawdown": 0.3902049424370374,
+    "sharpe": 1.4596712900235849,
+    "sortino": 2.390849207752858,
+    "exposure": 0.40561364887176665,
+    "trades": 16,
+    "open_trade": false,
+    "orders": 32,
+    "win_rate": 0.6875,
+    "avg_win": 0.4410332043228816,
+    "avg_loss": -0.08404165997506755,
+    "profit_factor": 11.545143798899122,
+    "expectancy": 0.27694730922977256,
+    "max_consecutive_losses": 2,
+    "fees": 0.18813209795375604,
+    "slippage": 0.03754972070612363,
+    "turnover": 32.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 13.285699083225884,
+   "oos_excess": {
+    "mean": 0.0008452407757759526,
+    "lo": 0.00011049916154150821,
+    "hi": 0.0016868397959236684,
+    "p_le_zero": 0.0115
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.5
+     },
+     "net_return": 3.6992180673847903,
+     "asset_return": 4.747599048866052,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.5
+     },
+     "net_return": 0.2444967031065044,
+     "asset_return": -0.15681169396955652,
+     "trades": 3
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.5
+     },
+     "net_return": -0.08112128062580393,
+     "asset_return": -0.47344561172092126,
+     "trades": 3
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.5
+     },
+     "net_return": 0.8275509365151603,
+     "asset_return": 1.77294163012641,
+     "trades": 4
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.5
+     },
+     "net_return": 0.32135250313536523,
+     "asset_return": 0.5575939128156635,
+     "trades": 3
+    }
+   ],
+   "folds_positive": 0.8,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 6.604887505866861,
+   "grid_net_max": 25.25167422628356,
+   "holdout": null,
+   "deflated_sharpe": 0.893891453641247,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "16 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +1197.7% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +1078.5% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 12.6"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 37.8% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.51 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "80% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.89"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.011 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "bollinger_reversion",
+   "family": "mean_reversion",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": -0.2042207352558686,
+    "cagr": -0.044880933814776425,
+    "max_drawdown": 0.4743689141775844,
+    "sharpe": 0.035108342184068206,
+    "sortino": 0.04562367486270347,
+    "exposure": 0.13979086406164007,
+    "trades": 13,
+    "open_trade": false,
+    "orders": 26,
+    "win_rate": 0.6153846153846154,
+    "avg_win": 0.06414831005188978,
+    "avg_loss": -0.12966139935260246,
+    "profit_factor": 0.7915794260704437,
+    "expectancy": -0.010393885872914925,
+    "max_consecutive_losses": 2,
+    "fees": 0.06606824156935914,
+    "slippage": 0.013197024785454585,
+    "turnover": 26.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": -0.2641125892770668,
+    "cagr": -0.059786100813872145,
+    "max_drawdown": 0.4743689141775844,
+    "sharpe": -0.013360497835510732,
+    "sortino": -0.017340893448757805,
+    "exposure": 0.13979086406164007,
+    "trades": 13,
+    "open_trade": false,
+    "orders": 26,
+    "win_rate": 0.6153846153846154,
+    "avg_win": 0.05776262531585699,
+    "avg_loss": -0.13488408106419877,
+    "profit_factor": 0.6851824157172655,
+    "expectancy": -0.01633226175339523,
+    "max_consecutive_losses": 2,
+    "fees": 0.13084849646837873,
+    "slippage": 0.02610374188328958,
+    "turnover": 26.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": -0.13959498286297467,
+   "oos_excess": {
+    "mean": -0.00023596942438253266,
+    "lo": -0.0007846254497872327,
+    "hi": 0.000276457734443419,
+    "p_le_zero": 0.81
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "n": 30,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": -0.167894406536526,
+     "asset_return": 4.747599048866052,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "n": 30,
+      "k": 1.5,
+      "trend": 200
+     },
+     "net_return": -0.2293035460064049,
+     "asset_return": -0.15681169396955652,
+     "trades": 3
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "n": 30,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": 0.0,
+     "asset_return": -0.47344561172092126,
+     "trades": 0
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "n": 30,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": 0.15557110265231722,
+     "asset_return": 1.77294163012641,
+     "trades": 5
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "n": 30,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": 0.07382656515854724,
+     "asset_return": 0.5575939128156635,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 0.4,
+   "folds_traded": 0.8,
+   "grid_positive": 0.5,
+   "grid_net_min": -0.21361249423505857,
+   "grid_net_max": 0.3710288964088906,
+   "holdout": null,
+   "deflated_sharpe": 0.019801897211478514,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "net_positive",
+     "net_positive_2x_costs",
+     "profit_factor",
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "13 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 80% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": false,
+      "detail": "net -20.4% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": false,
+      "detail": "net -26.4% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": false,
+      "detail": "profit factor 0.79"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 47.4% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.04 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "40% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "50% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.02"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.810 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "rsi_reversion",
+   "family": "mean_reversion",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": -0.18423462808428137,
+    "cagr": -0.04010658499169728,
+    "max_drawdown": 0.3514336800562724,
+    "sharpe": -0.23590831734921366,
+    "sortino": -0.32314517017021166,
+    "exposure": 0.06219042377545404,
+    "trades": 34,
+    "open_trade": false,
+    "orders": 68,
+    "win_rate": 0.5882352941176471,
+    "avg_win": 0.023917334033258186,
+    "avg_loss": -0.0461536412620588,
+    "profit_factor": 0.740301720800513,
+    "expectancy": -0.004935420500107633,
+    "max_consecutive_losses": 3,
+    "fees": 0.16395947891666068,
+    "slippage": 0.032750845352773963,
+    "turnover": 68.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": -0.3351996498779265,
+    "cagr": -0.07879196168698943,
+    "max_drawdown": 0.4127484296520546,
+    "sharpe": -0.5423391470118863,
+    "sortino": -0.7247692615964522,
+    "exposure": 0.06219042377545404,
+    "trades": 34,
+    "open_trade": false,
+    "orders": 68,
+    "win_rate": 0.5294117647058824,
+    "avg_win": 0.01997027381752614,
+    "avg_loss": -0.045642979451131424,
+    "profit_factor": 0.49222373988032886,
+    "expectancy": -0.01090655125007742,
+    "max_consecutive_losses": 5,
+    "fees": 0.3188595916865984,
+    "slippage": 0.06361194638841253,
+    "turnover": 68.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 0.0005845286547323525,
+   "oos_excess": {
+    "mean": -0.00020583350139007062,
+    "lo": -0.0005009500822791257,
+    "hi": 6.516937482047414e-05,
+    "p_le_zero": 0.9325
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": 0.03918883535842799,
+     "asset_return": 4.747599048866052,
+     "trades": 1
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "n": 3,
+      "low": 20.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": -0.16635815405874677,
+     "asset_return": -0.15681169396955652,
+     "trades": 5
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "n": 3,
+      "low": 20.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": -0.0760635429938592,
+     "asset_return": -0.47344561172092126,
+     "trades": 4
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "n": 3,
+      "low": 20.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": -0.006734811506733496,
+     "asset_return": 1.77294163012641,
+     "trades": 11
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "n": 3,
+      "low": 20.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": 0.026086487953906223,
+     "asset_return": 0.5575939128156635,
+     "trades": 13
+    }
+   ],
+   "folds_positive": 0.4,
+   "folds_traded": 1.0,
+   "grid_positive": 0.625,
+   "grid_net_min": -0.20586704494123953,
+   "grid_net_max": 0.2919830107958543,
+   "holdout": null,
+   "deflated_sharpe": 0.0037260491841886734,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "net_positive",
+     "net_positive_2x_costs",
+     "profit_factor",
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "34 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": false,
+      "detail": "net -18.4% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": false,
+      "detail": "net -33.5% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": false,
+      "detail": "profit factor 0.74"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 35.1% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe -0.24 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "40% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "62% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.00"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.932 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "vol_target_trend",
+   "family": "risk_adjusted",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 4,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 3.9969218227939347,
+    "cagr": 0.38182136501852915,
+    "max_drawdown": 0.37386837469386713,
+    "sharpe": 1.2621542672566566,
+    "sortino": 1.9859386688731633,
+    "exposure": 0.36937383537097185,
+    "trades": 17,
+    "open_trade": false,
+    "orders": 117,
+    "win_rate": 0.47058823529411764,
+    "avg_win": 0.43203642542992543,
+    "avg_loss": -0.07444468250669752,
+    "profit_factor": 5.158627389207869,
+    "expectancy": 0.1638993682870074,
+    "max_consecutive_losses": 3,
+    "fees": 0.08723806024004872,
+    "slippage": 0.017428442599421733,
+    "turnover": 32.2675695386373,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 3.5120849572080957,
+    "cagr": 0.3537601181239014,
+    "max_drawdown": 0.3965477298851624,
+    "sharpe": 1.1910211148917476,
+    "sortino": 1.867091196440277,
+    "exposure": 0.36938441802388217,
+    "trades": 17,
+    "open_trade": false,
+    "orders": 113,
+    "win_rate": 0.47058823529411764,
+    "avg_win": 0.4217208689797235,
+    "avg_loss": -0.07940209307235185,
+    "profit_factor": 4.7210719534441585,
+    "expectancy": 0.15642047730509537,
+    "max_consecutive_losses": 3,
+    "fees": 0.17058381653163252,
+    "slippage": 0.03404167180453414,
+    "turnover": 31.861186414772966,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 4.48680765769133,
+   "oos_excess": {
+    "mean": 0.00029458550471508666,
+    "lo": -0.000256570393733622,
+    "hi": 0.0008735125087641818,
+    "p_le_zero": 0.1525
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.5
+     },
+     "net_return": 2.348248884841053,
+     "asset_return": 4.747599048866052,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.3
+     },
+     "net_return": 0.015980695406997203,
+     "asset_return": -0.15681169396955652,
+     "trades": 3
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.3
+     },
+     "net_return": -0.20868735966612995,
+     "asset_return": -0.47344561172092126,
+     "trades": 4
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.3
+     },
+     "net_return": 0.7164556561877506,
+     "asset_return": 1.77294163012641,
+     "trades": 3
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.3
+     },
+     "net_return": 0.08148045424051586,
+     "asset_return": 0.5575939128156635,
+     "trades": 4
+    }
+   ],
+   "folds_positive": 0.8,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 3.368091590277883,
+   "grid_net_max": 7.384417619622202,
+   "holdout": null,
+   "deflated_sharpe": 0.7496139142689062,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "17 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +399.7% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +351.2% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 5.16"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 37.4% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.26 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "80% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.75"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.152 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "trend_ensemble",
+   "family": "ensemble",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 1,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 3.392631036976298,
+    "cagr": 0.3464782512341602,
+    "max_drawdown": 0.3681416524724257,
+    "sharpe": 1.1922799983808516,
+    "sortino": 1.889546574722711,
+    "exposure": 0.40100602178338723,
+    "trades": 46,
+    "open_trade": false,
+    "orders": 289,
+    "win_rate": 0.21739130434782608,
+    "avg_win": 0.3262155483406298,
+    "avg_loss": -0.017897079857490047,
+    "profit_factor": 5.063140513210384,
+    "expectancy": 0.05691001322905774,
+    "max_consecutive_losses": 13,
+    "fees": 0.13267496400876078,
+    "slippage": 0.026503974272313838,
+    "turnover": 50.75394226916718,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 2.7665220382621327,
+    "cagr": 0.3054928668661885,
+    "max_drawdown": 0.3937688814451894,
+    "sharpe": 1.0826019935778712,
+    "sortino": 1.7081249580244078,
+    "exposure": 0.40067859142110296,
+    "trades": 46,
+    "open_trade": false,
+    "orders": 289,
+    "win_rate": 0.13043478260869565,
+    "avg_win": 0.520747716965282,
+    "avg_loss": -0.01785013150456351,
+    "profit_factor": 4.375998996131899,
+    "expectancy": 0.05240176177411199,
+    "max_consecutive_losses": 18,
+    "fees": 0.26074191461067636,
+    "slippage": 0.05202617182745027,
+    "turnover": 50.740979540904966,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 4.118987013707533,
+   "oos_excess": {
+    "mean": 0.00015798425605493147,
+    "lo": -0.00031564233598884144,
+    "hi": 0.0007043542684195828,
+    "p_le_zero": 0.274
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 1.6829701397270371,
+     "asset_return": 4.747599048866052,
+     "trades": 2
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": -0.1119010762109457,
+     "asset_return": -0.15681169396955652,
+     "trades": 8
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": -0.07803571283639354,
+     "asset_return": -0.47344561172092126,
+     "trades": 21
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.6769161193984987,
+     "asset_return": 1.77294163012641,
+     "trades": 7
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.19240037716427905,
+     "asset_return": 0.5575939128156635,
+     "trades": 8
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 5.501737052629684,
+   "grid_net_max": 5.501737052629684,
+   "holdout": null,
+   "deflated_sharpe": 0.698359052138917,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "46 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +339.3% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +276.7% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 5.06"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 36.8% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.19 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.70"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.274 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "regime_switch",
+   "family": "regime_aware",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 4,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 1.8380526329934828,
+    "cagr": 0.23329036095559053,
+    "max_drawdown": 0.569089948127258,
+    "sharpe": 0.7358984581037625,
+    "sortino": 1.158174789879048,
+    "exposure": 0.3747936158503027,
+    "trades": 94,
+    "open_trade": false,
+    "orders": 188,
+    "win_rate": 0.43617021276595747,
+    "avg_win": 0.10020835066455915,
+    "avg_loss": -0.037745910980441374,
+    "profit_factor": 2.053723581751491,
+    "expectancy": 0.022425628673229083,
+    "max_consecutive_losses": 11,
+    "fees": 0.5241304696716934,
+    "slippage": 0.10469773862849549,
+    "turnover": 188.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 0.6117953593263115,
+    "cagr": 0.10071036280663859,
+    "max_drawdown": 0.6643336000327084,
+    "sharpe": 0.4398956808997294,
+    "sortino": 0.6844958459869538,
+    "exposure": 0.3747936158503027,
+    "trades": 94,
+    "open_trade": false,
+    "orders": 188,
+    "win_rate": 0.3723404255319149,
+    "avg_win": 0.11013399540984961,
+    "avg_loss": -0.03937967097332528,
+    "profit_factor": 1.6590724217793502,
+    "expectancy": 0.01629031119062283,
+    "max_consecutive_losses": 11,
+    "fees": 0.976653730735588,
+    "slippage": 0.19485136024306868,
+    "turnover": 188.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 3.9913509930498723,
+   "oos_excess": {
+    "mean": 5.903366616918873e-05,
+    "lo": -0.0006659007682672609,
+    "hi": 0.0007942584001103959,
+    "p_le_zero": 0.444
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "er_n": 40,
+      "er_trend": 0.2
+     },
+     "net_return": 2.862458762186674,
+     "asset_return": 4.747599048866052,
+     "trades": 19
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.3
+     },
+     "net_return": -0.40178662479192573,
+     "asset_return": -0.15681169396955652,
+     "trades": 17
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "er_n": 40,
+      "er_trend": 0.2
+     },
+     "net_return": 0.0984412450033767,
+     "asset_return": -0.47344561172092126,
+     "trades": 3
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "er_n": 40,
+      "er_trend": 0.2
+     },
+     "net_return": 0.19699819280302489,
+     "asset_return": 1.77294163012641,
+     "trades": 30
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.3
+     },
+     "net_return": -0.06582090541096508,
+     "asset_return": 0.5575939128156635,
+     "trades": 25
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 2.017531506230958,
+   "grid_net_max": 4.916275354069503,
+   "holdout": null,
+   "deflated_sharpe": 0.30363035849484377,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "max_drawdown",
+     "sharpe",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "94 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +183.8% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +61.2% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 2.05"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 56.9% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.74 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.30"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.444 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "buy_and_hold",
+   "family": "benchmark",
+   "symbol": "BTCUSDT",
+   "interval": "1d",
+   "grid_size": 1,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 9.695640957772234,
+    "cagr": 0.6102349999453207,
+    "max_drawdown": 0.767692043945304,
+    "sharpe": 1.067350199153097,
+    "sortino": 1.557735977932928,
+    "exposure": 0.9972482113373693,
+    "trades": 5,
+    "open_trade": false,
+    "orders": 10,
+    "win_rate": 0.6,
+    "avg_win": 2.339261370560281,
+    "avg_loss": -0.3192298398506005,
+    "profit_factor": 10.991742054823517,
+    "expectancy": 1.2758648863959285,
+    "max_consecutive_losses": 2,
+    "fees": 0.041019610105212136,
+    "slippage": 0.008199279156872737,
+    "turnover": 10.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 9.378560130539308,
+    "cagr": 0.6005233452862844,
+    "max_drawdown": 0.7690860652062739,
+    "sharpe": 1.0578939024476064,
+    "sortino": 1.543304073906138,
+    "exposure": 0.9972482113373693,
+    "trades": 5,
+    "open_trade": false,
+    "orders": 10,
+    "win_rate": 0.6,
+    "avg_win": 2.319223308043816,
+    "avg_loss": -0.3233149693192557,
+    "profit_factor": 10.75989450593785,
+    "expectancy": 1.2622079970985876,
+    "max_consecutive_losses": 2,
+    "fees": 0.08183939691202481,
+    "slippage": 0.016349288611075978,
+    "turnover": 10.0,
+    "asset_return": 10.021716721441749,
+    "asset_max_drawdown": 0.7662925431645937
+   },
+   "oos_gross_return": 10.021716721441724,
+   "oos_excess": {
+    "mean": -1.1012222992310556e-05,
+    "lo": -2.6635670621097867e-05,
+    "hi": 1.8742576377057904e-06,
+    "p_le_zero": 0.948
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {},
+     "net_return": 4.713180937159136,
+     "asset_return": 4.747599048866052,
+     "trades": 1
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {},
+     "net_return": -0.16186092392804619,
+     "asset_return": -0.15681169396955652,
+     "trades": 1
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {},
+     "net_return": -0.4765987557731548,
+     "asset_return": -0.47344561172092126,
+     "trades": 1
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {},
+     "net_return": 1.7563365374658026,
+     "asset_return": 1.77294163012641,
+     "trades": 1
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {},
+     "net_return": 0.548266637055904,
+     "asset_return": 0.5575939128156635,
+     "trades": 1
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 7.334592926256422,
+   "grid_net_max": 7.334592926256422,
+   "holdout": null,
+   "deflated_sharpe": null,
+   "assessment": null
+  },
+  {
+   "candidate": "tsmom",
+   "family": "momentum",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 1.5113186680591553,
+    "cagr": 0.20333771832291947,
+    "max_drawdown": 0.7060250767684085,
+    "sharpe": 0.6245494218027938,
+    "sortino": 0.881700403499236,
+    "exposure": 0.5459548706659328,
+    "trades": 69,
+    "open_trade": false,
+    "orders": 138,
+    "win_rate": 0.2753623188405797,
+    "avg_win": 0.3378716352206338,
+    "avg_loss": -0.059513585628357075,
+    "profit_factor": 2.1573430676081613,
+    "expectancy": 0.04991133025759692,
+    "max_consecutive_losses": 12,
+    "fees": 0.35198105541587243,
+    "slippage": 0.07031015915147433,
+    "turnover": 138.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 0.657829371459629,
+    "cagr": 0.10695889143381065,
+    "max_drawdown": 0.773742154431899,
+    "sharpe": 0.49444642850950615,
+    "sortino": 0.6960644279948699,
+    "exposure": 0.5459548706659328,
+    "trades": 69,
+    "open_trade": false,
+    "orders": 138,
+    "win_rate": 0.2608695652173913,
+    "avg_win": 0.34824676343778077,
+    "avg_loss": -0.06390739916628209,
+    "profit_factor": 1.9232612184701974,
+    "expectancy": 0.04361107803477775,
+    "max_consecutive_losses": 12,
+    "fees": 0.6717758638293281,
+    "slippage": 0.13402624600867055,
+    "turnover": 138.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 2.80090789068969,
+   "oos_excess": {
+    "mean": -0.0001951829200487127,
+    "lo": -0.0013223710822624925,
+    "hi": 0.0009264992373472946,
+    "p_le_zero": 0.6125
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "lookback": 60
+     },
+     "net_return": 2.070998586530241,
+     "asset_return": 6.001429145638885,
+     "trades": 5
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "lookback": 20
+     },
+     "net_return": -0.13807572838122373,
+     "asset_return": 0.8077489809847587,
+     "trades": 19
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "lookback": 30
+     },
+     "net_return": -0.22868314790798916,
+     "asset_return": -0.4462048207650702,
+     "trades": 14
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "lookback": 30
+     },
+     "net_return": 0.37169849960397494,
+     "asset_return": 1.1799993628341152,
+     "trades": 19
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "lookback": 30
+     },
+     "net_return": -0.10327017565579322,
+     "asset_return": -0.192371543812477,
+     "trades": 12
+    }
+   ],
+   "folds_positive": 0.4,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 1.3989097800803183,
+   "grid_net_max": 11.107724840360769,
+   "holdout": null,
+   "deflated_sharpe": 0.3553687227403274,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "69 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +151.1% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +65.8% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 2.16"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 70.6% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.62 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "40% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.36"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.613 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "ema_cross",
+   "family": "momentum",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 8.524135438967065,
+    "cagr": 0.5731195030608096,
+    "max_drawdown": 0.6332000731625729,
+    "sharpe": 1.0456736490499428,
+    "sortino": 1.5605512161945434,
+    "exposure": 0.5564116675839296,
+    "trades": 26,
+    "open_trade": false,
+    "orders": 52,
+    "win_rate": 0.4230769230769231,
+    "avg_win": 0.5276982007197379,
+    "avg_loss": -0.08761424953489255,
+    "profit_factor": 4.416846375813478,
+    "expectancy": 0.17271024864975876,
+    "max_consecutive_losses": 6,
+    "fees": 0.1426220674173663,
+    "slippage": 0.028494956426519433,
+    "turnover": 52.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 7.144474571821684,
+    "cagr": 0.5244037916830173,
+    "max_drawdown": 0.6462099712066469,
+    "sharpe": 0.9944470600860066,
+    "sortino": 1.482085660301206,
+    "exposure": 0.5564116675839296,
+    "trades": 26,
+    "open_trade": false,
+    "orders": 52,
+    "win_rate": 0.4230769230769231,
+    "avg_win": 0.5185308703866895,
+    "avg_loss": -0.09308924555291437,
+    "profit_factor": 4.08485394159477,
+    "expectancy": 0.16567311119076428,
+    "max_consecutive_losses": 6,
+    "fees": 0.280961555463301,
+    "slippage": 0.056076000469145536,
+    "turnover": 52.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 10.133871214636809,
+   "oos_excess": {
+    "mean": 0.0004475395969952612,
+    "lo": -0.0005420946017152564,
+    "hi": 0.0014883027911993488,
+    "p_le_zero": 0.1915
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "fast": 15,
+      "slow": 30
+     },
+     "net_return": 6.239608306547324,
+     "asset_return": 6.001429145638885,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "fast": 15,
+      "slow": 30
+     },
+     "net_return": 0.6389427973048241,
+     "asset_return": 0.8077489809847587,
+     "trades": 4
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "fast": 15,
+      "slow": 30
+     },
+     "net_return": -0.22950486885720223,
+     "asset_return": -0.4462048207650702,
+     "trades": 5
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "fast": 15,
+      "slow": 30
+     },
+     "net_return": 0.724765535513874,
+     "asset_return": 1.1799993628341152,
+     "trades": 6
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "fast": 15,
+      "slow": 30
+     },
+     "net_return": -0.39598637838044337,
+     "asset_return": -0.192371543812477,
+     "trades": 8
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 0.6041623068113136,
+   "grid_net_max": 16.17907689669029,
+   "holdout": null,
+   "deflated_sharpe": 0.7109661895416055,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "26 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +852.4% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +714.4% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.42"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 63.3% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.05 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.71"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.192 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "donchian",
+   "family": "breakout",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 8.070850528133072,
+    "cagr": 0.5577746878413079,
+    "max_drawdown": 0.49093015000888074,
+    "sharpe": 1.063355860374504,
+    "sortino": 1.6329511217939017,
+    "exposure": 0.43863511282333517,
+    "trades": 25,
+    "open_trade": false,
+    "orders": 50,
+    "win_rate": 0.48,
+    "avg_win": 0.44674607975001585,
+    "avg_loss": -0.089472976811004,
+    "profit_factor": 4.609000520496876,
+    "expectancy": 0.1679121703382855,
+    "max_consecutive_losses": 5,
+    "fees": 0.13922013705328048,
+    "slippage": 0.027814052600406033,
+    "turnover": 50.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 6.803680166554826,
+    "cagr": 0.5113616482979002,
+    "max_drawdown": 0.5311814820764966,
+    "sharpe": 1.010016416242182,
+    "sortino": 1.548546274279989,
+    "exposure": 0.43863511282333517,
+    "trades": 25,
+    "open_trade": false,
+    "orders": 50,
+    "win_rate": 0.48,
+    "avg_win": 0.4380645226107441,
+    "avg_loss": -0.09493681907697513,
+    "profit_factor": 4.259330105770917,
+    "expectancy": 0.16090382493313016,
+    "max_consecutive_losses": 5,
+    "fees": 0.274445740521134,
+    "slippage": 0.05477064577354916,
+    "turnover": 50.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 9.540474346308399,
+   "oos_excess": {
+    "mean": 0.0006220088172447343,
+    "lo": -0.00038122058719813206,
+    "hi": 0.0016609672483639476,
+    "p_le_zero": 0.1105
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "entry": 20,
+      "exit": 10
+     },
+     "net_return": 4.526102283015158,
+     "asset_return": 6.001429145638885,
+     "trades": 4
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "entry": 20,
+      "exit": 20
+     },
+     "net_return": 0.9484211677597651,
+     "asset_return": 0.8077489809847587,
+     "trades": 3
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "entry": 20,
+      "exit": 10
+     },
+     "net_return": -0.1375962738995773,
+     "asset_return": -0.4462048207650702,
+     "trades": 6
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "entry": 20,
+      "exit": 10
+     },
+     "net_return": 0.36568032399756545,
+     "asset_return": 1.1799993628341152,
+     "trades": 6
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "entry": 20,
+      "exit": 10
+     },
+     "net_return": -0.28470271638274225,
+     "asset_return": -0.192371543812477,
+     "trades": 6
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 4.50214306349116,
+   "grid_net_max": 10.042987963327015,
+   "holdout": null,
+   "deflated_sharpe": 0.7253791883569585,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "25 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +807.1% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +680.4% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.61"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 49.1% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.06 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.73"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.111 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "volume_breakout",
+   "family": "breakout",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 8.387676100528164,
+    "cagr": 0.5685625464788517,
+    "max_drawdown": 0.49192890838900405,
+    "sharpe": 1.0804829640977522,
+    "sortino": 1.6645708091994895,
+    "exposure": 0.4325811777655476,
+    "trades": 24,
+    "open_trade": false,
+    "orders": 48,
+    "win_rate": 0.5,
+    "avg_win": 0.4427694073950847,
+    "avg_loss": -0.091375925414233,
+    "profit_factor": 4.8455805551395,
+    "expectancy": 0.17569674099042584,
+    "max_consecutive_losses": 5,
+    "fees": 0.13393222562219592,
+    "slippage": 0.026757419639517756,
+    "turnover": 48.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 7.125002248044288,
+    "cagr": 0.5236704519228947,
+    "max_drawdown": 0.5055053659058444,
+    "sharpe": 1.0286919173790212,
+    "sortino": 1.5820941359337182,
+    "exposure": 0.4325811777655476,
+    "trades": 24,
+    "open_trade": false,
+    "orders": 48,
+    "win_rate": 0.5,
+    "avg_win": 0.4341117132603561,
+    "avg_loss": -0.09682834856715922,
+    "profit_factor": 4.483312167193065,
+    "expectancy": 0.16864168234659838,
+    "max_consecutive_losses": 5,
+    "fees": 0.2641551517678911,
+    "slippage": 0.05271621820909401,
+    "turnover": 48.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 9.843307055751739,
+   "oos_excess": {
+    "mean": 0.0006463882115446842,
+    "lo": -0.00035363887700282917,
+    "hi": 0.0016814863433345848,
+    "p_le_zero": 0.104
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.0
+     },
+     "net_return": 3.9939221485013263,
+     "asset_return": 6.001429145638885,
+     "trades": 4
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "entry": 20,
+      "exit": 20,
+      "vol_mult": 1.0
+     },
+     "net_return": 0.9093558365949241,
+     "asset_return": 0.8077489809847587,
+     "trades": 3
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.0
+     },
+     "net_return": 0.02118590705615775,
+     "asset_return": -0.4462048207650702,
+     "trades": 5
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.0
+     },
+     "net_return": 0.36568032399756545,
+     "asset_return": 1.1799993628341152,
+     "trades": 6
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "entry": 20,
+      "exit": 10,
+      "vol_mult": 1.0
+     },
+     "net_return": -0.29404732044755744,
+     "asset_return": -0.192371543812477,
+     "trades": 6
+    }
+   ],
+   "folds_positive": 0.8,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 3.823038449909566,
+   "grid_net_max": 10.940401196473037,
+   "holdout": null,
+   "deflated_sharpe": 0.7380061533080934,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "24 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +838.8% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +712.5% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.85"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 49.2% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.08 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "80% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.74"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.104 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "bollinger_reversion",
+   "family": "mean_reversion",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 2.2195507606058644,
+    "cagr": 0.2649579041494319,
+    "max_drawdown": 0.24280327383317324,
+    "sharpe": 1.0157263139380686,
+    "sortino": 1.9203064036244746,
+    "exposure": 0.08695652173913043,
+    "trades": 14,
+    "open_trade": false,
+    "orders": 28,
+    "win_rate": 0.9285714285714286,
+    "avg_win": 0.1017238717456658,
+    "avg_loss": -0.07764869145668352,
+    "profit_factor": 17.03068407059203,
+    "expectancy": 0.08891154580264084,
+    "max_consecutive_losses": 1,
+    "fees": 0.08503131611510018,
+    "slippage": 0.01698632573638376,
+    "turnover": 28.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 1.9593756036310395,
+    "cagr": 0.24371186005596912,
+    "max_drawdown": 0.24280327383317335,
+    "sharpe": 0.9542524892008878,
+    "sortino": 1.7877274377363632,
+    "exposure": 0.08695652173913043,
+    "trades": 14,
+    "open_trade": false,
+    "orders": 28,
+    "win_rate": 0.9285714285714286,
+    "avg_win": 0.09511270557204655,
+    "avg_loss": -0.08318348826704358,
+    "profit_factor": 14.864310191791747,
+    "expectancy": 0.0823772631549687,
+    "max_consecutive_losses": 1,
+    "fees": 0.16819524882989778,
+    "slippage": 0.03356002721296909,
+    "turnover": 28.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 2.5019833581631947,
+   "oos_excess": {
+    "mean": 0.0005298220256250242,
+    "lo": 7.183213559795302e-05,
+    "hi": 0.0010797987912883457,
+    "p_le_zero": 0.011
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "n": 20,
+      "k": 2.0,
+      "trend": 100
+     },
+     "net_return": 0.3201679444850256,
+     "asset_return": 6.001429145638885,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "n": 20,
+      "k": 2.0,
+      "trend": 100
+     },
+     "net_return": 0.8050296935669874,
+     "asset_return": 0.8077489809847587,
+     "trades": 5
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "n": 20,
+      "k": 2.0,
+      "trend": 100
+     },
+     "net_return": 0.1003536864236172,
+     "asset_return": -0.4462048207650702,
+     "trades": 1
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "n": 20,
+      "k": 2.0,
+      "trend": 100
+     },
+     "net_return": 0.02711204224844055,
+     "asset_return": 1.1799993628341152,
+     "trades": 1
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "n": 20,
+      "k": 2.0,
+      "trend": 100
+     },
+     "net_return": 0.19545055770236663,
+     "asset_return": -0.192371543812477,
+     "trades": 4
+    }
+   ],
+   "folds_positive": 1.0,
+   "folds_traded": 1.0,
+   "grid_positive": 0.875,
+   "grid_net_min": -0.2404012668734009,
+   "grid_net_max": 2.165770500047143,
+   "holdout": null,
+   "deflated_sharpe": 0.7101880687467541,
+   "assessment": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "14 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +222.0% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +195.9% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 17.03"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": true,
+      "detail": "max drawdown 24.3% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.02 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "100% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "88% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.71"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.011 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "rsi_reversion",
+   "family": "mean_reversion",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": -0.320896187045279,
+    "cagr": -0.07484155475588894,
+    "max_drawdown": 0.44503647978492933,
+    "sharpe": -0.22641912828311922,
+    "sortino": -0.28329980272118316,
+    "exposure": 0.03026967528893781,
+    "trades": 16,
+    "open_trade": false,
+    "orders": 32,
+    "win_rate": 0.5,
+    "avg_win": 0.03541923950671405,
+    "avg_loss": -0.07112340707694292,
+    "profit_factor": 0.49799694590554006,
+    "expectancy": -0.017852083785114436,
+    "max_consecutive_losses": 3,
+    "fees": 0.07237724923861195,
+    "slippage": 0.014457105237515928,
+    "turnover": 32.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": -0.38324440561722517,
+    "cagr": -0.09257880157796683,
+    "max_drawdown": 0.47745341158112087,
+    "sharpe": -0.3116790130500808,
+    "sortino": -0.38776179706990616,
+    "exposure": 0.03026967528893781,
+    "trades": 16,
+    "open_trade": false,
+    "orders": 32,
+    "win_rate": 0.4375,
+    "avg_win": 0.033602253294191406,
+    "avg_loss": -0.06834967239708124,
+    "profit_factor": 0.38237324304422354,
+    "expectancy": -0.02374570490714946,
+    "max_consecutive_losses": 3,
+    "fees": 0.14275959898260543,
+    "slippage": 0.02847942886094551,
+    "turnover": 32.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": -0.2523954399600469,
+   "oos_excess": {
+    "mean": -0.0002107548707429313,
+    "lo": -0.0007236003989313834,
+    "hi": 0.0001456397373325644,
+    "p_le_zero": 0.8285
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": -0.010895978947095819,
+     "asset_return": 6.001429145638885,
+     "trades": 1
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "n": 2,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 100
+     },
+     "net_return": -0.2823505708139139,
+     "asset_return": 0.8077489809847587,
+     "trades": 8
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 200
+     },
+     "net_return": 0.0,
+     "asset_return": -0.4462048207650702,
+     "trades": 0
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 200
+     },
+     "net_return": -0.04514769703850008,
+     "asset_return": 1.1799993628341152,
+     "trades": 4
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 200
+     },
+     "net_return": 0.0019490961469992296,
+     "asset_return": -0.192371543812477,
+     "trades": 3
+    }
+   ],
+   "folds_positive": 0.2,
+   "folds_traded": 0.8,
+   "grid_positive": 0.25,
+   "grid_net_min": -0.6351455067177971,
+   "grid_net_max": 0.27651885292974177,
+   "holdout": null,
+   "deflated_sharpe": 0.009075828848388479,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "net_positive",
+     "net_positive_2x_costs",
+     "profit_factor",
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "grid_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "16 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 80% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": false,
+      "detail": "net -32.1% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": false,
+      "detail": "net -38.3% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": false,
+      "detail": "profit factor 0.5"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 44.5% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe -0.23 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "20% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": false,
+      "detail": "25% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.01"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.829 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "vol_target_trend",
+   "family": "risk_adjusted",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 4,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 4.397207820819363,
+    "cagr": 0.40339296406386826,
+    "max_drawdown": 0.500803846703451,
+    "sharpe": 1.0624852979229895,
+    "sortino": 1.595810558786639,
+    "exposure": 0.3875024216708653,
+    "trades": 20,
+    "open_trade": false,
+    "orders": 109,
+    "win_rate": 0.45,
+    "avg_win": 0.39912839089393615,
+    "avg_loss": -0.08608276467189989,
+    "profit_factor": 3.7935537246538202,
+    "expectancy": 0.13226225533272634,
+    "max_consecutive_losses": 4,
+    "fees": 0.09657150779639709,
+    "slippage": 0.01929282024357412,
+    "turnover": 34.750042475279145,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 3.8634743793760427,
+    "cagr": 0.3743227930406532,
+    "max_drawdown": 0.5099348091721931,
+    "sharpe": 1.008719579805277,
+    "sortino": 1.512493826210081,
+    "exposure": 0.3874777259725551,
+    "trades": 20,
+    "open_trade": false,
+    "orders": 109,
+    "win_rate": 0.45,
+    "avg_win": 0.3902075475632982,
+    "avg_loss": -0.09015519008695976,
+    "profit_factor": 3.541235068393319,
+    "expectancy": 0.12600804185565634,
+    "max_consecutive_losses": 4,
+    "fees": 0.19112348995727624,
+    "slippage": 0.038139482517286445,
+    "turnover": 34.751656869585204,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 4.934860916933987,
+   "oos_excess": {
+    "mean": 0.00022213915477369467,
+    "lo": -0.00040464241862013295,
+    "hi": 0.0009242348667271992,
+    "p_le_zero": 0.2355
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.5
+     },
+     "net_return": 1.9328987553688055,
+     "asset_return": 6.001429145638885,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.5
+     },
+     "net_return": 0.6946972222456376,
+     "asset_return": 0.8077489809847587,
+     "trades": 3
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.5
+     },
+     "net_return": -0.28912842925651516,
+     "asset_return": -0.4462048207650702,
+     "trades": 5
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.5
+     },
+     "net_return": 0.7700268955171792,
+     "asset_return": 1.1799993628341152,
+     "trades": 4
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "fast": 20,
+      "slow": 50,
+      "target": 0.3
+     },
+     "net_return": -0.1370036867179032,
+     "asset_return": -0.192371543812477,
+     "trades": 5
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 1.8186962609623825,
+   "grid_net_max": 7.05792154471612,
+   "holdout": null,
+   "deflated_sharpe": 0.7230356862187219,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "20 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +439.7% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +386.3% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 3.79"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 50.1% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.06 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.72"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.235 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "trend_ensemble",
+   "family": "ensemble",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 1,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 3.069015906923571,
+    "cagr": 0.3259234036675056,
+    "max_drawdown": 0.3083222946870061,
+    "sharpe": 1.1280639812048572,
+    "sortino": 1.7731472884837767,
+    "exposure": 0.31100174858298274,
+    "trades": 32,
+    "open_trade": false,
+    "orders": 245,
+    "win_rate": 0.25,
+    "avg_win": 0.37640835591542554,
+    "avg_loss": -0.02675640819072035,
+    "profit_factor": 4.689323435248076,
+    "expectancy": 0.0740347828358161,
+    "max_consecutive_losses": 7,
+    "fees": 0.11757043659774402,
+    "slippage": 0.02348667047584916,
+    "turnover": 43.969651079788775,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 2.5728825115723537,
+    "cagr": 0.29171531762358516,
+    "max_drawdown": 0.34774966389647477,
+    "sharpe": 1.036535655345892,
+    "sortino": 1.6234205449510295,
+    "exposure": 0.3110745688360812,
+    "trades": 32,
+    "open_trade": false,
+    "orders": 244,
+    "win_rate": 0.21875,
+    "avg_win": 0.414937469262105,
+    "avg_loss": -0.028331458719793968,
+    "profit_factor": 4.100829842277684,
+    "expectancy": 0.06863361927624644,
+    "max_consecutive_losses": 9,
+    "fees": 0.23060815731702144,
+    "slippage": 0.046013880055355554,
+    "turnover": 43.766818262340465,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 3.646708989779693,
+   "oos_excess": {
+    "mean": 0.00014840818145576718,
+    "lo": -0.0003251027936496299,
+    "hi": 0.0006866159103740445,
+    "p_le_zero": 0.272
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 1.4757058318460725,
+     "asset_return": 6.001429145638885,
+     "trades": 3
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.48386679195366633,
+     "asset_return": 0.8077489809847587,
+     "trades": 5
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": -0.14265995519388552,
+     "asset_return": -0.4462048207650702,
+     "trades": 10
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.48938712614226976,
+     "asset_return": 1.1799993628341152,
+     "trades": 6
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": -0.13256942233857327,
+     "asset_return": -0.192371543812477,
+     "trades": 8
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 3.8491478585959698,
+   "grid_net_max": 3.8491478585959698,
+   "holdout": null,
+   "deflated_sharpe": 0.7750509376331974,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "32 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +306.9% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +257.3% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.69"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 30.8% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.13 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.78"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.272 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "regime_switch",
+   "family": "regime_aware",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 4,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 3.356317999573558,
+    "cagr": 0.3442332761776892,
+    "max_drawdown": 0.5167566340907965,
+    "sharpe": 0.8086479614778235,
+    "sortino": 1.1710754261057108,
+    "exposure": 0.40671436433681896,
+    "trades": 109,
+    "open_trade": false,
+    "orders": 218,
+    "win_rate": 0.5688073394495413,
+    "avg_win": 0.07624348910290439,
+    "avg_loss": -0.05291046842073,
+    "profit_factor": 1.9008812535969966,
+    "expectancy": 0.02055325053766757,
+    "max_consecutive_losses": 5,
+    "fees": 0.589225667798514,
+    "slippage": 0.11770061581335935,
+    "turnover": 218.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 1.2604760020815071,
+    "cagr": 0.17815006885621965,
+    "max_drawdown": 0.6757191160794005,
+    "sharpe": 0.5867533066899178,
+    "sortino": 0.8444480200995119,
+    "exposure": 0.40671436433681896,
+    "trades": 109,
+    "open_trade": false,
+    "orders": 218,
+    "win_rate": 0.5045871559633027,
+    "avg_win": 0.07902902615716659,
+    "avg_loss": -0.05136698236843405,
+    "profit_factor": 1.567009057768258,
+    "expectancy": 0.014429168722465396,
+    "max_consecutive_losses": 5,
+    "fees": 1.0914545444781338,
+    "slippage": 0.2177540435042195,
+    "turnover": 218.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 7.383869832012023,
+   "oos_excess": {
+    "mean": 0.00035420446440435357,
+    "lo": -0.0005177754682156788,
+    "hi": 0.0013511726515762598,
+    "p_le_zero": 0.2105
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.2
+     },
+     "net_return": 2.2559230306959828,
+     "asset_return": 6.001429145638885,
+     "trades": 24
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.2
+     },
+     "net_return": 0.7260298783575381,
+     "asset_return": 0.8077489809847587,
+     "trades": 24
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.2
+     },
+     "net_return": -0.25518356290328736,
+     "asset_return": -0.4462048207650702,
+     "trades": 10
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.2
+     },
+     "net_return": 0.09242130174117857,
+     "asset_return": 1.1799993628341152,
+     "trades": 32
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.2
+     },
+     "net_return": -0.047296582490104155,
+     "asset_return": -0.192371543812477,
+     "trades": 19
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 0.75,
+   "grid_net_min": -0.3426932000477647,
+   "grid_net_max": 3.2664827378240036,
+   "holdout": null,
+   "deflated_sharpe": 0.5119746345112847,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "109 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": true,
+      "detail": "4.97 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +335.6% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +126.0% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 1.9"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 51.7% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 0.81 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "60% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "75% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.51"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.210 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "buy_and_hold",
+   "family": "benchmark",
+   "symbol": "ETHUSDT",
+   "interval": "1d",
+   "grid_size": 1,
+   "oos": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 10.979476631325012,
+    "cagr": 0.6473489110550212,
+    "max_drawdown": 0.794265489154355,
+    "sharpe": 1.0243903898772881,
+    "sortino": 1.500417609585751,
+    "exposure": 0.9972482113373693,
+    "trades": 5,
+    "open_trade": false,
+    "orders": 10,
+    "win_rate": 0.6,
+    "avg_win": 2.6418531033343786,
+    "avg_loss": -0.32336425896344345,
+    "profit_factor": 12.254847420999495,
+    "expectancy": 1.45576615841525,
+    "max_consecutive_losses": 1,
+    "fees": 0.04327401201021616,
+    "slippage": 0.008650385090840526,
+    "turnover": 10.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_stress": {
+    "bars": 1817,
+    "years": 4.97,
+    "net_return": 10.624335469138023,
+    "cagr": 0.6374134148525112,
+    "max_drawdown": 0.7955000498947824,
+    "sharpe": 1.0171426960129597,
+    "sortino": 1.4894052901343193,
+    "exposure": 0.9972482113373693,
+    "trades": 5,
+    "open_trade": false,
+    "orders": 10,
+    "win_rate": 0.6,
+    "avg_win": 2.619999264397491,
+    "avg_loss": -0.3274245788291778,
+    "profit_factor": 12.0027607904371,
+    "expectancy": 1.4410297271068235,
+    "max_consecutive_losses": 1,
+    "fees": 0.08633240520368902,
+    "slippage": 0.017248789770568318,
+    "turnover": 10.0,
+    "asset_return": 11.340761913268691,
+    "asset_max_drawdown": 0.7930253453633334
+   },
+   "oos_gross_return": 11.34469242403368,
+   "oos_excess": {
+    "mean": -9.70193493601308e-06,
+    "lo": -2.5158574780468513e-05,
+    "hi": 3.973733332569813e-06,
+    "p_le_zero": 0.9165
+   },
+   "folds": [
+    {
+     "start": 1583280000,
+     "end": 1614729600,
+     "params": {},
+     "net_return": 5.961679173764034,
+     "asset_return": 6.001429145638885,
+     "trades": 1
+    },
+    {
+     "start": 1614816000,
+     "end": 1646265600,
+     "params": {},
+     "net_return": 0.7969351741996689,
+     "asset_return": 0.8077489809847587,
+     "trades": 1
+    },
+    {
+     "start": 1646352000,
+     "end": 1677801600,
+     "params": {},
+     "net_return": -0.44952303213849354,
+     "asset_return": -0.4462048207650702,
+     "trades": 1
+    },
+    {
+     "start": 1677888000,
+     "end": 1709337600,
+     "params": {},
+     "net_return": 1.1669449620394334,
+     "asset_return": 1.1799993628341152,
+     "trades": 1
+    },
+    {
+     "start": 1709424000,
+     "end": 1740182400,
+     "params": {},
+     "net_return": -0.19720548578839336,
+     "asset_return": -0.192371543812477,
+     "trades": 1
+    }
+   ],
+   "folds_positive": 0.6,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 2.169445451793135,
+   "grid_net_max": 2.169445451793135,
+   "holdout": null,
+   "deflated_sharpe": null,
+   "assessment": null
+  },
+  {
+   "candidate": "tsmom",
+   "family": "momentum",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 4.091629414544462,
+    "cagr": 0.8758830448700767,
+    "max_drawdown": 0.5264375326448885,
+    "sharpe": 1.2440648664124487,
+    "sortino": 2.088580377655612,
+    "exposure": 0.6423280423280423,
+    "trades": 23,
+    "open_trade": false,
+    "orders": 46,
+    "win_rate": 0.5217391304347826,
+    "avg_win": 0.34174305172755876,
+    "avg_loss": -0.05021531013518614,
+    "profit_factor": 7.424241747804703,
+    "expectancy": 0.15428470474972422,
+    "max_consecutive_losses": 4,
+    "fees": 0.16448100840156277,
+    "slippage": 0.03285900405202353,
+    "turnover": 46.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 3.433391881403936,
+    "cagr": 0.7781510225087009,
+    "max_drawdown": 0.5540996070809486,
+    "sharpe": 1.1668250038501844,
+    "sortino": 1.953838676531334,
+    "exposure": 0.6423280423280423,
+    "trades": 23,
+    "open_trade": false,
+    "orders": 46,
+    "win_rate": 0.43478260869565216,
+    "avg_win": 0.4008955262169027,
+    "avg_loss": -0.047670628682455425,
+    "profit_factor": 6.468997421183537,
+    "expectancy": 0.14735813431726552,
+    "max_consecutive_losses": 4,
+    "fees": 0.3207255192428373,
+    "slippage": 0.06399972452362981,
+    "turnover": 46.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 4.845907782014918,
+   "oos_excess": {
+    "mean": 0.00022358284903049711,
+    "lo": -0.001058293024462294,
+    "hi": 0.0015763356570462667,
+    "p_le_zero": 0.372
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "lookback": 30
+     },
+     "net_return": 4.426610282231584,
+     "asset_return": 3.7268817204300992,
+     "trades": 7
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "lookback": 120
+     },
+     "net_return": -0.0311071928970702,
+     "asset_return": 0.3132848043676064,
+     "trades": 7
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "lookback": 30
+     },
+     "net_return": -0.03160526054395729,
+     "asset_return": 0.4607496708930907,
+     "trades": 9
+    }
+   ],
+   "folds_positive": 0.3333333333333333,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 8.252034358452873,
+   "grid_net_max": 81.30488672217214,
+   "holdout": null,
+   "deflated_sharpe": 0.6064172881078009,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "max_drawdown",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "23 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +409.2% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +343.3% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 7.42"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 52.6% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.24 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "33% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.61"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.372 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "ema_cross",
+   "family": "momentum",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 2.8255555477050627,
+    "cagr": 0.6796394003114843,
+    "max_drawdown": 0.5792344247387776,
+    "sharpe": 1.0525165085607,
+    "sortino": 1.6984782798093865,
+    "exposure": 0.7111111111111111,
+    "trades": 7,
+    "open_trade": false,
+    "orders": 14,
+    "win_rate": 0.42857142857142855,
+    "avg_win": 1.349058200799604,
+    "avg_loss": -0.11119204652940404,
+    "profit_factor": 9.099514598214904,
+    "expectancy": 0.5146294880401707,
+    "max_consecutive_losses": 3,
+    "fees": 0.03554811871482382,
+    "slippage": 0.007102690289633479,
+    "turnover": 14.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 2.667726293080009,
+    "cagr": 0.6525092090882767,
+    "max_drawdown": 0.5842690888991424,
+    "sharpe": 1.031395833336664,
+    "sortino": 1.6621995747720335,
+    "exposure": 0.7111111111111111,
+    "trades": 7,
+    "open_trade": false,
+    "orders": 14,
+    "win_rate": 0.42857142857142855,
+    "avg_win": 1.3349620969433966,
+    "avg_loss": -0.11652555815379873,
+    "profit_factor": 8.592291584530013,
+    "expectancy": 0.5055405797449993,
+    "max_consecutive_losses": 3,
+    "fees": 0.07046251886131083,
+    "slippage": 0.014064868755507077,
+    "turnover": 14.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 2.989825603693682,
+   "oos_excess": {
+    "mean": -0.00016414845266308258,
+    "lo": -0.0014678209788781275,
+    "hi": 0.00109649194768348,
+    "p_le_zero": 0.5715
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "fast": 20,
+      "slow": 100
+     },
+     "net_return": 1.8843700890577715,
+     "asset_return": 3.7268817204300992,
+     "trades": 4
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "fast": 50,
+      "slow": 200
+     },
+     "net_return": 0.3054205148241964,
+     "asset_return": 0.3132848043676064,
+     "trades": 1
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "fast": 50,
+      "slow": 200
+     },
+     "net_return": 0.015998567694708754,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 1.0,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 10.444659992084242,
+   "grid_net_max": 31.7060582311082,
+   "holdout": null,
+   "deflated_sharpe": 0.481217321094902,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "max_drawdown",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "7 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +282.6% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +266.8% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 9.1"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 57.9% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.05 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "100% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.48"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.572 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "donchian",
+   "family": "breakout",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 6,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.8853803051928562,
+    "cagr": 0.27774410539097816,
+    "max_drawdown": 0.6832204545365204,
+    "sharpe": 0.7095172284324797,
+    "sortino": 1.1526502491129644,
+    "exposure": 0.37354497354497357,
+    "trades": 8,
+    "open_trade": false,
+    "orders": 16,
+    "win_rate": 0.375,
+    "avg_win": 0.9247135406937742,
+    "avg_loss": -0.16475318720253032,
+    "profit_factor": 3.367632115876562,
+    "expectancy": 0.2437968357585839,
+    "max_consecutive_losses": 3,
+    "fees": 0.044564475474710735,
+    "slippage": 0.008903115689705737,
+    "turnover": 16.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.7967490769173278,
+    "cagr": 0.254184449191716,
+    "max_drawdown": 0.6926116374233242,
+    "sharpe": 0.6767730054423179,
+    "sortino": 1.0977226192684753,
+    "exposure": 0.37354497354497357,
+    "trades": 8,
+    "open_trade": false,
+    "orders": 16,
+    "win_rate": 0.375,
+    "avg_win": 0.91316382176649,
+    "avg_loss": -0.16976529197488172,
+    "profit_factor": 3.227386980496346,
+    "expectancy": 0.23633312567813272,
+    "max_consecutive_losses": 3,
+    "fees": 0.08843981988077579,
+    "slippage": 0.017649084370595515,
+    "turnover": 16.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 0.9781847635694261,
+   "oos_excess": {
+    "mean": -0.00014665747957315963,
+    "lo": -0.0017683518776637351,
+    "hi": 0.0015702530764659655,
+    "p_le_zero": 0.5685
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "entry": 55,
+      "exit": 20
+     },
+     "net_return": 1.8947703402424265,
+     "asset_return": 3.7268817204300992,
+     "trades": 2
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "entry": 55,
+      "exit": 20
+     },
+     "net_return": -0.2951982632775817,
+     "asset_return": 0.3132848043676064,
+     "trades": 4
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "entry": 55,
+      "exit": 20
+     },
+     "net_return": -0.07590230636416906,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 0.3333333333333333,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 7.404177995050063,
+   "grid_net_max": 21.817338655875197,
+   "holdout": null,
+   "deflated_sharpe": 0.2706722413442677,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "8 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +88.5% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +79.7% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 3.37"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 68.3% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.71 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "33% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.27"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.569 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "volume_breakout",
+   "family": "breakout",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.8853803051928562,
+    "cagr": 0.27774410539097816,
+    "max_drawdown": 0.6832204545365204,
+    "sharpe": 0.7095172284324797,
+    "sortino": 1.1526502491129644,
+    "exposure": 0.37354497354497357,
+    "trades": 8,
+    "open_trade": false,
+    "orders": 16,
+    "win_rate": 0.375,
+    "avg_win": 0.9247135406937742,
+    "avg_loss": -0.16475318720253032,
+    "profit_factor": 3.367632115876562,
+    "expectancy": 0.2437968357585839,
+    "max_consecutive_losses": 3,
+    "fees": 0.044564475474710735,
+    "slippage": 0.008903115689705737,
+    "turnover": 16.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.7967490769173278,
+    "cagr": 0.254184449191716,
+    "max_drawdown": 0.6926116374233242,
+    "sharpe": 0.6767730054423179,
+    "sortino": 1.0977226192684753,
+    "exposure": 0.37354497354497357,
+    "trades": 8,
+    "open_trade": false,
+    "orders": 16,
+    "win_rate": 0.375,
+    "avg_win": 0.91316382176649,
+    "avg_loss": -0.16976529197488172,
+    "profit_factor": 3.227386980496346,
+    "expectancy": 0.23633312567813272,
+    "max_consecutive_losses": 3,
+    "fees": 0.08843981988077579,
+    "slippage": 0.017649084370595515,
+    "turnover": 16.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 0.9781847635694261,
+   "oos_excess": {
+    "mean": -0.00014665747957315963,
+    "lo": -0.0017683518776637351,
+    "hi": 0.0015702530764659655,
+    "p_le_zero": 0.5685
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "entry": 55,
+      "exit": 20,
+      "vol_mult": 1.0
+     },
+     "net_return": 1.8947703402424265,
+     "asset_return": 3.7268817204300992,
+     "trades": 2
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "entry": 55,
+      "exit": 20,
+      "vol_mult": 1.0
+     },
+     "net_return": -0.2951982632775817,
+     "asset_return": 0.3132848043676064,
+     "trades": 4
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "entry": 55,
+      "exit": 20,
+      "vol_mult": 1.5
+     },
+     "net_return": -0.07590230636416906,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 0.3333333333333333,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 6.072179221000862,
+   "grid_net_max": 20.449341204534917,
+   "holdout": null,
+   "deflated_sharpe": 0.2706722413442677,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "8 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +88.5% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +79.7% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 3.37"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 68.3% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.71 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "33% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.27"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.569 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "bollinger_reversion",
+   "family": "mean_reversion",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": -0.08136173272812253,
+    "cagr": -0.03226807295060463,
+    "max_drawdown": 0.32364438019461705,
+    "sharpe": 0.04140519188117752,
+    "sortino": 0.06045445350492678,
+    "exposure": 0.13544973544973546,
+    "trades": 8,
+    "open_trade": false,
+    "orders": 16,
+    "win_rate": 0.5,
+    "avg_win": 0.07167300686746209,
+    "avg_loss": -0.08419671179390473,
+    "profit_factor": 0.8512566030239048,
+    "expectancy": -0.006261852463221321,
+    "max_consecutive_losses": 3,
+    "fees": 0.039450015694935725,
+    "slippage": 0.007880117689747678,
+    "turnover": 16.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": -0.12454667411366571,
+    "cagr": -0.05011157651140352,
+    "max_drawdown": 0.3387580939150475,
+    "sharpe": -0.020028406046702696,
+    "sortino": -0.029133150774319064,
+    "exposure": 0.13544973544973546,
+    "trades": 8,
+    "open_trade": false,
+    "orders": 16,
+    "win_rate": 0.5,
+    "avg_win": 0.06524216832989188,
+    "avg_loss": -0.08969221559113488,
+    "profit_factor": 0.727400565365679,
+    "expectancy": -0.012225023630621501,
+    "max_consecutive_losses": 3,
+    "fees": 0.07828054354784453,
+    "slippage": 0.015616802932274344,
+    "turnover": 16.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": -0.03614341438495017,
+   "oos_excess": {
+    "mean": -0.0004188083688504925,
+    "lo": -0.001078691013770499,
+    "hi": 0.00022872630183930865,
+    "p_le_zero": 0.8805
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "n": 20,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": 0.09135944674664431,
+     "asset_return": 3.7268817204300992,
+     "trades": 4
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "n": 20,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": -0.2081041570814549,
+     "asset_return": 0.3132848043676064,
+     "trades": 2
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "n": 30,
+      "k": 1.5,
+      "trend": 100
+     },
+     "net_return": 0.06293977237458726,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 0.6666666666666666,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 0.38355582549030154,
+   "grid_net_max": 1.533480867651043,
+   "holdout": null,
+   "deflated_sharpe": 0.04723043721962422,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "net_positive",
+     "net_positive_2x_costs",
+     "profit_factor",
+     "max_drawdown",
+     "sharpe",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "8 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": false,
+      "detail": "net -8.1% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": false,
+      "detail": "net -12.5% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": false,
+      "detail": "profit factor 0.85"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 32.4% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.04 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "67% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.05"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.880 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "rsi_reversion",
+   "family": "mean_reversion",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 8,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.09317884549250266,
+    "cagr": 0.03503363522941316,
+    "max_drawdown": 0.14427325846897243,
+    "sharpe": 0.29521015216486696,
+    "sortino": 0.4253082542478906,
+    "exposure": 0.02433862433862434,
+    "trades": 11,
+    "open_trade": false,
+    "orders": 22,
+    "win_rate": 0.6363636363636364,
+    "avg_win": 0.043277734950232204,
+    "avg_loss": -0.04994889742891037,
+    "profit_factor": 1.5162704296065286,
+    "expectancy": 0.009377141357816724,
+    "max_consecutive_losses": 2,
+    "fees": 0.055036611746066985,
+    "slippage": 0.010993683962275437,
+    "turnover": 22.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.023146581013929746,
+    "cagr": 0.008883596175467634,
+    "max_drawdown": 0.15985422554437978,
+    "sharpe": 0.13605709816188596,
+    "sortino": 0.19177485080244047,
+    "exposure": 0.02433862433862434,
+    "trades": 11,
+    "open_trade": false,
+    "orders": 22,
+    "win_rate": 0.6363636363636364,
+    "avg_win": 0.03701728925428438,
+    "avg_loss": -0.05564991369406175,
+    "profit_factor": 1.164067505138111,
+    "expectancy": 0.003320124545794879,
+    "max_consecutive_losses": 2,
+    "fees": 0.1088547765099831,
+    "slippage": 0.02171690359166611,
+    "turnover": 22.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 0.16784327098877339,
+   "oos_excess": {
+    "mean": 4.8402223055807225e-05,
+    "lo": -0.0003019994282639136,
+    "hi": 0.0003964166011140413,
+    "p_le_zero": 0.3815
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 200
+     },
+     "net_return": 0.1405653578167947,
+     "asset_return": 3.7268817204300992,
+     "trades": 4
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 200
+     },
+     "net_return": 0.007484745088347067,
+     "asset_return": 0.3132848043676064,
+     "trades": 5
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "n": 3,
+      "low": 10.0,
+      "exit_n": 5,
+      "trend": 200
+     },
+     "net_return": -0.04866699702053201,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 0.6666666666666666,
+   "folds_traded": 1.0,
+   "grid_positive": 0.375,
+   "grid_net_min": -0.5019146816813596,
+   "grid_net_max": 0.6837523916851542,
+   "holdout": null,
+   "deflated_sharpe": 0.10502194627047984,
+   "assessment": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "sharpe",
+     "grid_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "11 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +9.3% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +2.3% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 1.52"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": true,
+      "detail": "max drawdown 14.4% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.30 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "67% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": false,
+      "detail": "38% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.11"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.382 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "vol_target_trend",
+   "family": "risk_adjusted",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 4,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.9307335582844991,
+    "cagr": 0.28953743473401383,
+    "max_drawdown": 0.20887322049576618,
+    "sharpe": 1.1951181873852548,
+    "sortino": 2.0792692911823774,
+    "exposure": 0.21513304798785368,
+    "trades": 10,
+    "open_trade": false,
+    "orders": 45,
+    "win_rate": 0.4,
+    "avg_win": 0.3078085230500462,
+    "avg_loss": -0.05553923199866521,
+    "profit_factor": 3.6947878940475065,
+    "expectancy": 0.08979987002081935,
+    "max_consecutive_losses": 3,
+    "fees": 0.02984963468443699,
+    "slippage": 0.0059631646701745035,
+    "turnover": 11.196287125138937,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.8676899424789382,
+    "cagr": 0.2730968709613957,
+    "max_drawdown": 0.2146146341055486,
+    "sharpe": 1.141549511236009,
+    "sortino": 1.9802621202862993,
+    "exposure": 0.21502745658972805,
+    "trades": 10,
+    "open_trade": false,
+    "orders": 45,
+    "win_rate": 0.4,
+    "avg_win": 0.3014545127851765,
+    "avg_loss": -0.05777843883462234,
+    "profit_factor": 3.4782815050671014,
+    "expectancy": 0.0859147418132972,
+    "max_consecutive_losses": 3,
+    "fees": 0.05931826310843889,
+    "slippage": 0.011836717900659616,
+    "turnover": 11.192948236466783,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 0.9806583311812751,
+   "oos_excess": {
+    "mean": 5.210089128174979e-05,
+    "lo": -0.00046012026469933624,
+    "hi": 0.000596373286714862,
+    "p_le_zero": 0.423
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "fast": 20,
+      "slow": 100,
+      "target": 0.3
+     },
+     "net_return": 0.5023236599468235,
+     "asset_return": 3.7268817204300992,
+     "trades": 4
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "fast": 20,
+      "slow": 100,
+      "target": 0.3
+     },
+     "net_return": 0.23885648469164034,
+     "asset_return": 0.3132848043676064,
+     "trades": 4
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "fast": 20,
+      "slow": 100,
+      "target": 0.3
+     },
+     "net_return": 0.037379925774400746,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 1.0,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 1.9119778134516285,
+   "grid_net_max": 4.780798882509542,
+   "holdout": null,
+   "deflated_sharpe": 0.5758405737800203,
+   "assessment": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "10 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +93.1% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +86.8% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 3.69"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": true,
+      "detail": "max drawdown 20.9% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.20 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "100% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.58"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.423 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "trend_ensemble",
+   "family": "ensemble",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 1,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 1.0289520204580191,
+    "cagr": 0.3145072342789881,
+    "max_drawdown": 0.20428658771557628,
+    "sharpe": 1.1620292295948533,
+    "sortino": 1.9617809902422358,
+    "exposure": 0.24287936808243862,
+    "trades": 16,
+    "open_trade": false,
+    "orders": 104,
+    "win_rate": 0.375,
+    "avg_win": 0.21467100080413662,
+    "avg_loss": -0.03093417572350714,
+    "profit_factor": 4.16376378131853,
+    "expectancy": 0.06116776547435927,
+    "max_consecutive_losses": 6,
+    "fees": 0.044394013389562365,
+    "slippage": 0.008868479937346038,
+    "turnover": 15.804025058017142,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.9351767273888691,
+    "cagr": 0.29068362460309594,
+    "max_drawdown": 0.21136141058720614,
+    "sharpe": 1.093617215562961,
+    "sortino": 1.8398884763260457,
+    "exposure": 0.24278932296695904,
+    "trades": 16,
+    "open_trade": false,
+    "orders": 104,
+    "win_rate": 0.3125,
+    "avg_win": 0.24939189177570156,
+    "avg_loss": -0.02952057508864764,
+    "profit_factor": 3.8400319257577906,
+    "expectancy": 0.05763957080646148,
+    "max_consecutive_losses": 8,
+    "fees": 0.08797910378153788,
+    "slippage": 0.017554824255418093,
+    "turnover": 15.803116162092552,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 1.1334815567328373,
+   "oos_excess": {
+    "mean": 3.1847322124641585e-05,
+    "lo": -0.000524405702686455,
+    "hi": 0.0006945925846666561,
+    "p_le_zero": 0.456
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.5532667997422194,
+     "asset_return": 3.7268817204300992,
+     "trades": 9
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.2846494203424361,
+     "asset_return": 0.3132848043676064,
+     "trades": 5
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "target": 0.4
+     },
+     "net_return": 0.016813005488238275,
+     "asset_return": 0.4607496708930907,
+     "trades": 2
+    }
+   ],
+   "folds_positive": 1.0,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 2.7596294044412106,
+   "grid_net_max": 2.7596294044412106,
+   "holdout": null,
+   "deflated_sharpe": 0.5535992670586246,
+   "assessment": {
+    "verdict": "INSUFFICIENT_EVIDENCE",
+    "label": null,
+    "failed": [
+     "oos_trades",
+     "oos_years",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": false,
+      "detail": "16 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +102.9% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": true,
+      "detail": "net +93.5% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 4.16"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": true,
+      "detail": "max drawdown 20.4% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": true,
+      "detail": "Sharpe 1.16 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": true,
+      "detail": "100% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.55"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.456 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "regime_switch",
+   "family": "regime_aware",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 4,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 0.2945606709277886,
+    "cagr": 0.10493365250795561,
+    "max_drawdown": 0.5868906996421688,
+    "sharpe": 0.45147318407359605,
+    "sortino": 0.7259370630353065,
+    "exposure": 0.3724867724867725,
+    "trades": 65,
+    "open_trade": false,
+    "orders": 130,
+    "win_rate": 0.35384615384615387,
+    "avg_win": 0.12317595982357225,
+    "avg_loss": -0.0461546886148173,
+    "profit_factor": 1.4614658625709314,
+    "expectancy": 0.013762310063382077,
+    "max_consecutive_losses": 7,
+    "fees": 0.36189827216118686,
+    "slippage": 0.07229005998941311,
+    "turnover": 130.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": -0.12458057032724401,
+    "cagr": -0.05012579175674303,
+    "max_drawdown": 0.6713488336730886,
+    "sharpe": 0.18023267094918724,
+    "sortino": 0.28609394890921613,
+    "exposure": 0.3724867724867725,
+    "trades": 65,
+    "open_trade": false,
+    "orders": 130,
+    "win_rate": 0.35384615384615387,
+    "avg_win": 0.11643606509764401,
+    "avg_loss": -0.05187847296697368,
+    "profit_factor": 1.2290764055039383,
+    "expectancy": 0.007678978963583349,
+    "max_consecutive_losses": 7,
+    "fees": 0.6701588122126997,
+    "slippage": 0.13369934067322337,
+    "turnover": 130.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 0.9128194799671612,
+   "oos_excess": {
+    "mean": -0.0005572110503706025,
+    "lo": -0.001972547557504757,
+    "hi": 0.0009189339146677846,
+    "p_le_zero": 0.7795
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.3
+     },
+     "net_return": 1.2078596211707038,
+     "asset_return": 3.7268817204300992,
+     "trades": 24
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.3
+     },
+     "net_return": -0.325714919129647,
+     "asset_return": 0.3132848043676064,
+     "trades": 31
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {
+      "er_n": 20,
+      "er_trend": 0.2
+     },
+     "net_return": -0.1304242872935666,
+     "asset_return": 0.4607496708930907,
+     "trades": 10
+    }
+   ],
+   "folds_positive": 0.3333333333333333,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 2.335433242646191,
+   "grid_net_max": 26.963853632861877,
+   "holdout": null,
+   "deflated_sharpe": 0.15202239726334982,
+   "assessment": {
+    "verdict": "REJECTED",
+    "label": null,
+    "failed": [
+     "oos_years",
+     "net_positive_2x_costs",
+     "max_drawdown",
+     "sharpe",
+     "folds_positive",
+     "deflated_sharpe",
+     "timing_edge"
+    ],
+    "checks": [
+     {
+      "name": "oos_trades",
+      "ok": true,
+      "detail": "65 closed trades (need 30)"
+     },
+     {
+      "name": "oos_years",
+      "ok": false,
+      "detail": "2.59 years (need 3.0)"
+     },
+     {
+      "name": "folds_traded",
+      "ok": true,
+      "detail": "traded in 100% of folds"
+     },
+     {
+      "name": "net_positive",
+      "ok": true,
+      "detail": "net +29.5% after costs"
+     },
+     {
+      "name": "net_positive_2x_costs",
+      "ok": false,
+      "detail": "net -12.5% at double costs"
+     },
+     {
+      "name": "profit_factor",
+      "ok": true,
+      "detail": "profit factor 1.46"
+     },
+     {
+      "name": "max_drawdown",
+      "ok": false,
+      "detail": "max drawdown 58.7% (limit 25%)"
+     },
+     {
+      "name": "sharpe",
+      "ok": false,
+      "detail": "Sharpe 0.45 (need 0.8)"
+     },
+     {
+      "name": "folds_positive",
+      "ok": false,
+      "detail": "33% of folds net positive"
+     },
+     {
+      "name": "grid_positive",
+      "ok": true,
+      "detail": "100% of parameter grid net positive"
+     },
+     {
+      "name": "deflated_sharpe",
+      "ok": false,
+      "detail": "deflated Sharpe probability 0.15"
+     },
+     {
+      "name": "timing_edge",
+      "ok": false,
+      "detail": "excess over same-exposure buy-and-hold: p=0.779 x 9 candidates"
+     }
+    ]
+   }
+  },
+  {
+   "candidate": "buy_and_hold",
+   "family": "benchmark",
+   "symbol": "SOLUSDT",
+   "interval": "1d",
+   "grid_size": 1,
+   "oos": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 7.906026727305155,
+    "cagr": 1.328415066983295,
+    "max_drawdown": 0.6000731476815129,
+    "sharpe": 1.4034403647894933,
+    "sortino": 2.2616032397746584,
+    "exposure": 0.9968253968253968,
+    "trades": 3,
+    "open_trade": false,
+    "orders": 6,
+    "win_rate": 1.0,
+    "avg_win": 1.4853329222691514,
+    "avg_loss": null,
+    "profit_factor": null,
+    "expectancy": 1.4853329222691514,
+    "max_consecutive_losses": 0,
+    "fees": 0.02618671370127182,
+    "slippage": 0.00523471459530314,
+    "turnover": 6.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_stress": {
+    "bars": 945,
+    "years": 2.59,
+    "net_return": 7.746658454858077,
+    "cagr": 1.312221701487894,
+    "max_drawdown": 0.6024730075245974,
+    "sharpe": 1.39534437482309,
+    "sortino": 2.247650128242463,
+    "exposure": 0.9968253968253968,
+    "trades": 3,
+    "open_trade": false,
+    "orders": 6,
+    "win_rate": 1.0,
+    "avg_win": 1.4704190682924256,
+    "avg_loss": null,
+    "profit_factor": null,
+    "expectancy": 1.4704190682924256,
+    "max_consecutive_losses": 0,
+    "fees": 0.05224249851697124,
+    "slippage": 0.010437973641071283,
+    "turnover": 6.0,
+    "asset_return": 8.067956989247286,
+    "asset_max_drawdown": 0.5976638546398443
+   },
+   "oos_gross_return": 8.06795698924731,
+   "oos_excess": {
+    "mean": -8.470985341567494e-06,
+    "lo": -3.507078470677348e-05,
+    "hi": 1.2566451489172569e-05,
+    "p_le_zero": 0.7455
+   },
+   "folds": [
+    {
+     "start": 1677456000,
+     "end": 1708905600,
+     "params": {},
+     "net_return": 3.6985759284470676,
+     "asset_return": 3.7268817204300992,
+     "trades": 1
+    },
+    {
+     "start": 1708992000,
+     "end": 1740441600,
+     "params": {},
+     "net_return": 0.3054205148241964,
+     "asset_return": 0.3132848043676064,
+     "trades": 1
+    },
+    {
+     "start": 1740528000,
+     "end": 1759017600,
+     "params": {},
+     "net_return": 0.4520023235361901,
+     "asset_return": 0.4607496708930907,
+     "trades": 1
+    }
+   ],
+   "folds_positive": 1.0,
+   "folds_traded": 1.0,
+   "grid_positive": 1.0,
+   "grid_net_min": 14.4247994579858,
+   "grid_net_max": 14.4247994579858,
+   "holdout": null,
+   "deflated_sharpe": null,
+   "assessment": null
+  }
+ ]
+}

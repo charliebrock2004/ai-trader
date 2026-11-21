@@ -92,3 +92,6 @@ AGENTS.md
 screenshots/
 artifacts/
 public/__grok/
+
+# Research candle cache (re-downloadable; reports record its SHA-256)
+data/research/
