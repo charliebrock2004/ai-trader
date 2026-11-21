@@ -45,6 +45,17 @@ def test_costs_reduce_equity_by_exactly_fee_and_slippage():
     assert paid.trades[0] == pytest.approx(paid.equity[-1] - 1)
 
 
+def test_window_accounting_is_consistent():
+    w = [1.0] * len(S)
+    a = bt.run(S, w, start=100, end=200)
+    assert a.exposure[-1] > 0.99  # held through the last bar, then closed
+    assert a.asset_ret[0] == pytest.approx(S.close[100] / S.open[100] - 1)
+    both = bt.stitch([a, bt.run(S, w, start=200, end=300)])
+    b = bt.run(S, w, start=200, end=300)
+    assert both.fees == pytest.approx(a.fees + a.equity[-1] * b.fees)
+    assert both.equity[-1] == pytest.approx(a.equity[-1] * b.equity[-1])
+
+
 def test_never_leveraged_and_never_short():
     w = [5.0 if i % 7 < 3 else -2.0 for i in range(len(S))]
     r = bt.run(S, w, start=1)
@@ -104,6 +115,8 @@ def test_gate_verdicts():
     assert beta["verdict"] == "PAPER_CANDIDATE" and beta["label"] == "risk_managed_beta"
     assert q.assess(_ev(trades=6), n_candidates=9, deflated_sharpe=0.97)["verdict"] == "INSUFFICIENT_EVIDENCE"
     assert q.assess(_ev(trades=6, max_drawdown=0.5), n_candidates=9, deflated_sharpe=0.97)["verdict"] == "REJECTED"
+    lost = dict(trades=8, net_return=-0.5, max_drawdown=0.6, sharpe=-1.0)
+    assert q.assess(_ev(trades=6, holdout=lost), n_candidates=9, deflated_sharpe=0.97)["verdict"] == "REJECTED"
     assert q.assess(_ev(holdout=None), n_candidates=9, deflated_sharpe=0.97)["verdict"] == "INSUFFICIENT_EVIDENCE"
     for bad in (dict(max_drawdown=0.4), dict(net_return=-0.1), dict(oos_stress=dict(net_return=-0.01)),
                 dict(holdout=dict(trades=8, net_return=-0.1, max_drawdown=0.1, sharpe=0.9))):
