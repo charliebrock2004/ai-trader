@@ -30,7 +30,7 @@ ai-trader = "ai_trader.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-ai_trader = ["db/*.sql", "dashboard/static/*", "dashboard/templates/*"]
+ai_trader = ["db/*.sql", "research/*.json", "dashboard/static/*", "dashboard/templates/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]

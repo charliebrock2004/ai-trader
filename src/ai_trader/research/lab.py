@@ -109,7 +109,7 @@ def markdown(report: dict) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="ai-trader research")
-    ap.add_argument("action", choices=("fetch", "run"))
+    ap.add_argument("action", choices=("fetch", "run", "tournament-register", "tournament"))
     ap.add_argument("--holdout", action="store_true", help="score the single-use holdout and log the access")
     ap.add_argument("--cache", default=str(rd.DEFAULT_CACHE))
     ap.add_argument("--out", default=str(OUT_DIR))
@@ -119,6 +119,19 @@ def main(argv=None) -> int:
         for sym in SYMBOLS:
             s = rd.fetch(sym, INTERVAL)
             print(sym, rd.validate(s), rd.save(s, cache))
+        return 0
+    if args.action.startswith("tournament"):
+        from ai_trader.research import tournament as tm
+
+        series = {sym: rd.fetch(sym, INTERVAL) for sym in SYMBOLS}
+        if args.action == "tournament-register":
+            print(tm.save_registration(tm.register(series)))
+            return 0
+        board = tm.board(tm.load_registration(), series)
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "tournament_leaderboard.md").write_text(tm.markdown(board))
+        print(tm.markdown(board))
         return 0
     series = {sym: rd.load(sym, INTERVAL, cache) for sym in SYMBOLS}
     report = study(series, use_holdout=args.holdout)

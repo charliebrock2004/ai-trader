@@ -20,7 +20,8 @@ from ai_trader.runtime import get_runtime
 MUTATING_COMMANDS = frozenset({"start", "stop", "cycle"})
 
 READ_COMMANDS = frozenset(
-    {"health", "status", "agent", "performance", "system", "decisions", "decision", "opportunities"}
+    {"health", "status", "agent", "performance", "system", "decisions", "decision", "opportunities",
+     "tournament"}
 )
 
 
@@ -81,6 +82,13 @@ def handle(req: dict[str, Any]) -> dict[str, Any]:
 
     if cmd == "health":
         return {"ok": True, "service": "ai-trader", "live": False, "engine": "python-worker"}
+
+    if cmd == "tournament":
+        # Derived from public candles and a committed registration; needs no
+        # runtime, ledger or broker, so it answers even while the desk boots.
+        from ai_trader.research.tournament import live_board
+
+        return live_board()
 
     runtime = get_runtime()
 
