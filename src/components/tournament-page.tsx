@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Failure, Loading, Shell } from "@/components/shell";
 import { api, type Tournament, type TournamentRow } from "@/lib/agent-api";
+import { rankMove, type RankHistory } from "@/lib/rank-history";
 
 const GATE_LABELS: Record<string, string> = {
   paper_days: "under 60 days",
@@ -20,6 +21,7 @@ export function TournamentPage() {
   const [data, setData] = useState<Tournament | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [asset, setAsset] = useState<string>("all");
+  const [history, setHistory] = useState<RankHistory | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -42,6 +44,14 @@ export function TournamentPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    // Optional: the leaderboard is complete without the daily record.
+    api
+      .tournamentHistory()
+      .then((h) => setHistory(h.ok ? { days: h.days, ranks: h.ranks } : null))
+      .catch(() => setHistory(null));
+  }, []);
 
   if (error) {
     return (
@@ -67,6 +77,8 @@ export function TournamentPage() {
   const compared = strategies.filter((r) => r.forward_bars > 0 && r.excess_return != null);
   const beating = compared.filter((r) => (r.excess_return ?? 0) > 0).length;
   const factor = data.stress_cost_factor ?? 2;
+  const recorded = history?.days ?? [];
+  const moves = recorded.length >= 2;
 
   return (
     <Shell active="tournament">
@@ -115,13 +127,19 @@ export function TournamentPage() {
         <p className="mt-0 mb-3 max-w-[70ch] text-sm leading-normal text-muted">
           "Vs holding" is the net return minus simply holding the same coin over the same days,
           after the same costs. "At {factor}× cost" re-runs the same rule with fee and slippage
-          multiplied by {factor}; it does not affect the rank or the gate.
+          multiplied by {factor}; it does not affect the rank or the gate.{" "}
+          {moves
+            ? `"Moved" is the change in rank between the daily records of ${recorded[recorded.length - 2]} and ${recorded[recorded.length - 1]}.`
+            : history
+              ? `Rank movement appears once two daily records exist (${recorded.length} so far).`
+              : "The daily rank record could not be read."}
         </p>
         <div className="desk-scroll">
           <table className="desk-table">
             <thead>
               <tr>
                 <th scope="col">#</th>
+                {moves ? <th scope="col">Moved</th> : null}
                 <th scope="col">Strategy</th>
                 <th scope="col">Asset</th>
                 <th scope="col">Equity</th>
@@ -138,6 +156,7 @@ export function TournamentPage() {
               {shown.map((row) => (
                 <tr key={row.id}>
                   <td>{row.rank}</td>
+                  {moves && history ? <Move places={rankMove(history, row.id)} /> : null}
                   <td>{row.benchmark ? `${row.candidate} (benchmark)` : row.candidate}</td>
                   <td>{row.symbol}</td>
                   <td>
@@ -161,6 +180,18 @@ export function TournamentPage() {
         </div>
       </section>
     </Shell>
+  );
+}
+
+function Move({ places }: { places: number | null }) {
+  if (places == null) return <td className="text-faint">—</td>;
+  if (places === 0) return <td className="text-muted">0</td>;
+  const up = places > 0;
+  return (
+    <td className={up ? "text-ok" : "text-halt"}>
+      <span aria-hidden="true">{up ? "▲" : "▼"}</span>
+      <span className="sr-only">{up ? "up" : "down"}</span> {Math.abs(places)}
+    </td>
   );
 }
 

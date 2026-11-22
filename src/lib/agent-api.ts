@@ -500,6 +500,10 @@ export const api = {
   performance: () => get<Performance>("/api/performance"),
   system: () => get<SystemStatus>("/api/system"),
   tournament: () => get<Tournament>("/api/tournament"),
+  tournamentHistory: () =>
+    get<{ ok: boolean; days: string[]; ranks: Record<string, (number | null)[]> }>(
+      "/api/tournament-history",
+    ),
   decisions: (limit = 50) => get<{ decisions: DecisionRow[] }>(`/api/decisions?limit=${limit}`),
   decision: (id: number) => get<{ ok: boolean; decision: DecisionDetail }>(`/api/decisions/${id}`),
 };
