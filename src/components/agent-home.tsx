@@ -278,12 +278,12 @@ export function AgentHome() {
         </header>
         {last ? (
           <>
-            <div className="desk-reason-grid">
+            <dl className="desk-reason-grid">
               <Reason label="Market" value={last.ticker ?? "—"} />
               <Reason label="Model" value={probability(last.model_probability)} />
               <Reason label="Market price" value={probability(last.market_probability)} />
               <Reason label="Net edge" value={points(last.net_edge)} />
-            </div>
+            </dl>
             <p className="mt-3 mb-0 max-w-[70ch] text-sm leading-normal text-muted">
               {last.notes ?? last.policy_reason ?? last.risk_reason ?? "No reason recorded."}
             </p>
@@ -385,8 +385,8 @@ function Count({ label, value }: { label: string; value: string }) {
 function Reason({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="m-0 font-mono text-[10px] tracking-[0.12em] text-faint uppercase">{label}</p>
-      <p className="mt-1 mb-0 font-mono text-base tabular-nums">{value}</p>
+      <dt className="m-0 font-mono text-[10px] tracking-[0.12em] text-faint uppercase">{label}</dt>
+      <dd className="mt-1 mb-0 ml-0 font-mono text-base tabular-nums">{value}</dd>
     </div>
   );
 }
