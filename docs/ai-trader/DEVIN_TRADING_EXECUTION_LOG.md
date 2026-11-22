@@ -162,3 +162,13 @@ curve (QuantStats).
   a 404 on every page load).
 
 Live readiness: unchanged, not ready.
+
+## 2026-11-22: rank movement from the daily record (roadmap P2.11)
+
+The snapshot job now also writes `history.json` on the `tournament-snapshots`
+branch: each entry's rank on each recorded day. It is derived and rebuilt from
+the daily files on every run; the daily files are still never rewritten. The
+site reads it through `/api/tournament-history` and the Tournament tab shows a
+"Moved" column (rank change between the last two recorded days) once two days
+exist. Until then the column is absent. The layout was checked in a browser with
+made-up history; there is one real recorded day so far.
