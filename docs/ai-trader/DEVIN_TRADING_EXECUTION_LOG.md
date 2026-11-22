@@ -172,3 +172,13 @@ site reads it through `/api/tournament-history` and the Tournament tab shows a
 "Moved" column (rank change between the last two recorded days) once two days
 exist. Until then the column is absent. The layout was checked in a browser with
 made-up history; there is one real recorded day so far.
+
+
+## 2026-11-22: scheduled health check (roadmap P1.7)
+
+`.github/workflows/health-check.yml` runs `scripts/health_check.py` every six
+hours: worker `/health` and the site's `/api/tournament`, read-only. A failure
+opens one GitHub issue (or comments on the open one) and the next healthy run
+closes it. Any reply that does not say `live=false`,
+`live_trading_allowed=false` and `simulated=true` is reported first as a safety
+problem. It does not restart or change anything.
