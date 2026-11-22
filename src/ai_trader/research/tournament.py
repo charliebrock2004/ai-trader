@@ -34,6 +34,9 @@ REGISTRATION = Path(__file__).with_name("tournament_registration.json")
 WARMUP = 200
 #: Completed bars may lag by this many intervals before data counts as stale.
 MAX_LAG_BARS = 2
+#: Display only: the ranking and the paper gate use the registered costs.
+STRESS_COST_FACTOR = 2.0
+CURVE_POINTS = 60
 _BY_NAME = {c.name: c for c in CANDIDATES + (BENCHMARK,)}
 
 
@@ -121,16 +124,25 @@ def board(reg: dict, series_by_symbol: dict, *, now: Optional[float] = None) -> 
                                           "profit_factor", "exposure", "fees", "slippage", "asset_return")})
             row["sharpe"] = m["sharpe"] if fwd >= 30 else None  # meaningless on a handful of bars
             row["equity"] = r.equity[-1]
+            # Same rule, same bars, twice the fee and slippage: how much of the result is cost assumption.
+            stress = bt.run(s, w, costs.scaled(STRESS_COST_FACTOR), start=n0, close_at_end=False)
+            row["stress_net_return"] = stress.equity[-1] - 1
+            row["curve"] = _curve(r.equity)
             # Execution here is simulated, so there are no execution errors to count.
             gate = q.assess_paper({"days": fwd * rd.INTERVAL_SECONDS[s.interval] / 86400, "trades": m["trades"],
                                    "net_return": m["net_return"], "max_drawdown": m["max_drawdown"],
                                    "execution_error_rate": 0.0}, crit)
         else:
-            row.update({"net_return": 0.0, "max_drawdown": 0.0, "trades": 0, "equity": 1.0, "sharpe": None})
+            row.update({"net_return": 0.0, "max_drawdown": 0.0, "trades": 0, "equity": 1.0, "sharpe": None,
+                        "stress_net_return": 0.0, "curve": [1.0]})
             gate = q.assess_paper({"days": 0, "trades": 0, "net_return": 0.0, "max_drawdown": 0.0,
                                    "execution_error_rate": 0.0}, crit)
         row["paper_gate"] = {"passed": not gate["failed"], "failed": gate["failed"]}
         rows.append(row)
+    hold = {r["symbol"]: r["net_return"] for r in rows if r["benchmark"]}
+    for r in rows:
+        # Against simply holding the same asset over the same bars, after the same costs.
+        r["excess_return"] = None if r["benchmark"] or r["symbol"] not in hold else r["net_return"] - hold[r["symbol"]]
     # Risk first: a gate pass outranks everything, then return net of the drawdown taken to earn it.
     rows.sort(key=lambda r: (not r["paper_gate"]["passed"], -(r["net_return"] - r["max_drawdown"]), r["id"]))
     for i, r in enumerate(rows, 1):
@@ -140,11 +152,21 @@ def board(reg: dict, series_by_symbol: dict, *, now: Optional[float] = None) -> 
         del d["first"]
     return {"ok": True, "simulated": True, "live": False, "registered_at": reg["registered_at"],
             "as_of": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)), "costs": reg["costs"],
+            "stress_cost_factor": STRESS_COST_FACTOR,
             "provisional": min_bars < crit.min_paper_days,
             "note": "Simulated paper results on forward public candles. Not trading profits. Passing the paper "
                     "gate does not qualify a strategy on its own: it must also have passed historical "
                     "qualification, and any live pilot needs the owner's explicit approval.",
             "data": data, "rows": rows}
+
+
+def _curve(equity: list[float]) -> list[float]:
+    """The equity curve from its 1.0 start, thinned to at most ``CURVE_POINTS``; the last point is always kept."""
+    pts = [1.0] + equity
+    if len(pts) > CURVE_POINTS:
+        last = len(pts) - 1
+        pts = [pts[round(i * last / (CURVE_POINTS - 1))] for i in range(CURVE_POINTS)]
+    return [round(x, 6) for x in pts]
 
 
 def markdown(b: dict) -> str:
@@ -153,9 +175,11 @@ def markdown(b: dict) -> str:
          b["note"], ""]
     if b["provisional"]:
         L += ["**Provisional:** too few forward days for any ranking to mean anything yet.", ""]
-    L += ["| # | Strategy | Asset | Bars | Net | Asset | Max DD | Trades | Target weight | Paper gate |", "|---|---|---|---|---|---|---|---|---|---|"]
+    L += ["| # | Strategy | Asset | Bars | Net | vs hold | Net at 2x cost | Asset | Max DD | Trades | Target weight | Paper gate |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in b["rows"]:
         L.append(f"| {r['rank']} | {r['candidate']} | {r['symbol']} | {r['forward_bars']} | {r['net_return']:+.1%} | "
+                 f"{'—' if r['excess_return'] is None else format(r['excess_return'], '+.1%')} | "
+                 f"{r['stress_net_return']:+.1%} | "
                  f"{r.get('asset_return', 0.0):+.1%} | {-r['max_drawdown']:.1%} | {r['trades']} | {r['target_weight']:.2f} | "
                  f"{'pass' if r['paper_gate']['passed'] else 'not yet: ' + ', '.join(r['paper_gate']['failed'])} |")
     return "\n".join(L) + "\n"
