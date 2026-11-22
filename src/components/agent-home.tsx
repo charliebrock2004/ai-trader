@@ -414,7 +414,7 @@ function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
   return (
     <div className="desk-signal">
       {latest ? (
-        <div className="desk-reason-grid mb-3">
+        <dl className="desk-reason-grid mb-3">
           <Reason label="Regime" value={latest.regime ?? "—"} />
           <Reason label="Setup" value={latest.setup ?? "none"} />
           <Reason
@@ -422,7 +422,7 @@ function SignalEvidence({ signal }: { signal?: AgentStatus["signal"] }) {
             value={`${score.toFixed(2)} / ${threshold.toFixed(2)}`}
           />
           <Reason label="Decision" value={latest.action ?? "—"} />
-        </div>
+        </dl>
       ) : null}
 
       {latest?.components && Object.keys(latest.components).length ? (
