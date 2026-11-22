@@ -63,8 +63,9 @@ export function TournamentPage() {
   const passing = strategies.filter((r) => r.paper_gate.passed).length;
   const assets = [...new Set(data.rows.map((r) => r.symbol))].sort();
   const shown = asset === "all" ? data.rows : data.rows.filter((r) => r.symbol === asset);
-  const scored = strategies.filter((r) => r.forward_bars > 0);
-  const beating = scored.filter((r) => (r.excess_return ?? 0) > 0).length;
+  // An engine that predates the comparison sends no excess_return: show "—", not "0 of N".
+  const compared = strategies.filter((r) => r.forward_bars > 0 && r.excess_return != null);
+  const beating = compared.filter((r) => (r.excess_return ?? 0) > 0).length;
   const factor = data.stress_cost_factor ?? 2;
 
   return (
@@ -82,7 +83,7 @@ export function TournamentPage() {
         <Stat label="Passing paper gate" value={`${passing} of ${strategies.length}`} />
         <Stat
           label="Ahead of holding"
-          value={scored.length ? `${beating} of ${scored.length}` : "—"}
+          value={compared.length ? `${beating} of ${compared.length}` : "—"}
         />
         <Stat label="Last refresh" value={clock(data.heartbeat?.last_success)} />
       </dl>
