@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { raceTimeout } from "@/lib/paper-core";
+import { raceTimeout } from "@/lib/race-timeout";
 import {
   EMPTY_SESSION,
   moneyAmount,
