@@ -114,7 +114,7 @@ Without `AI_TRADER_API_TOKEN` the read-only pages work and every mutating
 endpoint refuses — an unconfigured deployment is closed, not open.
 
 ```bash
-python3 -m pytest      # 482 tests
+python3 -m pytest
 npm test               # frontend contract tests
 npx tsc --noEmit
 ```

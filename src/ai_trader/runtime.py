@@ -5,6 +5,7 @@ from __future__ import annotations
 import threading
 from typing import Any, Optional
 
+from ai_trader.config import DEFAULT_XAI_MODEL
 from ai_trader.agent.runtime import AgentRuntime
 from ai_trader.agent.worker import DeskWorker
 from ai_trader.ai.budget import GrokBudget
@@ -47,7 +48,7 @@ class Runtime:
             clock=self.clock,
             daily_limit=self.settings.grok_daily_call_budget,
             min_interval_seconds=self.settings.grok_min_interval_seconds,
-            model=self.settings.xai_model or "grok-4.3",
+            model=self.settings.xai_model or DEFAULT_XAI_MODEL,
         )
         self.orchestrator.paper_session.budget = self.budget
         self.orchestrator.paper_session.gate_with_deterministic = True
@@ -84,7 +85,7 @@ class Runtime:
         thread, which fails closed if the rate is missing.
         """
         analyst = None
-        if self.settings.grok_configured() or self.settings.grok_paper_analysis:
+        if self.settings.grok_review_enabled():
             analyst = GrokSkeptic(
                 self.settings,
                 budget=self.budget,

@@ -14,6 +14,7 @@ import threading
 from datetime import datetime
 from typing import Any, Optional
 
+from ai_trader.config import DEFAULT_XAI_MODEL
 from ai_trader.clock import Clock, default_clock, ensure_utc
 
 DEFAULT_DAILY_LIMIT = 8
@@ -30,7 +31,7 @@ class GrokBudget:
         clock: Optional[Clock] = None,
         daily_limit: int = DEFAULT_DAILY_LIMIT,
         min_interval_seconds: int = DEFAULT_MIN_INTERVAL_SECONDS,
-        model: str = "grok-4.3",
+        model: str = DEFAULT_XAI_MODEL,
     ) -> None:
         self.store = store
         self.clock = clock or default_clock()

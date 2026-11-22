@@ -65,7 +65,7 @@ The pieces that were already good and should stay that way:
 4. Run everything:
 
    ```bash
-   python3 -m pytest        # 482 tests
+   python3 -m pytest
    npm test                 # frontend contract tests
    npx tsc --noEmit
    npm run build

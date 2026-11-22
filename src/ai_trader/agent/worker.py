@@ -11,6 +11,7 @@ import json
 import threading
 from typing import Any, Optional
 
+from ai_trader.config import DEFAULT_XAI_MODEL
 from ai_trader.safety import LIVE_TRADING_ALLOWED
 from ai_trader.survival.latch import AgentTerminatedError
 
@@ -358,7 +359,7 @@ class DeskWorker:
         return {
             "connected": connected,
             "status": "connected" if connected else "disconnected",
-            "model": settings.xai_model or "grok-4.3",
+            "model": settings.xai_model or DEFAULT_XAI_MODEL,
             "calls_today": int(snap.get("calls_today") or 0),
             "daily_budget": int(snap.get("daily_budget") or settings.grok_daily_call_budget),
             "remaining": int(snap.get("remaining") if snap.get("remaining") is not None else settings.grok_daily_call_budget),
@@ -373,9 +374,8 @@ class DeskWorker:
                 f"score threshold {settings.strategy_score_threshold:.2f}"
             ),
             #: Whether Grok is actually consulted on BTC candidates, read from the
-            #: analyst the session uses. GrokClient switches paper review on by
-            #: itself whenever an xAI key is configured (GROK_PAPER_ANALYSIS only
-            #: matters without a key), so the flag alone does not answer this.
+            #: analyst the session uses. True only with a key and
+            #: GROK_PAPER_ANALYSIS=true.
             "reviews_btc_candidates": bool(
                 connected
                 and getattr(getattr(self.runtime.orchestrator, "grok", None), "paper_requested", False)

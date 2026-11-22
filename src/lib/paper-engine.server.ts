@@ -36,8 +36,8 @@ function state(): WorkerState {
 }
 
 function grokPaperFlag() {
-  if (process.env.GROK_PAPER_ANALYSIS) return process.env.GROK_PAPER_ANALYSIS;
-  return process.env.XAI_API_KEY ? "true" : "false";
+  // The only switch. A key on its own enables nothing.
+  return process.env.GROK_PAPER_ANALYSIS || "false";
 }
 
 function workspaceRoot() {

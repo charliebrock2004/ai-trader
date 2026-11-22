@@ -13,7 +13,7 @@
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
 | Hosting | Frontend on Vercel, worker on Render free (sleeps when idle; the checkpoint job keeps it awake in multi-hour runs and checkpoints every 10 min) |
 | Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70**. The BLS CPI event pipeline is **parked** (`EVENT_PIPELINE_ENABLED=false`, the default) |
-| Tests | 612 Python tests passing |
+| Tests | Run `python -m pytest -q`; CI runs it on every PR. Counts are not recorded here because they went stale. |
 
 If this file disagrees with the code, the code wins. Update it after every
 significant change, and never mark something complete that is not tested.
@@ -129,11 +129,12 @@ neither did any daily-loss, position, trade-count, stop or FX rule.
   out-of-range values are refused at `Settings` and at session start, and a
   test proves the value the dashboard shows is the value the detector uses.
 - Grok was not the bottleneck: in the 5-20 Sep ledger it made **zero** BTC
-  decisions. `GrokClient` turns paper review on by itself whenever an xAI key is
-  set (whatever `GROK_PAPER_ANALYSIS` says), and the production worker has a key,
-  so Grok does review BTC candidates now: it challenges a candidate the
-  detector already found, can only hold it, never sizes it, and is capped at 8
-  calls a day, 30 minutes apart. On 6 Nov it held 1 of the first 3 candidates.
+  decisions. Until Phase 0.5 a key on its own turned paper review on. Now
+  `GROK_PAPER_ANALYSIS` is the only switch, and `render.yaml` sets it to
+  `false`, so **Grok review is off in production until the owner sets
+  `GROK_PAPER_ANALYSIS=true` on the worker**. When on, it challenges a candidate
+  the detector already found, can only hold it, never sizes it, and is capped at
+  8 calls a day, 30 minutes apart. On 6 Nov it held 1 of the first 3 candidates.
   A failure, budget skip or hold is recorded with its reason and never invents
   a fill. The dashboard reports whether Grok is reviewing.
 - Dashboard labels that still said "trend pullback (SMA 10/20)" now describe the

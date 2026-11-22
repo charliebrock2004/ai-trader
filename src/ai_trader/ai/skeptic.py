@@ -26,6 +26,7 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any, Optional
 
+from ai_trader.config import DEFAULT_XAI_MODEL
 from ai_trader.ai.validate import extract_json_object
 
 #: The only recommendations the model can express.
@@ -345,7 +346,7 @@ class GrokSkeptic:
 
     @property
     def model(self) -> str:
-        return getattr(self.settings, "xai_model", None) or "grok-4.3"
+        return getattr(self.settings, "xai_model", None) or DEFAULT_XAI_MODEL
 
     def review(
         self,
