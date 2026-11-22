@@ -198,7 +198,6 @@ MUTATING_ROUTES = (
     "src/routes/api/agent.cycle.ts",
     "src/routes/api/paper-session.start.ts",
     "src/routes/api/paper-session.stop.ts",
-    "src/routes/api/paper-session.grok.ts",
 )
 
 
