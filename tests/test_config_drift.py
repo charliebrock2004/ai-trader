@@ -67,3 +67,27 @@ def test_env_example_and_render_use_the_default() -> None:
         text = (REPO / name).read_text(encoding="utf-8")
         models = set(re.findall(r"grok-\d[\w.\-]*", text))
         assert models == {DEFAULT_XAI_MODEL}, name
+
+
+def test_local_launcher_does_not_derive_the_switch_from_a_key() -> None:
+    text = (REPO / "src/lib/paper-engine.server.ts").read_text(encoding="utf-8")
+    body = text.split("function grokPaperFlag()", 1)[1].split("\n}", 1)[0]
+    assert "XAI_API_KEY" not in body
+
+
+def test_status_reports_key_without_review(
+    isolated_env: object, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from ai_trader.config import clear_settings_cache
+    from ai_trader.rpc import handle
+
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
+    clear_settings_cache()
+    reset_runtime()
+    try:
+        usage = handle({"cmd": "status"})["grok_usage"]
+        assert usage["connected"] is True
+        assert usage["reviews_btc_candidates"] is False
+    finally:
+        reset_runtime()
+        clear_settings_cache()

@@ -352,7 +352,7 @@ class DeskWorker:
 
     def _grok_usage(self) -> dict[str, Any]:
         settings = self.runtime.settings
-        connected = bool(settings.grok_review_enabled() and settings.grok_configured())
+        connected = bool(settings.grok_configured())
         budget = getattr(self.runtime, "budget", None)
         snap = budget.snapshot() if budget is not None else {}
         return {
@@ -373,9 +373,8 @@ class DeskWorker:
                 f"score threshold {settings.strategy_score_threshold:.2f}"
             ),
             #: Whether Grok is actually consulted on BTC candidates, read from the
-            #: analyst the session uses. GrokClient switches paper review on by
-            #: itself whenever an xAI key is configured (GROK_PAPER_ANALYSIS only
-            #: matters without a key), so the flag alone does not answer this.
+            #: analyst the session uses. True only with a key and
+            #: GROK_PAPER_ANALYSIS=true.
             "reviews_btc_candidates": bool(
                 connected
                 and getattr(getattr(self.runtime.orchestrator, "grok", None), "paper_requested", False)
