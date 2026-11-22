@@ -41,6 +41,36 @@ def test_board_scores_forward_bars_only_and_is_repeatable():
     assert "Not trading profits" in tm.markdown(b1)
 
 
+def test_board_compares_with_holding_and_stresses_costs():
+    reg = _reg()
+    b = tm.board(reg, {"SYN": FULL}, now=_now(FULL))
+    hold = next(r for r in b["rows"] if r["benchmark"])
+    assert hold["excess_return"] is None
+    for r in b["rows"]:
+        if not r["benchmark"]:
+            assert r["excess_return"] == pytest.approx(r["net_return"] - hold["net_return"])
+        # Doubling costs can never help, and costs nothing when nothing traded.
+        assert r["stress_net_return"] <= r["net_return"] + 1e-12
+        if r["orders"] == 0:
+            assert r["stress_net_return"] == r["net_return"] == 0.0
+        assert r["curve"][0] == 1.0 and r["curve"][-1] == pytest.approx(r["equity"], abs=1e-6)
+        assert len(r["curve"]) <= tm.CURVE_POINTS
+    assert any(r["orders"] and r["stress_net_return"] < r["net_return"] for r in b["rows"])
+    # The extra columns are display only: the order is still the registered-cost ranking.
+    key = [(not r["paper_gate"]["passed"], -(r["net_return"] - r["max_drawdown"]), r["id"]) for r in b["rows"]]
+    assert key == sorted(key)
+    b0 = tm.board(reg, {"SYN": FULL.prefix(1200)}, now=_now(FULL.prefix(1200)))
+    assert all(r["curve"] == [1.0] and r["stress_net_return"] == 0.0 for r in b0["rows"])
+    assert "vs hold" in tm.markdown(b)
+
+
+def test_curve_is_thinned_but_keeps_both_ends():
+    eq = [1 + i / 1000 for i in range(1, 501)]
+    c = tm._curve(eq)
+    assert len(c) == tm.CURVE_POINTS and c[0] == 1.0 and c[-1] == eq[-1]
+    assert c == sorted(c)
+
+
 def test_short_or_losing_runs_never_pass_the_paper_gate():
     b = tm.board(_reg(1380), {"SYN": FULL}, now=_now(FULL))
     assert not any(r["paper_gate"]["passed"] for r in b["rows"])
