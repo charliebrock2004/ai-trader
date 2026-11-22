@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import AliasChoices, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ai_trader.safety import ALPACA_PAPER_BASE_URL, assert_safe_to_run
+from ai_trader.safety import assert_safe_to_run
 from ai_trader.strategy.signal import DEFAULT_SCORE_THRESHOLD, validate_score_threshold
 
 
@@ -32,9 +32,6 @@ class Settings(BaseSettings):
     xai_model: str = "grok-4.3"
     xai_base_url: str = "https://api.x.ai/v1"
 
-    alpaca_api_key: Optional[SecretStr] = None
-    alpaca_secret_key: Optional[SecretStr] = None
-    alpaca_base_url: str = ALPACA_PAPER_BASE_URL
 
     database_path: Path = Field(default=Path("data/ai_trader.db"))
     log_level: str = "INFO"
@@ -104,9 +101,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _enforce_safety(self) -> "Settings":
-        normalised = assert_safe_to_run(
-            mode=self.trading_mode, alpaca_base_url=self.alpaca_base_url
-        )
+        normalised = assert_safe_to_run(mode=self.trading_mode)
         self.trading_mode = normalised
         return self
 
@@ -130,15 +125,6 @@ class Settings(BaseSettings):
     def grok_configured(self) -> bool:
         return bool(self.xai_api_key and self.xai_api_key.get_secret_value().strip())
 
-    def alpaca_configured(self) -> bool:
-        key = self.alpaca_api_key.get_secret_value().strip() if self.alpaca_api_key else ""
-        secret = (
-            self.alpaca_secret_key.get_secret_value().strip()
-            if self.alpaca_secret_key
-            else ""
-        )
-        return bool(key and secret)
-
     def public_view(self) -> dict:
         """Safe for the dashboard and logs. No secrets."""
         return {
@@ -149,8 +135,6 @@ class Settings(BaseSettings):
             "grok_daily_call_budget": self.grok_daily_call_budget,
             "grok_min_interval_seconds": self.grok_min_interval_seconds,
             "strategy_score_threshold": self.strategy_score_threshold,
-            "alpaca_base_url": self.alpaca_base_url,
-            "alpaca_configured": self.alpaca_configured(),
             "database_path": str(self.resolve_database_path()),
             "log_level": self.log_level,
             "kill_switch_default": self.kill_switch_engaged,

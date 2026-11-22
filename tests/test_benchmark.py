@@ -230,7 +230,6 @@ def test_orchestrator_benchmark_never_calls_broker(isolated_env) -> None:
 
     orch.broker.submit = trap  # type: ignore[method-assign]
     orch.simulated_broker.submit = trap  # type: ignore[method-assign]
-    orch.alpaca_broker.submit = trap  # type: ignore[method-assign]
     result = orch.benchmark()
     assert result["broker"] == "NOT USED"
     assert result["broker_submit_calls"] == 0
@@ -242,7 +241,6 @@ def test_orchestrator_benchmark_never_calls_broker(isolated_env) -> None:
     assert all(row["action"] == "HOLD" for row in stored)
     assert trapped == []
     assert orch.simulated_broker.submit_calls == 0
-    assert orch.alpaca_broker.health()["connected"] is False
     repo.close()
 
 

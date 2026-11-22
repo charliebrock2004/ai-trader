@@ -267,8 +267,8 @@ class RiskEngine:
         terminated: bool = False,
         stop_pct_hint: Optional[float] = None,
     ) -> RiskAssessment:
-        """Approve or reject an INTERNAL simulated paper order or an Alpaca
-        PAPER order. Never a live broker order. AI cannot change limits.
+        """Approve or reject an INTERNAL simulated paper order.
+        Never a live broker order. AI cannot change limits.
         """
         act = action.upper()
         if terminated:
