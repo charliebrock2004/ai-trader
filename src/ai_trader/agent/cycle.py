@@ -36,6 +36,9 @@ from ai_trader.events.base import (
 from ai_trader.markets.base import Contract, MarketDataError, OrderBook
 from ai_trader.survival.config import SurvivalState
 
+#: The ``decisions.kind`` value written by the event pipeline.
+EVENT_DECISION_KIND = "binary"
+
 
 @dataclass
 class CycleReport:
@@ -655,7 +658,7 @@ class AgentCycle:
         market_id = self.store.upsert_market(
             venue=opportunity.contract.venue,
             ticker=opportunity.contract.ticker,
-            kind="binary",
+            kind=EVENT_DECISION_KIND,
             question=opportunity.contract.question,
             event_key=opportunity.contract.event_key,
             resolution_source=opportunity.contract.resolution_source,

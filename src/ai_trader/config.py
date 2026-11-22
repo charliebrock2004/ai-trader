@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     terminal_threshold_pct: float = 0.40
     #: Known daily running cost, used for the runway estimate.
     hosting_cost_per_day: float = 0.0
+    #: The CPI prediction-market pipeline is parked: as of Nov 2026 no venue for
+    #: these contracts openly serves UK residents (Kalshi does not, Polymarket
+    #: geoblocks, and the FCA bans retail binary options). The code and tests
+    #: stay; nothing runs it unless this is turned on.
+    event_pipeline_enabled: bool = False
     #: Optional BLS registration key. Lifts the anonymous request quota.
     bls_api_key: Optional[str] = None
     #: Required to call any mutating endpoint. Empty means mutations are refused.
@@ -161,6 +166,7 @@ class Settings(BaseSettings):
                 self.api_token and self.api_token.get_secret_value().strip()
             ),
             "bls_api_key_configured": bool(self.bls_api_key),
+            "event_pipeline_enabled": self.event_pipeline_enabled,
         }
 
 
