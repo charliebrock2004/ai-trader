@@ -6,6 +6,10 @@
  */
 
 import { z } from "zod";
+
+// Zod probes `Function("")` to decide whether to compile parsers; that is an eval under a
+// content security policy. Interpreted parsing is fast enough for these payloads.
+z.config({ jitless: true });
 import { resolveParentEmbedderOrigin } from "./preview-embedder-origin";
 
 export {
