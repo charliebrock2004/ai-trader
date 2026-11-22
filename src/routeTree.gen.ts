@@ -25,7 +25,6 @@ import { Route as ApiTournamentHistoryRouteImport } from './routes/api/tournamen
 import { Route as DecisionsIdRouteImport } from './routes/decisions.$id'
 import { Route as ApiAgentCycleRouteImport } from './routes/api/agent.cycle'
 import { Route as ApiDecisionsIdRouteImport } from './routes/api/decisions.$id'
-import { Route as ApiPaperSessionGrokRouteImport } from './routes/api/paper-session.grok'
 import { Route as ApiPaperSessionStartRouteImport } from './routes/api/paper-session.start'
 import { Route as ApiPaperSessionStopRouteImport } from './routes/api/paper-session.stop'
 
@@ -109,11 +108,6 @@ const ApiDecisionsIdRoute = ApiDecisionsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiDecisionsRoute,
 } as any)
-const ApiPaperSessionGrokRoute = ApiPaperSessionGrokRouteImport.update({
-  id: '/grok',
-  path: '/grok',
-  getParentRoute: () => ApiPaperSessionRoute,
-} as any)
 const ApiPaperSessionStartRoute = ApiPaperSessionStartRouteImport.update({
   id: '/start',
   path: '/start',
@@ -142,7 +136,6 @@ export interface FileRoutesByFullPath {
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
-  '/api/paper-session/grok': typeof ApiPaperSessionGrokRoute
   '/api/paper-session/start': typeof ApiPaperSessionStartRoute
   '/api/paper-session/stop': typeof ApiPaperSessionStopRoute
 }
@@ -163,7 +156,6 @@ export interface FileRoutesByTo {
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
-  '/api/paper-session/grok': typeof ApiPaperSessionGrokRoute
   '/api/paper-session/start': typeof ApiPaperSessionStartRoute
   '/api/paper-session/stop': typeof ApiPaperSessionStopRoute
 }
@@ -185,7 +177,6 @@ export interface FileRoutesById {
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
-  '/api/paper-session/grok': typeof ApiPaperSessionGrokRoute
   '/api/paper-session/start': typeof ApiPaperSessionStartRoute
   '/api/paper-session/stop': typeof ApiPaperSessionStopRoute
 }
@@ -208,7 +199,6 @@ export interface FileRouteTypes {
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
-    | '/api/paper-session/grok'
     | '/api/paper-session/start'
     | '/api/paper-session/stop'
   fileRoutesByTo: FileRoutesByTo
@@ -229,7 +219,6 @@ export interface FileRouteTypes {
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
-    | '/api/paper-session/grok'
     | '/api/paper-session/start'
     | '/api/paper-session/stop'
   id:
@@ -250,7 +239,6 @@ export interface FileRouteTypes {
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
-    | '/api/paper-session/grok'
     | '/api/paper-session/start'
     | '/api/paper-session/stop'
   fileRoutesById: FileRoutesById
@@ -385,13 +373,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDecisionsIdRouteImport
       parentRoute: typeof ApiDecisionsRoute
     }
-    '/api/paper-session/grok': {
-      id: '/api/paper-session/grok'
-      path: '/grok'
-      fullPath: '/api/paper-session/grok'
-      preLoaderRoute: typeof ApiPaperSessionGrokRouteImport
-      parentRoute: typeof ApiPaperSessionRoute
-    }
     '/api/paper-session/start': {
       id: '/api/paper-session/start'
       path: '/start'
@@ -446,13 +427,11 @@ const ApiDecisionsRouteWithChildren = ApiDecisionsRoute._addFileChildren(
 )
 
 interface ApiPaperSessionRouteChildren {
-  ApiPaperSessionGrokRoute: typeof ApiPaperSessionGrokRoute
   ApiPaperSessionStartRoute: typeof ApiPaperSessionStartRoute
   ApiPaperSessionStopRoute: typeof ApiPaperSessionStopRoute
 }
 
 const ApiPaperSessionRouteChildren: ApiPaperSessionRouteChildren = {
-  ApiPaperSessionGrokRoute: ApiPaperSessionGrokRoute,
   ApiPaperSessionStartRoute: ApiPaperSessionStartRoute,
   ApiPaperSessionStopRoute: ApiPaperSessionStopRoute,
 }
