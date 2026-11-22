@@ -314,10 +314,11 @@ class DeskWorker:
                 self._set_desired(False)
                 self.runtime.orchestrator.stop_paper_session()
                 break
-            try:
-                self.runtime.agent.run_cycle()
-            except Exception:
-                pass
+            if self.runtime.settings.event_pipeline_enabled:
+                try:
+                    self.runtime.agent.run_cycle()
+                except Exception:
+                    pass
             paper = self.runtime.orchestrator.paper_session
             if paper.sim is not None:
                 try:
@@ -487,14 +488,20 @@ class DeskWorker:
                     "tradeable": True,
                     "running": running,
                 },
-                "cpi_event": {
-                    "name": "BLS CPI prediction-market pipeline",
-                    "tradeable": False,
-                    "reason": (
-                        "No prediction-market venue order book is connected, so "
-                        "every CPI contract holds. No fills are simulated without a book."
-                    ),
-                },
+                **(
+                    {
+                        "cpi_event": {
+                            "name": "BLS CPI prediction-market pipeline",
+                            "tradeable": False,
+                            "reason": (
+                                "No prediction-market venue order book is connected, so "
+                                "every CPI contract holds. No fills are simulated without a book."
+                            ),
+                        }
+                    }
+                    if self.runtime.settings.event_pipeline_enabled
+                    else {}
+                ),
             },
             "persistence": self._persistence_view(),
             "grok_usage": self._grok_usage(),

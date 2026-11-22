@@ -14,7 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
-from ai_trader.agent.cycle import AgentCycle, CycleReport
+from ai_trader.agent.cycle import EVENT_DECISION_KIND, AgentCycle, CycleReport
 from ai_trader.analytics.performance import compute_performance
 from ai_trader.clock import Clock, default_clock
 from ai_trader.contracts.ledger import ContractLedger
@@ -51,6 +51,8 @@ class AgentRuntime:
         grok_budget: Any = None,
     ) -> None:
         self.require_analyst = require_analyst
+        #: Set False by the trading runtime while the event pipeline is parked.
+        self.event_pipeline_enabled = True
         self.grok_budget = grok_budget
         self.clock = clock or default_clock()
         self.store = store
@@ -217,13 +219,22 @@ class AgentRuntime:
         }
 
     def performance(self) -> dict[str, Any]:
-        return compute_performance(
+        summary = compute_performance(
             self.store,
             starting_equity=self.config.starting_equity,
             equity=self.ledger.equity(),
             terminal_threshold=self.config.terminal_equity,
             cost_ledger=self.costs,
         )
+        if not self.event_pipeline_enabled:
+            # Parked: old event-pipeline rows stay in the database, but the
+            # funnel reports the spot desk only.
+            summary["pipelines"] = {
+                kind: funnel
+                for kind, funnel in (summary.get("pipelines") or {}).items()
+                if kind != EVENT_DECISION_KIND
+            }
+        return summary
 
     def system(self) -> dict[str, Any]:
         """Component health. Reports broken components as broken."""
@@ -291,6 +302,10 @@ class AgentRuntime:
                 "detail": f"{self.store.decision_counts().get('TOTAL', 0)} decisions recorded.",
             },
         ]
+        parked = not self.event_pipeline_enabled
+        if parked:
+            # A parked pipeline is neither healthy nor broken; it is not running.
+            components = [c for c in components if c["id"] not in ("events", "market")]
         return {
             "ok": all(c["ok"] for c in components),
             "live": False,
@@ -299,8 +314,8 @@ class AgentRuntime:
             "last_error": self.last_error,
             "last_cycle_at": (self.last_cycle or {}).get("finished_at"),
             "survival": survival,
-            "strategy": "event-driven prediction markets",
-            "event_family": event_health.get("name", "none"),
+            "strategy": "spot paper desk" if parked else "event-driven prediction markets",
+            "event_family": "parked" if parked else event_health.get("name", "none"),
         }
 
     @staticmethod

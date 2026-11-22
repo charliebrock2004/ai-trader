@@ -12,7 +12,7 @@
 | Engine | One Python `DeskWorker`. The browser is control/monitoring only. |
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
 | Hosting | Frontend on Vercel, worker on Render free (sleeps when idle; the checkpoint job keeps it awake in multi-hour runs and checkpoints every 10 min) |
-| Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70** + BLS CPI event family (HOLDs until a venue book exists; reported separately) |
+| Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70**. The BLS CPI event pipeline is **parked** (`EVENT_PIPELINE_ENABLED=false`, the default) |
 | Tests | 612 Python tests passing |
 
 If this file disagrees with the code, the code wins. Update it after every
@@ -471,8 +471,16 @@ Separate from the desk above; neither can place an order.
 
 ## What is NOT done, and why
 
-**There is no prediction-market venue adapter, so the event pipeline cannot
-currently fill.** The CPI ladder is registered and priced, but no order book is
+**The CPI event pipeline is parked (Phase 0.2, Nov 2026).** As of November 2026
+no venue for these contracts openly serves UK residents: Kalshi does not,
+Polymarket geoblocks, and the FCA bans retail binary options. With
+`EVENT_PIPELINE_ENABLED=false` (the default) the worker runs no event cycles,
+registers no CPI contracts, `/api/cycle` answers "parked", and the status,
+system and decisions-funnel views show the spot pipeline only. The code and its
+tests are kept. Do not turn it on to trade; there is nowhere legal to trade it.
+
+**There is no prediction-market venue adapter, so the event pipeline could not
+fill even when enabled.** The CPI ladder is registered and priced, but no order book is
 attached. Every contract reports "no order book" and the agent holds. This is
 correct fail-closed behaviour and it is visible on the System page. Connecting a
 venue means implementing `PredictionMarketAdapter` against it and passing its
