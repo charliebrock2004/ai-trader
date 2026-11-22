@@ -70,6 +70,10 @@ services:
       - key: GROK_PAPER_ANALYSIS
         value: "false"
 
+      # Parked: no UK-legal venue for CPI contracts as of Nov 2026.
+      - key: EVENT_PIPELINE_ENABLED
+        value: "false"
+
       - key: PERSIST_RESTORE
         value: "true"
 

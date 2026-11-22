@@ -64,7 +64,6 @@ def test_dry_run_hold_is_persisted_and_rejected(isolated_env: object) -> None:
 
     orch.broker.submit = trap  # type: ignore[method-assign]
     orch.simulated_broker.submit = trap  # type: ignore[method-assign]
-    orch.alpaca_broker.submit = trap  # type: ignore[method-assign]
 
     result = orch.dry_run(["SPY"])
     assert result["ok"] is True

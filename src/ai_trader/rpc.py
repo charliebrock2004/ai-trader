@@ -110,6 +110,15 @@ def handle(req: dict[str, Any]) -> dict[str, Any]:
     if cmd == "stop":
         return runtime.worker.stop()
     if cmd == "cycle":
+        if not runtime.settings.event_pipeline_enabled:
+            return {
+                "ok": False,
+                "parked": True,
+                "error": (
+                    "The event pipeline is parked (EVENT_PIPELINE_ENABLED=false): "
+                    "no UK-legal venue exists for these contracts as of Nov 2026."
+                ),
+            }
         return runtime.agent.run_cycle()
     if cmd == "performance":
         return runtime.agent.performance()

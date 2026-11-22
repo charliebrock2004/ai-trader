@@ -156,7 +156,6 @@ def test_cycle_buy_zero_broker(isolated_env: object, monkeypatch: pytest.MonkeyP
 
     orch.broker.submit = trap  # type: ignore[method-assign]
     orch.simulated_broker.submit = trap  # type: ignore[method-assign]
-    orch.alpaca_broker.submit = trap  # type: ignore[method-assign]
     result = orch.grok_paper_cycle(symbol="SIM-UP")
     assert result["broker"] == "NOT USED"
     assert result["broker_submit_calls"] == 0

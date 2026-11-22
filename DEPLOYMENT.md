@@ -229,8 +229,8 @@ Not by a flag you could flip:
   constant. Startup asserts it.
 - `TRADING_MODE` accepts `simulate` and `paper`. Anything containing `live`,
   `real`, `prod` or `cash` refuses to start the process.
-- The Alpaca live API URL is blocked at the config layer; the paper adapter is
-  observation only, and the session path traps `submit` on every broker.
+- There is no external broker adapter. The only broker is the internal
+  simulator, and the session path traps `submit` on it.
 - The HTTP worker has no order route, and no request field changes any of the
   above. Passing `{"live": true}` to Start does nothing.
 - The analyst can only return an opinion. It cannot choose a ticker, a size, a

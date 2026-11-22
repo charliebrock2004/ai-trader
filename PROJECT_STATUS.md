@@ -12,7 +12,7 @@
 | Engine | One Python `DeskWorker`. The browser is control/monitoring only. |
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
 | Hosting | Frontend on Vercel, worker on Render free (sleeps when idle; the checkpoint job keeps it awake in multi-hour runs and checkpoints every 10 min) |
-| Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70** + BLS CPI event family (HOLDs until a venue book exists; reported separately) |
+| Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70**. The BLS CPI event pipeline is **parked** (`EVENT_PIPELINE_ENABLED=false`, the default) |
 | Tests | Run `python -m pytest -q`; CI runs it on every PR. Counts are not recorded here because they went stale. |
 
 If this file disagrees with the code, the code wins. Update it after every
@@ -472,8 +472,16 @@ Separate from the desk above; neither can place an order.
 
 ## What is NOT done, and why
 
-**There is no prediction-market venue adapter, so the event pipeline cannot
-currently fill.** The CPI ladder is registered and priced, but no order book is
+**The CPI event pipeline is parked (Phase 0.2, Nov 2026).** As of November 2026
+no venue for these contracts openly serves UK residents: Kalshi does not,
+Polymarket geoblocks, and the FCA bans retail binary options. With
+`EVENT_PIPELINE_ENABLED=false` (the default) the worker runs no event cycles,
+registers no CPI contracts, `/api/cycle` answers "parked", and the status,
+system and decisions-funnel views show the spot pipeline only. The code and its
+tests are kept. Do not turn it on to trade; there is nowhere legal to trade it.
+
+**There is no prediction-market venue adapter, so the event pipeline could not
+fill even when enabled.** The CPI ladder is registered and priced, but no order book is
 attached. Every contract reports "no order book" and the agent holds. This is
 correct fail-closed behaviour and it is visible on the System page. Connecting a
 venue means implementing `PredictionMarketAdapter` against it and passing its
@@ -517,8 +525,9 @@ splits by time, but there is no historical corpus loaded.
    internal simulator against public BTC-USD candles.
 4. **Drawdown is computed from settlements**, not a tick-level equity path,
    because that is what the engine records.
-5. **The Alpaca paper adapter is dormant** and observation only. The session path
-   traps `submit` on every broker.
+5. **There is no external broker adapter.** The dormant Alpaca paper adapter
+   was removed in Phase 0.4; the only broker is the internal simulator, and the
+   session path traps `submit` on it.
 6. **The worker runs on Render free, so it trades in bursts, not continuously.**
    It sleeps when idle and only wakes when something pings it. The GitHub
    Actions job that does the pinging is scheduled every ten minutes but GitHub

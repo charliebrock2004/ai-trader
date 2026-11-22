@@ -98,10 +98,11 @@ class Runtime:
         # every contract reports "no order book" and the agent holds, which is
         # visible on the System page rather than looking like a quiet agent.
         market = PaperPredictionMarket(clock=self.clock)
-        try:
-            register_cpi_ladder(market, event_source, limit=4)
-        except Exception:  # noqa: BLE001 — a calendar failure must not stop boot
-            pass
+        if self.settings.event_pipeline_enabled:
+            try:
+                register_cpi_ladder(market, event_source, limit=4)
+            except Exception:  # noqa: BLE001 — a calendar failure must not stop boot
+                pass
 
         agent = AgentRuntime(
             store=self.repository.records,
@@ -121,6 +122,7 @@ class Runtime:
             grok_budget=self.budget,
         )
         agent.fx_source = "deferred"  # type: ignore[attr-defined]
+        agent.event_pipeline_enabled = self.settings.event_pipeline_enabled
         return agent
 
     def _refresh_fx_async(self) -> None:
