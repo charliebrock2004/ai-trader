@@ -58,6 +58,10 @@ class Result:
 def run(series: Series, weights: list[float], costs: Costs = BASE_COSTS, *,
         start: int = 1, end: Optional[int] = None, band: float = 0.10,
         close_at_end: bool = True) -> Result:
+    if hasattr(series, "members"):
+        from ai_trader.research.round2 import run_basket
+
+        return run_basket(series, weights, costs, start=start, end=end, band=band, close_at_end=close_at_end)
     end = len(series) if end is None else end
     if len(weights) != len(series):
         raise ValueError("weights and series differ in length")

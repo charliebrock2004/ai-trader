@@ -2,6 +2,7 @@
 
     python -m ai_trader research fetch            # download public candles
     python -m ai_trader research run              # development run, holdout untouched
+    python -m ai_trader research run2             # round 2 candidates, holdout untouched
     python -m ai_trader research run --holdout    # scores the holdout; logged, do it once
 
 Outputs are simulated historical results, never trading profits.
@@ -73,6 +74,28 @@ def _pct(v, d=1):
     return "n/a" if v is None else f"{v * 100:+.{d}f}%"
 
 
+def table(rows: list) -> list:
+    """Markdown result table plus the failed checks for one group of evaluations."""
+    L = ["| Strategy | Verdict | OOS net | 2x costs | Gross | Max DD | Sharpe | Trades | Win | PF | Exposure | Folds + | Grid + | DSR | Timing p | Holdout net | Holdout DD |",
+         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for e in rows:
+        o, a, h = e["oos"], e["assessment"], e["holdout"]
+        L.append("| " + " | ".join([
+            e["candidate"], (a["verdict"] + (f" ({a['label']})" if a["label"] else "")) if a else "benchmark",
+            _pct(o["net_return"]), _pct(e["oos_stress"]["net_return"]), _pct(e["oos_gross_return"]),
+            _pct(-o["max_drawdown"]), f"{o['sharpe']:.2f}", str(o["trades"]),
+            "n/a" if o["win_rate"] is None else f"{o['win_rate']:.0%}",
+            "n/a" if o["profit_factor"] is None else f"{o['profit_factor']:.2f}",
+            f"{o['exposure']:.0%}", f"{e['folds_positive']:.0%}", f"{e['grid_positive']:.0%}",
+            "n/a" if e["deflated_sharpe"] is None else f"{e['deflated_sharpe']:.2f}",
+            f"{e['oos_excess']['p_le_zero']:.2f}",
+            _pct(h["net_return"]) if h else "not scored", _pct(-h["max_drawdown"]) if h else "not scored"]) + " |")
+    L += ["", "Failed checks:", ""]
+    for e in (r for r in rows if r["assessment"]):
+        L.append(f"- **{e['candidate']}**: {', '.join(e['assessment']['failed']) or 'none'}")
+    return L
+
+
 def markdown(report: dict) -> str:
     L = ["# Strategy research report", "",
          f"Generated {report['generated_at']}. **Simulated results on historical candles. Not trading profits.**", "",
@@ -86,30 +109,13 @@ def markdown(report: dict) -> str:
         L.append(f"- {sym}: {d['bars']} bars, {time.strftime('%Y-%m-%d', time.gmtime(d['first']))} to "
                  f"{time.strftime('%Y-%m-%d', time.gmtime(d['last']))}, {d['missing_bars']} missing, sha256 `{d['sha256'][:12]}`")
     for sym in report["data"]:
-        L += ["", f"## {sym}", "",
-              "| Strategy | Verdict | OOS net | 2x costs | Gross | Max DD | Sharpe | Trades | Win | PF | Exposure | Folds + | Grid + | DSR | Timing p | Holdout net | Holdout DD |",
-              "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
-        for e in (r for r in report["results"] if r["symbol"] == sym):
-            o, a, h = e["oos"], e["assessment"], e["holdout"]
-            L.append("| " + " | ".join([
-                e["candidate"], (a["verdict"] + (f" ({a['label']})" if a["label"] else "")) if a else "benchmark",
-                _pct(o["net_return"]), _pct(e["oos_stress"]["net_return"]), _pct(e["oos_gross_return"]),
-                _pct(-o["max_drawdown"]), f"{o['sharpe']:.2f}", str(o["trades"]),
-                "n/a" if o["win_rate"] is None else f"{o['win_rate']:.0%}",
-                "n/a" if o["profit_factor"] is None else f"{o['profit_factor']:.2f}",
-                f"{o['exposure']:.0%}", f"{e['folds_positive']:.0%}", f"{e['grid_positive']:.0%}",
-                "n/a" if e["deflated_sharpe"] is None else f"{e['deflated_sharpe']:.2f}",
-                f"{e['oos_excess']['p_le_zero']:.2f}",
-                _pct(h["net_return"]) if h else "not scored", _pct(-h["max_drawdown"]) if h else "not scored"]) + " |")
-        L += ["", "Failed checks:", ""]
-        for e in (r for r in report["results"] if r["symbol"] == sym and r["assessment"]):
-            L.append(f"- **{e['candidate']}**: {', '.join(e['assessment']['failed']) or 'none'}")
+        L += ["", f"## {sym}", ""] + table([r for r in report["results"] if r["symbol"] == sym])
     return "\n".join(L) + "\n"
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="ai-trader research")
-    ap.add_argument("action", choices=("fetch", "run", "tournament-register", "tournament"))
+    ap.add_argument("action", choices=("fetch", "run", "run2", "tournament-register", "tournament"))
     ap.add_argument("--holdout", action="store_true", help="score the single-use holdout and log the access")
     ap.add_argument("--cache", default=str(rd.DEFAULT_CACHE))
     ap.add_argument("--out", default=str(OUT_DIR))
@@ -117,8 +123,19 @@ def main(argv=None) -> int:
     cache = Path(args.cache)
     if args.action == "fetch":
         for sym in SYMBOLS:
-            s = rd.fetch(sym, INTERVAL)
-            print(sym, rd.validate(s), rd.save(s, cache))
+            for interval in (INTERVAL, "4h"):
+                s = rd.fetch(sym, interval)
+                print(sym, interval, rd.validate(s), rd.save(s, cache))
+        return 0
+    if args.action == "run2":
+        from ai_trader.research import round2
+
+        report = round2.study({(sym, i): rd.load(sym, i, cache) for sym in SYMBOLS for i in (INTERVAL, "4h")})
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "round2_development_report.json").write_text(json.dumps(report, indent=1, default=str))
+        (out / "round2_development_report.md").write_text(round2.markdown(report))
+        print(round2.markdown(report))
         return 0
     if args.action.startswith("tournament"):
         from ai_trader.research import tournament as tm
