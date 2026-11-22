@@ -12,6 +12,10 @@
 
 import { z } from "zod";
 
+// Zod probes `Function("")` to decide whether to compile parsers; that is an eval under a
+// content security policy. Interpreted parsing is fast enough for these payloads.
+z.config({ jitless: true });
+
 export const StartSessionSchema = z
   .object({
     symbol: z.enum(["BTC-USD", "ETH-USD", "SIM-UP", "SIM-DOWN", "SIM-FLAT"]).default("BTC-USD"),

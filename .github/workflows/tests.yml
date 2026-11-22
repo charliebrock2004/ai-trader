@@ -1,5 +1,5 @@
-# Runs the Python suite (engine, research lab, tournament) on every PR and on
-# main. Read-only: no secrets, no deploy, no trading.
+# Runs the Python suite (engine, research lab, tournament) and the frontend
+# checks (typecheck, lint, tests) on every PR and on main. Read-only: no secrets, no deploy, no trading.
 name: tests
 
 on:
@@ -27,3 +27,20 @@ jobs:
           cache-dependency-path: requirements-dev.txt
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      # Reported, not enforced: a new advisory must not block an unrelated PR.
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
