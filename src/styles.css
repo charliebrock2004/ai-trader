@@ -8,7 +8,7 @@
   --color-muted: #9aa0ab;
   --color-faint: #828995;
   --color-accent: #d8dce4;
-  --color-halt: #c45c4a;
+  --color-halt: #d06a58;
   --color-ok: #7f9c8c;
   --font-display: "Newsreader", "Times New Roman", serif;
   --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
@@ -805,7 +805,7 @@ a.desk-chip {
   gap: 0.6rem;
   align-items: baseline;
   font-size: 0.8125rem;
-  color: var(--muted, #6b7280);
+  color: var(--color-muted);
 }
 .desk-rejection-count {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -815,7 +815,7 @@ a.desk-chip {
 .desk-rejection-share {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.6875rem;
-  opacity: 0.6;
+  color: var(--color-faint);
 }
 
 /* Opportunity-score components, as bars. A borderline candidate should be
@@ -833,7 +833,7 @@ a.desk-chip {
   gap: 0.6rem;
   align-items: center;
   font-size: 0.75rem;
-  color: var(--muted, #6b7280);
+  color: var(--color-muted);
 }
 .desk-component-name {
   text-transform: capitalize;
