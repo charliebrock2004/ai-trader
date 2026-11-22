@@ -28,7 +28,8 @@ test("anything malformed or not marked simulated is rejected", () => {
   for (const bad of [
     null,
     "x",
-    { ...ok, live: true },
+    { ...ok, live: 1 },
+    { ...ok, live: undefined },
     { ...ok, simulated: undefined },
     { ...ok, days: ["yesterday", "today"] },
     { ...ok, ranks: { a: [1] } },
