@@ -21,6 +21,7 @@ import { Route as ApiPaperSessionRouteImport } from './routes/api/paper-session'
 import { Route as ApiPerformanceRouteImport } from './routes/api/performance'
 import { Route as ApiSystemRouteImport } from './routes/api/system'
 import { Route as ApiTournamentRouteImport } from './routes/api/tournament'
+import { Route as ApiTournamentHistoryRouteImport } from './routes/api/tournament-history'
 import { Route as DecisionsIdRouteImport } from './routes/decisions.$id'
 import { Route as ApiAgentCycleRouteImport } from './routes/api/agent.cycle'
 import { Route as ApiDecisionsIdRouteImport } from './routes/api/decisions.$id'
@@ -88,6 +89,11 @@ const ApiTournamentRoute = ApiTournamentRouteImport.update({
   path: '/api/tournament',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTournamentHistoryRoute = ApiTournamentHistoryRouteImport.update({
+  id: '/api/tournament-history',
+  path: '/api/tournament-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DecisionsIdRoute = DecisionsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/api/performance': typeof ApiPerformanceRoute
   '/api/system': typeof ApiSystemRoute
   '/api/tournament': typeof ApiTournamentRoute
+  '/api/tournament-history': typeof ApiTournamentHistoryRoute
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/api/performance': typeof ApiPerformanceRoute
   '/api/system': typeof ApiSystemRoute
   '/api/tournament': typeof ApiTournamentRoute
+  '/api/tournament-history': typeof ApiTournamentHistoryRoute
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/api/performance': typeof ApiPerformanceRoute
   '/api/system': typeof ApiSystemRoute
   '/api/tournament': typeof ApiTournamentRoute
+  '/api/tournament-history': typeof ApiTournamentHistoryRoute
   '/decisions/$id': typeof DecisionsIdRoute
   '/api/agent/cycle': typeof ApiAgentCycleRoute
   '/api/decisions/$id': typeof ApiDecisionsIdRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/api/performance'
     | '/api/system'
     | '/api/tournament'
+    | '/api/tournament-history'
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/api/performance'
     | '/api/system'
     | '/api/tournament'
+    | '/api/tournament-history'
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/api/performance'
     | '/api/system'
     | '/api/tournament'
+    | '/api/tournament-history'
     | '/decisions/$id'
     | '/api/agent/cycle'
     | '/api/decisions/$id'
@@ -256,6 +268,7 @@ export interface RootRouteChildren {
   ApiPerformanceRoute: typeof ApiPerformanceRoute
   ApiSystemRoute: typeof ApiSystemRoute
   ApiTournamentRoute: typeof ApiTournamentRoute
+  ApiTournamentHistoryRoute: typeof ApiTournamentHistoryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -342,6 +355,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tournament'
       fullPath: '/api/tournament'
       preLoaderRoute: typeof ApiTournamentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tournament-history': {
+      id: '/api/tournament-history'
+      path: '/api/tournament-history'
+      fullPath: '/api/tournament-history'
+      preLoaderRoute: typeof ApiTournamentHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/decisions/$id': {
@@ -454,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPerformanceRoute: ApiPerformanceRoute,
   ApiSystemRoute: ApiSystemRoute,
   ApiTournamentRoute: ApiTournamentRoute,
+  ApiTournamentHistoryRoute: ApiTournamentHistoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

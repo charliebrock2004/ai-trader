@@ -13,7 +13,7 @@
 | Transport | HTTP (`python -m ai_trader http`) for deployment; stdio RPC locally. Same engine, same commands. |
 | Hosting | Frontend on Vercel, worker on Render free (sleeps when idle; the checkpoint job keeps it awake in multi-hour runs and checkpoints every 10 min) |
 | Current strategy | BTC-USD public 5m multi-setup scored detector (long only), score threshold **0.70** + BLS CPI event family (HOLDs until a venue book exists; reported separately) |
-| Tests | 563 Python tests passing |
+| Tests | 612 Python tests passing |
 
 If this file disagrees with the code, the code wins. Update it after every
 significant change, and never mark something complete that is not tested.
