@@ -11,6 +11,7 @@ import json
 import threading
 from typing import Any, Optional
 
+from ai_trader.config import DEFAULT_XAI_MODEL
 from ai_trader.safety import LIVE_TRADING_ALLOWED
 from ai_trader.survival.latch import AgentTerminatedError
 
@@ -351,13 +352,13 @@ class DeskWorker:
 
     def _grok_usage(self) -> dict[str, Any]:
         settings = self.runtime.settings
-        connected = bool(settings.grok_configured())
+        connected = bool(settings.grok_review_enabled() and settings.grok_configured())
         budget = getattr(self.runtime, "budget", None)
         snap = budget.snapshot() if budget is not None else {}
         return {
             "connected": connected,
             "status": "connected" if connected else "disconnected",
-            "model": settings.xai_model or "grok-4.3",
+            "model": settings.xai_model or DEFAULT_XAI_MODEL,
             "calls_today": int(snap.get("calls_today") or 0),
             "daily_budget": int(snap.get("daily_budget") or settings.grok_daily_call_budget),
             "remaining": int(snap.get("remaining") if snap.get("remaining") is not None else settings.grok_daily_call_budget),

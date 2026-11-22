@@ -106,7 +106,7 @@ export function AgentHome() {
   const grokCalls = grokUsage?.calls_today ?? 0;
   const grokBudget = grokUsage?.daily_budget ?? 8;
   const grokCost = grokUsage?.estimated_cost ?? status.costs?.costs_by_category?.llm ?? 0;
-  const grokModel = grokUsage?.model ?? "grok-4.3";
+  const grokModel = grokUsage?.model ?? "model not reported";
   const decision = (status.current_decision || status.decision || last?.final_action || "HOLD").toUpperCase();
   const today = status.today_pnl ?? status.account?.daily_pnl ?? 0;
   const startLabel = busy === "start" || starting ? "Starting…" : running ? "Running" : "Start";

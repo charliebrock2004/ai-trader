@@ -1,6 +1,6 @@
 """Grok / xAI paper-analysis adapter.
 
-Calls https://api.x.ai/v1/chat/completions with grok-4.3 (cheapest current
+Calls https://api.x.ai/v1/chat/completions with the configured model (cheapest current
 general-purpose text model) when a key is present. The caller is expected to
 have already passed the cheap deterministic filter and the daily budget.
 
@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
+from ai_trader.config import DEFAULT_XAI_MODEL
 from ai_trader.ai.base import Analyst, ProposedDecision
 from ai_trader.ai.payload import SYSTEM_PROMPT, build_grok_payload
 from ai_trader.ai.validate import GROK_JSON_SCHEMA, parse_grok_response
@@ -21,7 +22,7 @@ from ai_trader.config import Settings
 from ai_trader.types import Action, Decision, MarketAnalysis, MarketSnapshot, utc_now_iso
 
 XAI_CHAT_PATH = "/chat/completions"
-DEFAULT_MODEL = "grok-4.3"
+DEFAULT_MODEL = DEFAULT_XAI_MODEL
 DEFAULT_TIMEOUT = 8.0
 
 
@@ -40,10 +41,7 @@ class GrokAnalyst(Analyst):
     ) -> None:
         self.settings = settings
         requested = settings.grok_paper_analysis if enable_paper is None else bool(enable_paper)
-        # A deployed worker with a key should analyse paper candidates without
-        # an extra flag. The flag still cannot enable live trading.
-        if enable_paper is None and settings.grok_configured():
-            requested = True
+        # GROK_PAPER_ANALYSIS is the only switch; a key alone enables nothing.
         # Env/flag enables PAPER ANALYSIS only. It cannot enable live trading.
         self.paper_requested = bool(requested)
         self.enabled = self.paper_requested
@@ -242,7 +240,7 @@ class GrokAnalyst(Analyst):
             "base_url": self.settings.xai_base_url,
             "network": bool(self.http_calls),
             "notes": (
-                "Paper analysis only. POST /chat/completions model grok-4.3. "
+                f"Paper analysis only. POST /chat/completions model {self.settings.xai_model or DEFAULT_MODEL}. "
                 "Output is BUY/SELL/HOLD JSON. Never a broker call. "
                 "Grok is not consulted unless a cheap deterministic filter fires "
                 "and the daily call budget still has room."

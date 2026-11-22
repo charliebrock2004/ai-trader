@@ -18,6 +18,10 @@ def project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+#: The one default Grok model. Everything else reads ``settings.xai_model``.
+DEFAULT_XAI_MODEL = "grok-4.3"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -29,7 +33,7 @@ class Settings(BaseSettings):
     trading_mode: str = "simulate"
 
     xai_api_key: Optional[SecretStr] = None
-    xai_model: str = "grok-4.3"
+    xai_model: str = DEFAULT_XAI_MODEL
     xai_base_url: str = "https://api.x.ai/v1"
 
     alpaca_api_key: Optional[SecretStr] = None
@@ -121,6 +125,11 @@ class Settings(BaseSettings):
 
     def resolve_kill_switch_path(self) -> Path:
         return self.resolve_database_path().parent / "KILL_SWITCH"
+
+    def grok_review_enabled(self) -> bool:
+        """Whether Grok reviews run. ``GROK_PAPER_ANALYSIS`` is the only switch:
+        a key being present does not turn reviews on."""
+        return bool(self.grok_paper_analysis)
 
     def grok_configured(self) -> bool:
         return bool(self.xai_api_key and self.xai_api_key.get_secret_value().strip())
