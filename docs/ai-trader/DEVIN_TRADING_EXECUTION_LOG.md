@@ -141,3 +141,12 @@ for the tournament.
 - Daily candles are now validated before round 2 scores them.
 - Report wording: the basket timing test compares against a cost-free equal
   weight rebalanced every bar, not the `equal_weight` benchmark row.
+
+## 2026-11-22: scheduled health check (roadmap P1.7)
+
+`.github/workflows/health-check.yml` runs `scripts/health_check.py` every six
+hours: worker `/health` and the site's `/api/tournament`, read-only. A failure
+opens one GitHub issue (or comments on the open one) and the next healthy run
+closes it. Any reply that does not say `live=false`,
+`live_trading_allowed=false` and `simulated=true` is reported first as a safety
+problem. It does not restart or change anything.
