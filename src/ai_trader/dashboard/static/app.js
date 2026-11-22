@@ -18,7 +18,6 @@ const MODULE_LABELS = {
   ai: "Grok AI",
   risk: "Risk engine",
   broker_simulated: "Simulated broker",
-  broker_alpaca: "Alpaca paper",
   database: "SQLite",
 };
 
@@ -128,8 +127,8 @@ function renderHalt(kill) {
   const lede = document.querySelector(".hero .lede");
   if (lede) {
     lede.textContent = engaged
-      ? "Market data, Grok, and Alpaca paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is on."
-      : "Market data, Grok, and Alpaca paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is clear; orders are still blocked.";
+      ? "Market data, Grok, and simulated paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is on."
+      : "Market data, Grok, and simulated paper trading are wired as modules — not connected, not live. The risk engine sits between any future AI decision and execution. The kill switch is clear; orders are still blocked.";
   }
 }
 

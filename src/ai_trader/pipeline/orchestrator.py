@@ -16,14 +16,12 @@ from ai_trader.account.simulated import SimulatedPaperAccount
 from ai_trader.ai.fixture import FixtureAnalyst
 from ai_trader.ai.grok_client import GrokAnalyst
 from ai_trader.analysis.technical import TechnicalAnalyst, analyse_series
-from ai_trader.broker.alpaca_paper import AlpacaPaperBroker
 from ai_trader.broker.simulated import SimulatedBroker
 from ai_trader.clock import Clock, default_clock
 from ai_trader.config import Settings
 from ai_trader.db.repository import Repository
 from ai_trader.fx.provider import FxProvider, PublicFxFeed
 from ai_trader.exceptions import (
-    AlpacaPaperUnavailableError,
     KillSwitchEngagedError,
     LiveTradingBlockedError,
     OrderPlacementDisabledError,
@@ -85,7 +83,6 @@ class Orchestrator:
         self.paper_account = SimulatedPaperAccount()
         self.risk = RiskEngine(allow_orders=False)
         self.simulated_broker = SimulatedBroker()
-        self.alpaca_broker = AlpacaPaperBroker(settings)
         self.broker = self.simulated_broker
         self.last_grok_cycle = None
         self.last_benchmark = None
@@ -95,8 +92,6 @@ class Orchestrator:
         self.last_session = None
 
     def _select_broker_name(self) -> str:
-        if self.settings.trading_mode == "paper":
-            return self.alpaca_broker.name
         return self.simulated_broker.name
 
     def _persist_account(self, state: PaperAccountState) -> int:
@@ -164,7 +159,7 @@ class Orchestrator:
                 "title": "Paper Execution",
                 "status": "paper",
                 "detail": (
-                    "Alpaca PAPER when configured. Simulated engine otherwise. "
+                    "Internal simulated engine only. No external broker. "
                     "Live trading disabled."
                 ),
             },
@@ -178,8 +173,7 @@ class Orchestrator:
 
     def status(self) -> dict[str, Any]:
         safety = safety_report(
-            mode=self.settings.trading_mode,
-            alpaca_base_url=self.settings.alpaca_base_url,
+            mode=self.settings.trading_mode
         )
         return {
             "foundation": True,
@@ -200,7 +194,6 @@ class Orchestrator:
                 "paper_account": self.paper_account.health(),
                 "risk": self.risk.health(),
                 "broker_simulated": self.simulated_broker.health(),
-                "broker_alpaca": self.alpaca_broker.health(),
                 "database": self.repository.health(),
             },
             "architecture": self.architecture(),
@@ -222,8 +215,7 @@ class Orchestrator:
     def dry_run(self, symbols: Optional[list[str]] = None) -> dict[str, Any]:
         """Walk the pipeline. Persist bars, analysis, HOLD, account. Place zero orders."""
         assert_safe_to_run(
-            mode=self.settings.trading_mode,
-            alpaca_base_url=self.settings.alpaca_base_url,
+            mode=self.settings.trading_mode
         )
         try:
             self.kill_switch.assert_clear()
@@ -341,8 +333,7 @@ class Orchestrator:
     ) -> dict[str, Any]:
         """Run sequential paper simulation. Never calls a broker."""
         assert_safe_to_run(
-            mode=self.settings.trading_mode,
-            alpaca_base_url=self.settings.alpaca_base_url,
+            mode=self.settings.trading_mode
         )
         try:
             self.kill_switch.assert_clear()
@@ -393,8 +384,7 @@ class Orchestrator:
     ) -> dict[str, Any]:
         """One Grok (or fixture) decision into the paper simulator. Never a broker."""
         assert_safe_to_run(
-            mode=self.settings.trading_mode,
-            alpaca_base_url=self.settings.alpaca_base_url,
+            mode=self.settings.trading_mode
         )
         try:
             self.kill_switch.assert_clear()
@@ -452,7 +442,7 @@ class Orchestrator:
         report = sim.run(series, source=source, kill_switch=False)
         if report.get("look_ahead"):
             raise RuntimeError("Look-ahead bias detected.")
-        if self.simulated_broker.submit_calls or self.alpaca_broker.health().get("connected"):
+        if self.simulated_broker.submit_calls:
             raise OrderPlacementDisabledError("Broker was touched during a paper cycle.")
         self.repository.persist_paper_run(report)
         account_after = report["account"]
@@ -518,8 +508,7 @@ class Orchestrator:
     def benchmark(self, *, grok_analyst: Any = None) -> dict[str, Any]:
         """Four-strategy paper benchmark. Never a broker. Never live."""
         assert_safe_to_run(
-            mode=self.settings.trading_mode,
-            alpaca_base_url=self.settings.alpaca_base_url,
+            mode=self.settings.trading_mode
         )
         from ai_trader.benchmark.runner import run_benchmark
 
@@ -531,7 +520,6 @@ class Orchestrator:
 
         self.broker.submit = trap  # type: ignore[method-assign]
         self.simulated_broker.submit = trap  # type: ignore[method-assign]
-        self.alpaca_broker.submit = trap  # type: ignore[method-assign]
         analyst = grok_analyst
         if analyst is None:
             analyst = self.grok if (self.settings.grok_paper_analysis or self.settings.grok_configured()) else self.ai
@@ -593,8 +581,7 @@ class Orchestrator:
     ) -> dict[str, Any]:
         """Sequential paper session. Repeated Grok decisions. Never a broker."""
         assert_safe_to_run(
-            mode=self.settings.trading_mode,
-            alpaca_base_url=self.settings.alpaca_base_url,
+            mode=self.settings.trading_mode
         )
         trapped: list[str] = []
 
@@ -602,10 +589,9 @@ class Orchestrator:
             trapped.append("submit")
             raise OrderPlacementDisabledError("Paper session must not call SimulatedBroker.submit.")
 
-        # No session path may submit to any broker. Alpaca is observation only.
+        # No session path may submit to any broker.
         self.simulated_broker.submit = trap  # type: ignore[method-assign]
         self.broker.submit = trap  # type: ignore[method-assign]
-        self.alpaca_broker.submit = trap  # type: ignore[method-assign]
         analyst = self.grok if (self.settings.grok_paper_analysis or self.settings.grok_configured()) else self.ai
         config_kwargs: dict[str, Any] = {
             "symbol": symbol,
@@ -637,7 +623,7 @@ class Orchestrator:
         )
         if trapped or self.simulated_broker.submit_calls:
             raise OrderPlacementDisabledError("Simulated broker was touched during a paper session.")
-        report = self._attach_alpaca_paper(report)
+        report = self._mark_simulated(report)
         self.last_session = report
         if not continuous:
             self._persist_session(report)
@@ -688,37 +674,14 @@ class Orchestrator:
                 "balance": report.get("balance"),
                 "execution": report.get("execution"),
                 "live": False,
-                "alpaca_submit_calls": report.get("alpaca_submit_calls", 0),
             },
         )
 
-    def _alpaca_paper_ready(self) -> bool:
-        return (
-            LIVE_TRADING_ALLOWED is False
-            and self.settings.trading_mode == "paper"
-            and self.settings.alpaca_configured()
-        )
-
-    def _attach_alpaca_paper(self, report: dict[str, Any]) -> dict[str, Any]:
-        """Attach a **read-only** Alpaca paper account mirror, if configured.
-
-        This used to submit an order. It no longer does, for three reasons:
-
-        1. It ran its own weakened risk check — ``trades_today=0``,
-           ``halted=False``, ``day_start_equity`` set to current equity — so
-           the daily-loss limit and the trade cap could never fire on that path.
-        2. Any fill it produced never reached ``PaperLedger``, so the internal
-           book and the reported balance silently disagreed.
-        3. It was the only code in the repository that sent an order to an
-           external venue, reached directly from the Start button.
-
-        The authoritative fill path is the internal simulator. Alpaca is now
-        observation only, and ``submit`` is trapped by the caller.
-        """
+    def _mark_simulated(self, report: dict[str, Any]) -> dict[str, Any]:
+        """Stamp a session report as simulated. No external broker exists."""
         payload = dict(report)
         payload["live"] = False
         payload["live_trading_allowed"] = False
-        payload["alpaca_submit_calls"] = 0
         payload["broker_submit_calls"] = 0
         payload["execution"] = "simulated"
         payload["broker"] = "NOT USED"
@@ -730,31 +693,8 @@ class Orchestrator:
         if running:
             payload["status"] = "RUNNING"
             return payload
-        if not self._alpaca_paper_ready():
-            payload["status"] = payload.get("status") or "SIMULATED"
-            return payload
-
-        account = self.alpaca_broker.account()
-        if not account.get("available"):
-            payload["status"] = "SIMULATED"
-            payload["alpaca_account"] = account
-            payload["alpaca_error"] = account.get("reason") or "Alpaca paper unavailable."
-            payload["alpaca_failure"] = account.get("failure")
-            return payload
-
-        # Observation only. The account balance shown to the user stays the
-        # internal GBP paper book; the Alpaca mirror sits beside it.
-        payload["status"] = "SIMULATED"
-        payload["alpaca_account"] = {
-            k: v for k, v in account.items() if k not in {"id", "account_number"}
-        }
-        try:
-            payload["alpaca_positions"] = self.alpaca_broker.positions()
-        except AlpacaPaperUnavailableError as exc:
-            payload["alpaca_error"] = str(exc)
-            payload["alpaca_failure"] = exc.failure
+        payload["status"] = payload.get("status") or "SIMULATED"
         return payload
-
 
     def stop_paper_session(self) -> dict[str, Any]:
         was_continuous = bool(getattr(self.paper_session.config, "continuous", False))

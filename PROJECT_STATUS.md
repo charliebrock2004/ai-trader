@@ -516,8 +516,9 @@ splits by time, but there is no historical corpus loaded.
    internal simulator against public BTC-USD candles.
 4. **Drawdown is computed from settlements**, not a tick-level equity path,
    because that is what the engine records.
-5. **The Alpaca paper adapter is dormant** and observation only. The session path
-   traps `submit` on every broker.
+5. **There is no external broker adapter.** The dormant Alpaca paper adapter
+   was removed in Phase 0.4; the only broker is the internal simulator, and the
+   session path traps `submit` on it.
 6. **The worker runs on Render free, so it trades in bursts, not continuously.**
    It sleeps when idle and only wakes when something pings it. The GitHub
    Actions job that does the pinging is scheduled every ten minutes but GitHub

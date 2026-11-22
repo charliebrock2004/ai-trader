@@ -20,7 +20,7 @@ from ai_trader.contracts.risk import ContractRiskEngine
 from ai_trader.markets.cpi_contracts import cpi_contracts, register_cpi_ladder
 from ai_trader.markets.fees import ZeroFeeModel
 from ai_trader.paper.simulator import PaperSimulator
-from ai_trader.safety import ALPACA_LIVE_BASE_URL, LIVE_TRADING_ALLOWED
+from ai_trader.safety import LIVE_TRADING_ALLOWED
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_ROOT = ROOT / "src" / "ai_trader"
@@ -51,13 +51,9 @@ def test_live_trading_stays_disabled_everywhere() -> None:
         assert "live_trading_allowed: true" not in body.lower(), path
 
 
-def test_the_live_broker_host_appears_nowhere_but_the_block_list() -> None:
+def test_no_external_broker_host_appears_anywhere() -> None:
     for path in _python_files() + _ts_files():
-        body = path.read_text(encoding="utf-8").replace("paper-api.alpaca.markets", "")
-        if path.name == "safety.py":
-            assert ALPACA_LIVE_BASE_URL in path.read_text(encoding="utf-8")
-            continue
-        assert ALPACA_LIVE_BASE_URL not in body, path
+        assert "alpaca.markets" not in path.read_text(encoding="utf-8"), path
 
 
 def test_no_module_enables_orders() -> None:

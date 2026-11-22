@@ -232,13 +232,11 @@ def test_orchestrator_session_never_calls_broker(isolated_env) -> None:
 
     orch.broker.submit = trap  # type: ignore[method-assign]
     orch.simulated_broker.submit = trap  # type: ignore[method-assign]
-    orch.alpaca_broker.submit = trap  # type: ignore[method-assign]
     result = orch.start_paper_session(symbol="SIM-UP", bars=16, grok_frequency=8, warmup=8)
     assert result["broker"] == "NOT USED"
     assert result["broker_submit_calls"] == 0
     assert trapped == []
     assert orch.simulated_broker.submit_calls == 0
-    assert orch.alpaca_broker.health()["connected"] is False
     # The paper run is persisted even when the SMA filter never fires and
     # Grok is not called. Empty Grok rows are honest, not a missing audit.
     assert repo.list_paper_orders(50) is not None
@@ -290,7 +288,6 @@ def test_orchestrator_public_session_never_calls_broker(isolated_env) -> None:
 
     orch.broker.submit = trap  # type: ignore[method-assign]
     orch.simulated_broker.submit = trap  # type: ignore[method-assign]
-    orch.alpaca_broker.submit = trap  # type: ignore[method-assign]
     orch.public_market_data = PublicCryptoFeed(http_client=_Get(), now_fn=lambda: now)
     result = orch.start_paper_session(
         symbol="BTC-USD",
@@ -317,7 +314,6 @@ def test_orchestrator_public_session_never_calls_broker(isolated_env) -> None:
         assert result["running"] is False
         assert result["data_error"], "a failed session must say why"
     assert trapped == []
-    assert orch.alpaca_broker.health()["connected"] is False
     repo.close()
 
 
@@ -421,7 +417,6 @@ def test_orchestrator_continuous_session_never_calls_broker(isolated_env) -> Non
 
     orch.broker.submit = trap  # type: ignore[method-assign]
     orch.simulated_broker.submit = trap  # type: ignore[method-assign]
-    orch.alpaca_broker.submit = trap  # type: ignore[method-assign]
     result = orch.start_paper_session(
         symbol="SIM-UP",
         bars=12,
@@ -437,5 +432,4 @@ def test_orchestrator_continuous_session_never_calls_broker(isolated_env) -> Non
     if orch.paper_session._thread is not None:
         orch.paper_session._thread.join(timeout=2)
     assert stopped["grok"] == "STOPPED"
-    assert orch.alpaca_broker.health()["connected"] is False
     repo.close()

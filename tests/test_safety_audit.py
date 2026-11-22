@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ai_trader.safety import ALPACA_LIVE_BASE_URL, LIVE_TRADING_ALLOWED
+from ai_trader.safety import LIVE_TRADING_ALLOWED
 
 
 ROOT = Path(__file__).resolve().parents[1] / "src" / "ai_trader"
@@ -18,14 +18,11 @@ def test_live_flag_false() -> None:
 def test_no_live_host_assignment() -> None:
     for path in ROOT.rglob("*.py"):
         body = path.read_text()
-        if path.name == "safety.py":
-            assert "api.alpaca.markets" in body
-            continue
-        assert ALPACA_LIVE_BASE_URL not in body.replace("paper-api.alpaca.markets", "")
+        assert "alpaca.markets" not in body
         assert "LIVE_TRADING_ALLOWED = True" not in body
 
 
-def test_grok_and_alpaca_remain_stubs() -> None:
+def test_grok_remains_a_stub_and_no_broker_adapter_exists() -> None:
     grok = (ROOT / "ai" / "grok_client.py").read_text()
     assert "LIVE_TRADING_ALLOWED = True" not in grok
     assert "allow_orders = True" not in grok
@@ -35,13 +32,9 @@ def test_grok_and_alpaca_remain_stubs() -> None:
     engine = (ROOT / "risk" / "engine.py").read_text()
     assert "allow_orders: bool = False" in engine
     assert LIVE_TRADING_ALLOWED is False
-    alpaca = (ROOT / "broker" / "alpaca_paper.py").read_text()
-    assert "LIVE_TRADING_ALLOWED = True" not in alpaca
-    assert "allow_orders = True" not in alpaca
-    assert "api.alpaca.markets" not in alpaca.replace("paper-api.alpaca.markets", "")
-    assert "paper-api.alpaca.markets" in alpaca
-    assert "Alpaca live API URL is blocked." in alpaca
-    assert "Live trading is disabled." in alpaca
+    # The only broker modules are the interface and the internal simulator.
+    brokers = sorted(p.name for p in (ROOT / "broker").glob("*.py"))
+    assert brokers == ["__init__.py", "base.py", "simulated.py"]
 
 
 def test_benchmark_stays_paper() -> None:

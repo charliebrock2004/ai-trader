@@ -50,11 +50,3 @@ class StaleMarketDataError(MarketDataUnavailableError):
 
     def __init__(self, message: str) -> None:
         super().__init__(message, failure="stale")
-
-
-class AlpacaPaperUnavailableError(AITraderError):
-    """Alpaca paper API down, unauthorized, or unusable. No trade is sent."""
-
-    def __init__(self, message: str, *, failure: str = "unavailable") -> None:
-        super().__init__(message)
-        self.failure = failure
