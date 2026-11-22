@@ -287,6 +287,12 @@ export type TournamentRow = {
   max_drawdown: number;
   trades: number;
   sharpe: number | null;
+  /** Net return minus holding the same asset over the same bars; null on the benchmark row. */
+  excess_return?: number | null;
+  /** Net return with fee and slippage multiplied by `stress_cost_factor`. */
+  stress_net_return?: number;
+  /** Equity from 1.0, thinned to at most 60 points. */
+  curve?: number[];
   paper_gate: { passed: boolean; failed: string[] };
 };
 
@@ -301,6 +307,7 @@ export type Tournament = {
   provisional?: boolean;
   note?: string;
   costs?: { fee: number; slippage: number };
+  stress_cost_factor?: number;
   data?: Record<string, { forward_bars: number; last_bar: number }>;
   heartbeat?: { last_success: number | null; last_attempt: number | null; error: string | null };
   rows: TournamentRow[];
@@ -493,6 +500,10 @@ export const api = {
   performance: () => get<Performance>("/api/performance"),
   system: () => get<SystemStatus>("/api/system"),
   tournament: () => get<Tournament>("/api/tournament"),
+  tournamentHistory: () =>
+    get<{ ok: boolean; days: string[]; ranks: Record<string, (number | null)[]> }>(
+      "/api/tournament-history",
+    ),
   decisions: (limit = 50) => get<{ decisions: DecisionRow[] }>(`/api/decisions?limit=${limit}`),
   decision: (id: number) => get<{ ok: boolean; decision: DecisionDetail }>(`/api/decisions/${id}`),
 };

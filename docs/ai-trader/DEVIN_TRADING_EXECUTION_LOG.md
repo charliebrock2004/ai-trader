@@ -141,3 +141,34 @@ for the tournament.
 - Daily candles are now validated before round 2 scores them.
 - Report wording: the basket timing test compares against a cost-free equal
   weight rebalanced every bar, not the `equal_weight` benchmark row.
+
+## 2026-11-22: leaderboard evidence (roadmap P0.1, P0.2, P2.9)
+
+Product review and roadmap: Notion "AI Trader — product review, competitor
+research and roadmap (22 Nov 2026)". Ideas adapted, no code copied: market
+comparison per pair (Freqtrade), cost-model stress (Lean), tear-sheet equity
+curve (QuantStats).
+
+- Each leaderboard row now carries `excess_return` (net return minus holding the
+  same asset over the same forward bars, after the same costs),
+  `stress_net_return` (same rule and bars at 2x fee and slippage) and `curve`
+  (equity from 1.0, at most 60 points).
+- Ranking and the paper gate are unchanged: both still use the registered costs.
+  The registration file is untouched.
+- Tournament page: equity sparkline, "Vs holding", "At 2x cost", asset filter,
+  and a count of strategies ahead of holding.
+- Accessibility: faint text colour raised to pass 4.5:1, the no-trade reason
+  grid is a valid definition list, and the apple-touch icon now exists (it was
+  a 404 on every page load).
+
+Live readiness: unchanged, not ready.
+
+## 2026-11-22: rank movement from the daily record (roadmap P2.11)
+
+The snapshot job now also writes `history.json` on the `tournament-snapshots`
+branch: each entry's rank on each recorded day. It is derived and rebuilt from
+the daily files on every run; the daily files are still never rewritten. The
+site reads it through `/api/tournament-history` and the Tournament tab shows a
+"Moved" column (rank change between the last two recorded days) once two days
+exist. Until then the column is absent. The layout was checked in a browser with
+made-up history; there is one real recorded day so far.
