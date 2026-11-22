@@ -1,6 +1,7 @@
 # AI-Trader — project status
 
-**Source of truth. Read this first**, then [ARCHITECTURE.md](ARCHITECTURE.md),
+**Source of truth. Read this first**; [HOW_THIS_WORKS.md](HOW_THIS_WORKS.md) is the
+one-page plain-English version. Then [ARCHITECTURE.md](ARCHITECTURE.md),
 [DEVELOPMENT.md](DEVELOPMENT.md) and [DEPLOYMENT.md](DEPLOYMENT.md).
 
 | | |
@@ -17,6 +18,30 @@
 
 If this file disagrees with the code, the code wins. Update it after every
 significant change, and never mark something complete that is not tested.
+
+---
+
+## Build plan: Phase 0 (stop the sprawl) — done 22 November 2026
+
+| Task | State | Where |
+|---|---|---|
+| 0.1 One trader | `peakswift_big-/trading-engine` marked frozen. **Not verified:** suspending its Render cron job `peakswift-trading-worker`, and confirming `TRADING_LIVE_ARM`, `SOLANA_TRADER_KEY`, `KRAKEN_API_KEY` and `KRAKEN_API_SECRET` are unset there, are owner actions on Render. | peakswift_big- #70 |
+| 0.2 CPI pipeline parked | Off by default behind `EVENT_PIPELINE_ENABLED`; code and tests kept. | #19 |
+| 0.3 Dead browser engine deleted | Done. | #18 |
+| 0.4 Alpaca adapter removed | Done. The only broker is the internal simulator. | #20 |
+| 0.5 Config drift | One `DEFAULT_XAI_MODEL`; `GROK_PAPER_ANALYSIS` is the only review switch; hand-written test counts removed. | #21 |
+| 0.6 Tidy | 21 merged branches deleted. Kept: `main`, `tournament-snapshots`, `research/btc-quant-evaluation`, `worker-endpoint`. | this file, [HOW_THIS_WORKS.md](HOW_THIS_WORKS.md) |
+
+**Which process can place an order:** none can place a real one. This
+repository's `DeskWorker` is the only process that should place *simulated*
+orders. The legacy PeakSwift worker has no real-money path enabled (`sol-100` is
+shadow-only, paused, kill switch on), but until its Render cron job is suspended
+it is still a second running process.
+
+**Grok review is currently off in production**: the worker has
+`GROK_PAPER_ANALYSIS=false`, and since 0.5 a key alone no longer enables it.
+
+Phase 1 (real venue fees and slippage in one cost model) has not started.
 
 ---
 
