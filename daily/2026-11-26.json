@@ -1,0 +1,1380 @@
+{
+ "as_of": "2026-11-27T09:01:17Z",
+ "costs": {
+  "fee": 0.0025,
+  "slippage": 0.0005
+ },
+ "data": {
+  "BTCUSDT": {
+   "forward_bars": 5,
+   "last_bar": 1795651200,
+   "sha256": "191efd5265952d2431e1062595fd6b4ee9215263c717f81600996f15082c500c"
+  },
+  "ETHUSDT": {
+   "forward_bars": 5,
+   "last_bar": 1795651200,
+   "sha256": "8aea1951c635d0e7b31478a641ac13ac2bc0ffaefc087dc235f747ab051ccc87"
+  },
+  "SOLUSDT": {
+   "forward_bars": 5,
+   "last_bar": 1795651200,
+   "sha256": "c2d4a2d6c3cefbf6d22055da960b68bcbcb4feaa8f329cbe5b5fc0b993c3dd9e"
+  }
+ },
+ "live": false,
+ "note": "Simulated paper results on forward public candles. Not trading profits. Passing the paper gate does not qualify a strategy on its own: it must also have passed historical qualification, and any live pilot needs the owner's explicit approval.",
+ "ok": true,
+ "provisional": true,
+ "registered_at": "2026-11-21T11:38:03Z",
+ "rows": [
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "bollinger_reversion",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "mean_reversion",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "bollinger_reversion:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "k": 1.5,
+    "n": 20,
+    "trend": 100
+   },
+   "profit_factor": null,
+   "rank": 1,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "bollinger_reversion",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "mean_reversion",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "bollinger_reversion:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "k": 2.0,
+    "n": 20,
+    "trend": 100
+   },
+   "profit_factor": null,
+   "rank": 2,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "donchian",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "breakout",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "donchian:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "entry": 20,
+    "exit": 10
+   },
+   "profit_factor": null,
+   "rank": 3,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "donchian",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "breakout",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "donchian:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "entry": 40,
+    "exit": 20
+   },
+   "profit_factor": null,
+   "rank": 4,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "donchian",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "breakout",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "donchian:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "entry": 55,
+    "exit": 20
+   },
+   "profit_factor": null,
+   "rank": 5,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "ema_cross",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "momentum",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "ema_cross:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "fast": 10,
+    "slow": 30
+   },
+   "profit_factor": null,
+   "rank": 6,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "ema_cross",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "momentum",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "ema_cross:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "fast": 15,
+    "slow": 30
+   },
+   "profit_factor": null,
+   "rank": 7,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "ema_cross",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "momentum",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "ema_cross:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "fast": 15,
+    "slow": 30
+   },
+   "profit_factor": null,
+   "rank": 8,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "regime_switch",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "regime_aware",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "regime_switch:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "er_n": 40,
+    "er_trend": 0.2
+   },
+   "profit_factor": null,
+   "rank": 9,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "regime_switch",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "regime_aware",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "regime_switch:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "er_n": 20,
+    "er_trend": 0.2
+   },
+   "profit_factor": null,
+   "rank": 10,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "regime_switch",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "regime_aware",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "regime_switch:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "er_n": 20,
+    "er_trend": 0.2
+   },
+   "profit_factor": null,
+   "rank": 11,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "rsi_reversion",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "mean_reversion",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "rsi_reversion:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "exit_n": 5,
+    "low": 20.0,
+    "n": 3,
+    "trend": 100
+   },
+   "profit_factor": null,
+   "rank": 12,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "rsi_reversion",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "mean_reversion",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "rsi_reversion:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "exit_n": 5,
+    "low": 10.0,
+    "n": 3,
+    "trend": 200
+   },
+   "profit_factor": null,
+   "rank": 13,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "rsi_reversion",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "mean_reversion",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "rsi_reversion:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "exit_n": 5,
+    "low": 10.0,
+    "n": 3,
+    "trend": 200
+   },
+   "profit_factor": null,
+   "rank": 14,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "trend_ensemble",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "ensemble",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "trend_ensemble:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "target": 0.4
+   },
+   "profit_factor": null,
+   "rank": 15,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "trend_ensemble",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "ensemble",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "trend_ensemble:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "target": 0.4
+   },
+   "profit_factor": null,
+   "rank": 16,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "trend_ensemble",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "ensemble",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "trend_ensemble:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "target": 0.4
+   },
+   "profit_factor": null,
+   "rank": 17,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "tsmom",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "momentum",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "tsmom:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "lookback": 60
+   },
+   "profit_factor": null,
+   "rank": 18,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "tsmom",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "momentum",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "tsmom:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "lookback": 30
+   },
+   "profit_factor": null,
+   "rank": 19,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "tsmom",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "momentum",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "tsmom:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "lookback": 30
+   },
+   "profit_factor": null,
+   "rank": 20,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "vol_target_trend",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "risk_adjusted",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "vol_target_trend:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "fast": 20,
+    "slow": 50,
+    "target": 0.5
+   },
+   "profit_factor": null,
+   "rank": 21,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "vol_target_trend",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "risk_adjusted",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "vol_target_trend:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "fast": 20,
+    "slow": 50,
+    "target": 0.5
+   },
+   "profit_factor": null,
+   "rank": 22,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "vol_target_trend",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "risk_adjusted",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "vol_target_trend:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "fast": 20,
+    "slow": 100,
+    "target": 0.3
+   },
+   "profit_factor": null,
+   "rank": 23,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": false,
+   "candidate": "volume_breakout",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0029852520445610153,
+   "exposure": 0.0,
+   "family": "breakout",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "volume_breakout:BTCUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "entry": 20,
+    "exit": 10,
+    "vol_mult": 1.5
+   },
+   "profit_factor": null,
+   "rank": 24,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "BTCUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": false,
+   "candidate": "volume_breakout",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": 0.0004965629808342253,
+   "exposure": 0.0,
+   "family": "breakout",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "volume_breakout:ETHUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "entry": 55,
+    "exit": 20,
+    "vol_mult": 1.5
+   },
+   "profit_factor": null,
+   "rank": 25,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "ETHUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "volume_breakout",
+   "curve": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "equity": 1.0,
+   "excess_return": -0.0072111576127738,
+   "exposure": 0.0,
+   "family": "breakout",
+   "fees": 0.0,
+   "forward_bars": 5,
+   "id": "volume_breakout:SOLUSDT",
+   "max_drawdown": 0.0,
+   "net_return": 0.0,
+   "open_trade": false,
+   "orders": 0,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {
+    "entry": 55,
+    "exit": 20,
+    "vol_mult": 1.5
+   },
+   "profit_factor": null,
+   "rank": 26,
+   "sharpe": null,
+   "slippage": 0.0,
+   "stress_net_return": 0.0,
+   "symbol": "SOLUSDT",
+   "target_weight": 0.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.0060017490431911735,
+   "benchmark": true,
+   "candidate": "buy_and_hold",
+   "curve": [
+    1.0,
+    1.014474,
+    1.014472,
+    0.990647,
+    1.001012,
+    1.002985
+   ],
+   "equity": 1.002985252044561,
+   "excess_return": null,
+   "exposure": 1.0,
+   "family": "benchmark",
+   "fees": 0.0025,
+   "forward_bars": 5,
+   "id": "buy_and_hold:BTCUSDT",
+   "max_drawdown": 0.023487100276345818,
+   "net_return": 0.0029852520445610153,
+   "open_trade": true,
+   "orders": 1,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades"
+    ],
+    "passed": false
+   },
+   "params": {},
+   "profit_factor": null,
+   "rank": 27,
+   "sharpe": null,
+   "slippage": 0.0004985007496251875,
+   "stress_net_return": -2.8231470554196392e-05,
+   "symbol": "BTCUSDT",
+   "target_weight": 1.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": false,
+   "candidate": "bollinger_reversion",
+   "curve": [
+    1.0,
+    1.002957,
+    1.021391,
+    0.98821,
+    0.99927,
+    1.007211
+   ],
+   "equity": 1.0072111576127738,
+   "excess_return": 0.0,
+   "exposure": 1.0,
+   "family": "mean_reversion",
+   "fees": 0.0025,
+   "forward_bars": 5,
+   "id": "bollinger_reversion:SOLUSDT",
+   "max_drawdown": 0.032486463973344315,
+   "net_return": 0.0072111576127738,
+   "open_trade": true,
+   "orders": 1,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades"
+    ],
+    "passed": false
+   },
+   "params": {
+    "k": 1.5,
+    "n": 20,
+    "trend": 100
+   },
+   "profit_factor": null,
+   "rank": 28,
+   "sharpe": null,
+   "slippage": 0.0004985007496251874,
+   "stress_net_return": 0.004184977304021675,
+   "symbol": "SOLUSDT",
+   "target_weight": 1.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.010240364101834709,
+   "benchmark": true,
+   "candidate": "buy_and_hold",
+   "curve": [
+    1.0,
+    1.002957,
+    1.021391,
+    0.98821,
+    0.99927,
+    1.007211
+   ],
+   "equity": 1.0072111576127738,
+   "excess_return": null,
+   "exposure": 1.0,
+   "family": "benchmark",
+   "fees": 0.0025,
+   "forward_bars": 5,
+   "id": "buy_and_hold:SOLUSDT",
+   "max_drawdown": 0.032486463973344315,
+   "net_return": 0.0072111576127738,
+   "open_trade": true,
+   "orders": 1,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades"
+    ],
+    "passed": false
+   },
+   "params": {},
+   "profit_factor": null,
+   "rank": 29,
+   "sharpe": null,
+   "slippage": 0.0004985007496251874,
+   "stress_net_return": 0.004184977304021675,
+   "symbol": "SOLUSDT",
+   "target_weight": 1.0,
+   "trades": 0,
+   "win_rate": null
+  },
+  {
+   "asset_return": 0.002509462393659012,
+   "benchmark": true,
+   "candidate": "buy_and_hold",
+   "curve": [
+    1.0,
+    1.019897,
+    1.011806,
+    0.993742,
+    1.00116,
+    0.999503
+   ],
+   "equity": 0.9995034370191658,
+   "excess_return": null,
+   "exposure": 1.0,
+   "family": "benchmark",
+   "fees": 0.0025,
+   "forward_bars": 5,
+   "id": "buy_and_hold:ETHUSDT",
+   "max_drawdown": 0.025644743175610274,
+   "net_return": -0.0004965629808342253,
+   "open_trade": true,
+   "orders": 1,
+   "paper_gate": {
+    "failed": [
+     "paper_days",
+     "paper_trades",
+     "paper_net_positive"
+    ],
+    "passed": false
+   },
+   "params": {},
+   "profit_factor": null,
+   "rank": 30,
+   "sharpe": null,
+   "slippage": 0.0004985007496251875,
+   "stress_net_return": -0.0034995853329758964,
+   "symbol": "ETHUSDT",
+   "target_weight": 1.0,
+   "trades": 0,
+   "win_rate": null
+  }
+ ],
+ "simulated": true,
+ "stress_cost_factor": 2.0
+}
